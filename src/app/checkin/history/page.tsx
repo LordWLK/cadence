@@ -3,14 +3,15 @@
 import { useState, useEffect } from 'react';
 import { MoodChart } from '@/components/checkin/MoodChart';
 import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useAuth } from '@/providers/AuthProvider';
 import { MOOD_EMOJIS } from '@/lib/config/constants';
-import { Sun, Moon, LogIn } from 'lucide-react';
+import { exportCheckinsCSV, exportCheckinsJSON } from '@/lib/utils/export';
+import { Sun, Moon, LogIn, Download, FileJson, Heart } from 'lucide-react';
 import { subDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
-import { Button } from '@/components/ui/Button';
 import type { Checkin } from '@/lib/supabase/types';
 
 export default function HistoryPage() {
@@ -18,6 +19,7 @@ export default function HistoryPage() {
   const { getByDateRange } = useCheckins();
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showExport, setShowExport] = useState(false);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -62,9 +64,47 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Historique</h1>
-        <p className="text-text-muted text-sm mt-1">Ton humeur et ton energie</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Historique</h1>
+          <p className="text-text-muted text-sm mt-1">Ton humeur et ton energie</p>
+        </div>
+        {checkins.length > 0 && (
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowExport(!showExport)}
+              aria-label="Exporter les donnees"
+            >
+              <Download size={16} />
+            </Button>
+            {showExport && (
+              <div
+                className="absolute right-0 top-10 z-20 rounded-xl shadow-lg border p-1 space-y-1 min-w-[160px]"
+                style={{
+                  backgroundColor: 'var(--color-surface-elevated)',
+                  borderColor: 'var(--color-border)',
+                }}
+              >
+                <button
+                  onClick={() => { exportCheckinsCSV(checkins); setShowExport(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-surface-alt transition-colors text-left"
+                >
+                  <Download size={14} className="text-text-dim" />
+                  Exporter en CSV
+                </button>
+                <button
+                  onClick={() => { exportCheckinsJSON(checkins); setShowExport(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-surface-alt transition-colors text-left"
+                >
+                  <FileJson size={14} className="text-text-dim" />
+                  Exporter en JSON
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <Card>
@@ -78,8 +118,15 @@ export default function HistoryPage() {
             {[1,2,3].map(i => <div key={i} className="h-20 bg-surface-alt rounded-2xl animate-pulse" />)}
           </div>
         ) : Object.keys(grouped).length === 0 ? (
-          <Card className="text-center py-6">
+          <Card className="text-center py-8 space-y-3">
+            <Heart size={28} className="text-text-dim mx-auto" />
             <p className="text-text-muted text-sm">Aucun check-in pour le moment</p>
+            <p className="text-text-dim text-xs">Fais ton premier check-in pour commencer le suivi !</p>
+            <Link href="/checkin">
+              <Button variant="secondary" size="sm">
+                <Heart size={14} /> Faire un check-in
+              </Button>
+            </Link>
           </Card>
         ) : (
           Object.entries(grouped).map(([date, dayCheckins]) => (
