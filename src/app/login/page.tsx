@@ -13,11 +13,11 @@ export default function LoginPage() {
   const { user, signIn, verifyOtp } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [code, setCode] = useState('');
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const codeInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (user) router.replace('/');
@@ -37,64 +37,25 @@ export default function LoginPage() {
       setError(error);
     } else {
       setStep('code');
-      // Focus first OTP input after render
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+      setTimeout(() => codeInputRef.current?.focus(), 100);
     }
   };
 
   // ─── Step 2: Verify OTP code ─────────────────────────────────────────────
-  const handleVerify = async (code: string) => {
+  const handleVerifySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleaned = code.replace(/\D/g, '');
+    if (cleaned.length < 6) return;
     setLoading(true);
     setError(null);
-    const { error } = await verifyOtp(email, code);
+    const { error } = await verifyOtp(email, cleaned);
     setLoading(false);
     if (error) {
       setError('Code invalide ou expiré. Réessaie.');
-      setOtp(['', '', '', '', '', '']);
-      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+      setCode('');
+      setTimeout(() => codeInputRef.current?.focus(), 100);
     }
     // Success is handled by useAuth → user state change → redirect
-  };
-
-  const handleOtpChange = (index: number, value: string) => {
-    // Only accept digits
-    const digit = value.replace(/\D/g, '').slice(-1);
-    const newOtp = [...otp];
-    newOtp[index] = digit;
-    setOtp(newOtp);
-
-    if (digit && index < 5) {
-      // Auto-focus next input
-      inputRefs.current[index + 1]?.focus();
-    }
-
-    // Auto-submit when all 6 digits entered
-    const fullCode = newOtp.join('');
-    if (fullCode.length === 6) {
-      handleVerify(fullCode);
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOtpPaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (pasted.length === 0) return;
-    const newOtp = [...otp];
-    for (let i = 0; i < 6; i++) {
-      newOtp[i] = pasted[i] || '';
-    }
-    setOtp(newOtp);
-    if (pasted.length === 6) {
-      handleVerify(pasted);
-    } else {
-      inputRefs.current[pasted.length]?.focus();
-    }
   };
 
   // ─── Code entry screen ───────────────────────────────────────────────────
@@ -102,7 +63,7 @@ export default function LoginPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 space-y-8">
         <div className="self-start">
-          <Button variant="ghost" size="sm" onClick={() => { setStep('email'); setError(null); setOtp(['', '', '', '', '', '']); }}>
+          <Button variant="ghost" size="sm" onClick={() => { setStep('email'); setError(null); setCode(''); }}>
             <ArrowLeft size={14} /> Retour
           </Button>
         </div>
@@ -114,31 +75,25 @@ export default function LoginPage() {
         </div>
 
         <Card variant="elevated" className="w-full max-w-sm">
-          <div className="space-y-5">
+          <form onSubmit={handleVerifySubmit} className="space-y-5">
             <div className="text-center">
               <h2 className="font-semibold text-[var(--color-text)]">Entre le code</h2>
               <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                Un code à 6 chiffres a été envoyé à{' '}
+                Un code a été envoyé à{' '}
                 <span className="text-[var(--color-text)] font-medium">{email}</span>
               </p>
             </div>
 
-            <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
-              {otp.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={(el) => { inputRefs.current[i] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(i, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                  className="w-11 h-13 text-center text-lg font-bold bg-[var(--color-surface-input)] border border-[var(--color-border)] rounded-xl text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] transition-colors"
-                />
-              ))}
-            </div>
+            <input
+              ref={codeInputRef}
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+              placeholder="Ton code"
+              className="w-full text-center text-2xl font-bold tracking-[0.3em] bg-[var(--color-surface-input)] border border-[var(--color-border)] rounded-xl px-4 py-4 text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] placeholder:text-base placeholder:tracking-normal placeholder:font-normal focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] transition-colors"
+            />
 
             {error && (
               <p className="text-[var(--color-error)] text-xs bg-[color-mix(in_srgb,var(--color-error)_8%,transparent)] rounded-lg px-3 py-2 text-center">
@@ -146,19 +101,18 @@ export default function LoginPage() {
               </p>
             )}
 
-            {loading && (
-              <p className="text-[var(--color-text-muted)] text-xs text-center">
-                Vérification en cours...
-              </p>
-            )}
+            <Button type="submit" className="w-full" size="lg" disabled={loading || code.length < 6}>
+              {loading ? 'Vérification...' : 'Valider'}
+            </Button>
 
             <button
-              onClick={() => { setStep('email'); setError(null); }}
+              type="button"
+              onClick={() => { setStep('email'); setError(null); setCode(''); }}
               className="w-full text-center text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
             >
               Pas reçu ? Renvoyer un code
             </button>
-          </div>
+          </form>
         </Card>
       </div>
     );
