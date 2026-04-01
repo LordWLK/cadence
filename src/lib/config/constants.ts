@@ -15,6 +15,15 @@ export const SPORT_COLORS: Record<string, string> = {
   mma: 'sport-mma',
 };
 
+// Hex values for inline styles (Tailwind can't resolve dynamic class names like `border-${var}`)
+export const SPORT_HEX: Record<string, string> = {
+  football: '#16a34a',
+  basketball: '#ea580c',
+  mma: '#dc2626',
+};
+
+export const MOOD_HEX = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'] as const;
+
 export const MOOD_EMOJIS = ['😔', '😕', '😐', '🙂', '😊'] as const;
 export const MOOD_LABELS = ['Pas bien', 'Bof', 'Neutre', 'Bien', 'Super'] as const;
 
@@ -59,7 +68,7 @@ export const KNOWN_DERBIES: [string, string][] = [
 export const CL_KNOCKOUT_KEYWORDS = ['final', 'semi-final', 'quarter-final', 'round of 16', 'knockout'];
 
 // NBA: top teams are dynamically determined from standings (top 6 per conference)
-export const NBA_SEASON = 2025; // Current season year
+export const NBA_SEASON = new Date().getMonth() >= 9 ? new Date().getFullYear() + 1 : new Date().getFullYear(); // NBA season straddles calendar years
 
 // UFC/MMA keywords for big match detection
 export const MMA_BIG_MATCH_KEYWORDS = ['title', 'championship', 'main event', 'main card', 'ppv'];

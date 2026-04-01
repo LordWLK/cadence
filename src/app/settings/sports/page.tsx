@@ -9,7 +9,7 @@ import { useSportPrefs } from '@/lib/hooks/useSportPrefs';
 import { useAuth } from '@/providers/AuthProvider';
 import { searchTeams, searchPlayers } from '@/lib/api/thesportsdb';
 import { getNbaTeams, type BdlTeam } from '@/lib/api/balldontlie';
-import { FOOTBALL_LEAGUES } from '@/lib/config/constants';
+import { FOOTBALL_LEAGUES, SPORT_HEX } from '@/lib/config/constants';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import type { SportPreference } from '@/lib/supabase/types';
@@ -64,17 +64,17 @@ export default function SportsSettingsPage() {
     loadPrefs();
   };
 
-  const tabs: { id: Tab; label: string; color: string }[] = [
-    { id: 'football', label: 'Football', color: 'sport-football' },
-    { id: 'basketball', label: 'NBA', color: 'sport-basketball' },
-    { id: 'mma', label: 'MMA/UFC', color: 'sport-mma' },
+  const tabs: { id: Tab; label: string; hex: string }[] = [
+    { id: 'football', label: 'Football', hex: SPORT_HEX.football },
+    { id: 'basketball', label: 'NBA', hex: SPORT_HEX.basketball },
+    { id: 'mma', label: 'MMA/UFC', hex: SPORT_HEX.mma },
   ];
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Link href="/settings">
-          <Button variant="ghost" size="sm"><ArrowLeft size={16} /></Button>
+          <Button variant="ghost" size="sm" aria-label="Retour"><ArrowLeft size={16} /></Button>
         </Link>
         <div>
           <h1 className="text-2xl font-bold">Preferences sport</h1>
@@ -87,11 +87,11 @@ export default function SportsSettingsPage() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
-              tab === t.id
-                ? `bg-${t.color}/15 text-${t.color} ring-1 ring-${t.color}/30`
-                : 'bg-surface-elevated text-text-muted'
-            }`}
+            className="flex-1 py-2 rounded-xl text-sm font-medium transition-all"
+            style={tab === t.id
+              ? { backgroundColor: `${t.hex}20`, color: t.hex, boxShadow: `inset 0 0 0 1px ${t.hex}50` }
+              : { backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-muted)' }
+            }
           >
             {t.label}
             {sportPrefs(t.id).length > 0 && (

@@ -1,6 +1,6 @@
 'use client';
 
-import { MOOD_EMOJIS, MOOD_LABELS } from '@/lib/config/constants';
+import { MOOD_EMOJIS, MOOD_LABELS, MOOD_HEX } from '@/lib/config/constants';
 
 interface MoodSelectorProps {
   value: number;
@@ -15,19 +15,26 @@ export function MoodSelector({ value, onChange }: MoodSelectorProps) {
         {MOOD_EMOJIS.map((emoji, index) => {
           const mood = index + 1;
           const isSelected = value === mood;
+          const hex = MOOD_HEX[index];
           return (
             <button
               key={mood}
               type="button"
               onClick={() => onChange(mood)}
+              aria-label={`Humeur : ${MOOD_LABELS[index]}`}
               className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all flex-1 ${
-                isSelected
-                  ? `bg-mood-${mood}/20 ring-2 ring-mood-${mood} scale-110`
-                  : 'bg-surface-elevated hover:bg-border'
+                isSelected ? 'scale-110' : 'bg-surface-elevated hover:bg-border'
               }`}
+              style={isSelected ? {
+                backgroundColor: `${hex}20`,
+                boxShadow: `inset 0 0 0 2px ${hex}`,
+              } : undefined}
             >
               <span className="text-2xl">{emoji}</span>
-              <span className={`text-[10px] ${isSelected ? `text-mood-${mood}` : 'text-text-dim'}`}>
+              <span
+                className={`text-[10px] ${!isSelected ? 'text-text-dim' : ''}`}
+                style={isSelected ? { color: hex } : undefined}
+              >
                 {MOOD_LABELS[index]}
               </span>
             </button>

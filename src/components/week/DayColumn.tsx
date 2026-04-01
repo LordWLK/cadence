@@ -52,21 +52,23 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
       </div>
 
       {/* Check-in dots */}
-      <div className="flex justify-center gap-1 mb-1">
+      <div className="flex justify-center gap-1 mb-1" role="group" aria-label="Check-ins du jour">
         <div
           className="w-1.5 h-1.5 rounded-full"
           style={{ backgroundColor: hasMorning ? '#d97706' : '#d4cfc5' }}
-          title="Matin"
+          title={hasMorning ? 'Check-in matin fait' : 'Pas de check-in matin'}
+          aria-label={hasMorning ? 'Check-in matin fait' : 'Pas de check-in matin'}
         />
         <div
           className="w-1.5 h-1.5 rounded-full"
           style={{ backgroundColor: hasEvening ? '#4f46e5' : '#d4cfc5' }}
-          title="Soir"
+          title={hasEvening ? 'Check-in soir fait' : 'Pas de check-in soir'}
+          aria-label={hasEvening ? 'Check-in soir fait' : 'Pas de check-in soir'}
         />
       </div>
 
       {/* Mood */}
-      {avgMood && (
+      {avgMood !== null && avgMood >= 1 && avgMood <= 5 && (
         <p className="text-center text-sm leading-none mb-1">
           {MOOD_EMOJIS[avgMood - 1]}
         </p>

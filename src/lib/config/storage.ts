@@ -1,7 +1,7 @@
 export interface AppConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
-  theSportsDbKey: string; // defaults to '3'
+  theSportsDbKey: string; // defaults to '123' (free V1 key)
   ballDontLieKey: string;
 }
 

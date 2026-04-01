@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSportFeed, type SportFeedEvent } from '@/lib/hooks/useSportFeed';
 import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { EventCard } from './EventCard';
@@ -14,8 +14,8 @@ export function SportFeed() {
   const { create } = useSelectedEvents();
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
-  const nextWeekStart = getNextWeekStart();
-  const nextWeekEnd = getWeekEnd(nextWeekStart);
+  const nextWeekStart = useMemo(() => getNextWeekStart(), []);
+  const nextWeekEnd   = useMemo(() => getWeekEnd(nextWeekStart), [nextWeekStart]);
 
   useEffect(() => {
     fetchFeed(nextWeekStart, nextWeekEnd);
