@@ -10,6 +10,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { getNextWeekStart, getWeekStart, getWeekDays, formatDate, formatDateISO, getDayName } from '@/lib/utils/dates';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { SportFeed } from '@/components/friday/SportFeed';
+import { BacklogDrawer } from '@/components/friday/BacklogDrawer';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CalendarPlus, Trash2, Pencil, Check, X, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import Link from 'next/link';
@@ -255,6 +256,13 @@ export default function FridayPage() {
       )}
 
       <SportFeed />
+
+      <BacklogDrawer
+        weekStart={nextWeekStart}
+        weekDays={weekDays}
+        weekStartISO={weekStartISO}
+        onPulled={loadActivities}
+      />
     </div>
   );
 }

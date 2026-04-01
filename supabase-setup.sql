@@ -77,8 +77,30 @@ CREATE POLICY "Users manage own selected events"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
+-- 5. Backlog activities table (templates for recurring or "later" activities)
+CREATE TABLE IF NOT EXISTS backlog_activities (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  category TEXT CHECK (category IN ('sport_play', 'work', 'social', 'personal_project', 'relax', 'other')) NOT NULL,
+  recurrence TEXT CHECK (recurrence IN ('none', 'weekly', 'monthly')) NOT NULL DEFAULT 'none',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE backlog_activities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own backlog"
+  ON backlog_activities FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Add backlog reference to weekly_activities
+ALTER TABLE weekly_activities ADD COLUMN IF NOT EXISTS backlog_id UUID REFERENCES backlog_activities(id) ON DELETE SET NULL;
+
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_checkins_user_date ON checkins(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_activities_user_week ON weekly_activities(user_id, week_start);
 CREATE INDEX IF NOT EXISTS idx_sport_prefs_user ON sport_preferences(user_id, sport);
 CREATE INDEX IF NOT EXISTS idx_selected_events_user_date ON selected_events(user_id, event_date);
+CREATE INDEX IF NOT EXISTS idx_backlog_user ON backlog_activities(user_id, is_active);

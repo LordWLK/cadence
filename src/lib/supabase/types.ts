@@ -42,6 +42,7 @@ export type Database = {
           category: string;
           planned_date: string;
           week_start: string;
+          backlog_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -51,6 +52,7 @@ export type Database = {
           category: string;
           planned_date: string;
           week_start: string;
+          backlog_id?: string | null;
           created_at?: string;
         };
         Update: {
@@ -60,6 +62,37 @@ export type Database = {
           category?: string;
           planned_date?: string;
           week_start?: string;
+          backlog_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      backlog_activities: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          category: string;
+          recurrence: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          title: string;
+          category: string;
+          recurrence?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          category?: string;
+          recurrence?: string;
+          is_active?: boolean;
           created_at?: string;
         };
         Relationships: [];
@@ -146,3 +179,5 @@ export type SportPreference = Database['public']['Tables']['sport_preferences'][
 export type SportPreferenceInsert = Database['public']['Tables']['sport_preferences']['Insert'];
 export type SelectedEvent = Database['public']['Tables']['selected_events']['Row'];
 export type SelectedEventInsert = Database['public']['Tables']['selected_events']['Insert'];
+export type BacklogActivity = Database['public']['Tables']['backlog_activities']['Row'];
+export type BacklogActivityInsert = Database['public']['Tables']['backlog_activities']['Insert'];
