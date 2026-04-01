@@ -12,7 +12,7 @@ export default function SettingsPage() {
   const { config, updateConfig, resetConfig, isConfigured } = useConfig();
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
-  const [theSportsDbKey, setTheSportsDbKey] = useState('3');
+  const [theSportsDbKey, setTheSportsDbKey] = useState('123');
   const [ballDontLieKey, setBallDontLieKey] = useState('');
   const [saved, setSaved] = useState(false);
   const [notifPermission, setNotifPermission] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export default function SettingsPage() {
     if (config) {
       setSupabaseUrl(config.supabaseUrl);
       setSupabaseAnonKey(config.supabaseAnonKey);
-      setTheSportsDbKey(config.theSportsDbKey || '3');
+      setTheSportsDbKey(config.theSportsDbKey || '123');
       setBallDontLieKey(config.ballDontLieKey || '');
     }
   }, [config]);
@@ -37,7 +37,7 @@ export default function SettingsPage() {
     updateConfig({
       supabaseUrl,
       supabaseAnonKey,
-      theSportsDbKey: theSportsDbKey || '3',
+      theSportsDbKey: theSportsDbKey || '123',
       ballDontLieKey,
     });
     setSaved(true);
@@ -91,13 +91,13 @@ export default function SettingsPage() {
           </div>
           <div>
             <label className="text-sm text-text-muted block mb-1.5">
-              TheSportsDB Key <span className="text-text-dim">(defaut: 3 = gratuit)</span>
+              TheSportsDB Key <span className="text-text-dim">(defaut: 123 = gratuit)</span>
             </label>
             <input
               type="text"
               value={theSportsDbKey}
               onChange={(e) => setTheSportsDbKey(e.target.value)}
-              placeholder="3"
+              placeholder="123"
               className={inputClass}
             />
           </div>
