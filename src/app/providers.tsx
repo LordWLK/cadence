@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { Onboarding } from '@/components/layout/Onboarding';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { SplashScreen } from '@/components/layout/SplashScreen';
+import { SessionFromUrl } from '@/components/auth/SessionFromUrl';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -19,6 +20,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <ConfigGate>
             <SupabaseProvider>
               <AuthProvider>
+                <SessionFromUrl />
                 <main className="max-w-lg mx-auto px-4 pt-6 pb-28">
                   <PageTransition>
                     {children}
