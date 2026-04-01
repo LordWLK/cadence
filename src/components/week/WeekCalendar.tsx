@@ -8,7 +8,7 @@ import { useActivities } from '@/lib/hooks/useActivities';
 import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { useAuth } from '@/providers/AuthProvider';
 import { getWeekStart, getWeekEnd, getWeekDays, formatDate, formatDateISO, isToday } from '@/lib/utils/dates';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarCheck } from 'lucide-react';
 import { addWeeks, format } from 'date-fns';
 import type { Checkin, WeeklyActivity, SelectedEvent } from '@/lib/supabase/types';
 
@@ -80,10 +80,14 @@ export function WeekCalendar() {
           {weekOffset !== 0 && (
             <button
               onClick={() => setWeekOffset(0)}
-              className="text-xs hover:underline"
-              style={{ color: 'var(--color-text-muted)' }}
+              className="flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-lg transition-colors"
+              style={{
+                color: 'var(--color-primary)',
+                backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+              }}
             >
-              Revenir à cette semaine
+              <CalendarCheck size={12} />
+              Aujourd&apos;hui
             </button>
           )}
         </div>

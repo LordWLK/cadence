@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { StreakBadge } from '@/components/checkin/StreakBadge';
 import { QuickCheckin } from '@/components/checkin/QuickCheckin';
 import { WeeklyRecap } from '@/components/week/WeeklyRecap';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
 
 // ─── Landing page ─────────────────────────────────────────────────────────────
 function LandingPage() {
@@ -195,6 +196,7 @@ function LandingPage() {
 function AppHome() {
   return (
     <div className="space-y-5 animate-stagger">
+      <OfflineBanner />
       <div className="flex items-center justify-between">
         <CadenceLogoStacked className="w-28" />
         <div className="flex gap-2">

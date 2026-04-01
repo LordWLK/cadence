@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useAuth } from '@/providers/AuthProvider';
 import { MOOD_EMOJIS } from '@/lib/config/constants';
+import { SearchNotes } from '@/components/checkin/SearchNotes';
+import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { exportCheckinsCSV, exportCheckinsJSON } from '@/lib/utils/export';
 import { Sun, Moon, LogIn, Download, FileJson, Heart } from 'lucide-react';
 import { subDays, format } from 'date-fns';
@@ -58,6 +60,18 @@ export default function HistoryPage() {
     );
   }
 
+  const loadCheckins = async () => {
+    setLoading(true);
+    const end = new Date();
+    const start = subDays(end, 30);
+    const data = await getByDateRange(
+      format(start, 'yyyy-MM-dd'),
+      format(end, 'yyyy-MM-dd')
+    );
+    setCheckins(data);
+    setLoading(false);
+  };
+
   const grouped: Record<string, Checkin[]> = {};
   for (const c of [...checkins].reverse()) {
     if (!grouped[c.date]) grouped[c.date] = [];
@@ -65,6 +79,7 @@ export default function HistoryPage() {
   }
 
   return (
+    <PullToRefresh onRefresh={loadCheckins}>
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -108,6 +123,8 @@ export default function HistoryPage() {
           </div>
         )}
       </div>
+
+      <SearchNotes />
 
       <Card>
         <MoodChart />
@@ -163,5 +180,6 @@ export default function HistoryPage() {
         )}
       </div>
     </div>
+    </PullToRefresh>
   );
 }
