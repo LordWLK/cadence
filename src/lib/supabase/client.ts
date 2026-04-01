@@ -6,6 +6,24 @@ let client: SupabaseClient<Database> | null = null;
 let lastUrl: string | null = null;
 
 export function getSupabaseClient(): SupabaseClient<Database> | null {
+  // Try env vars first
+  const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (envUrl && envKey) {
+    if (client && lastUrl === envUrl) return client;
+    client = createClient<Database>(envUrl, envKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    });
+    lastUrl = envUrl;
+    return client;
+  }
+
+  // Fallback to localStorage config
   const config = getConfig();
   if (!config) return null;
 

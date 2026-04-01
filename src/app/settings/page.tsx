@@ -4,18 +4,23 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/providers/ConfigProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Save, Trash2, Link, Key, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon } from 'lucide-react';
+import { Save, Trash2, Link, Key, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTheme } from '@/lib/hooks/useTheme';
 import NextLink from 'next/link';
 import { requestNotificationPermission, isNotificationSupported, getNotificationPermission, scheduleDailyReminders } from '@/lib/utils/notifications';
 
 export default function SettingsPage() {
-  const { config, updateConfig, resetConfig, isConfigured } = useConfig();
+  const { config, sportConfig, updateConfig, updateSportConfig, resetConfig, isConfigured, hasEnvVars } = useConfig();
   const { theme, toggleTheme } = useTheme();
+
+  // Supabase fields (only needed when no env vars)
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
+
+  // Sport API keys
   const [theSportsDbKey, setTheSportsDbKey] = useState('123');
   const [ballDontLieKey, setBallDontLieKey] = useState('');
+
   const [saved, setSaved] = useState(false);
   const [notifPermission, setNotifPermission] = useState<string | null>(null);
 
@@ -26,25 +31,36 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    if (config) {
+    if (config && !hasEnvVars) {
       setSupabaseUrl(config.supabaseUrl);
       setSupabaseAnonKey(config.supabaseAnonKey);
-      setTheSportsDbKey(config.theSportsDbKey || '123');
-      setBallDontLieKey(config.ballDontLieKey || '');
     }
-  }, [config]);
+    setTheSportsDbKey(sportConfig.theSportsDbKey || '123');
+    setBallDontLieKey(sportConfig.ballDontLieKey || '');
+  }, [config, sportConfig, hasEnvVars]);
 
   const handleSave = () => {
-    if (!supabaseUrl || !supabaseAnonKey) return;
-    updateConfig({
-      supabaseUrl,
-      supabaseAnonKey,
+    // Save sport config
+    updateSportConfig({
       theSportsDbKey: theSportsDbKey || '123',
       ballDontLieKey,
     });
+
+    // If no env vars, also save Supabase config
+    if (!hasEnvVars && supabaseUrl && supabaseAnonKey) {
+      updateConfig({
+        supabaseUrl,
+        supabaseAnonKey,
+        theSportsDbKey: theSportsDbKey || '123',
+        ballDontLieKey,
+      });
+    }
+
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
+
+  const canSave = hasEnvVars || (!!supabaseUrl && !!supabaseAnonKey);
 
   const inputClass =
     'w-full bg-surface-elevated border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors';
@@ -56,35 +72,66 @@ export default function SettingsPage() {
         <p className="text-text-muted text-sm mt-1">Configure tes connexions</p>
       </div>
 
+      {/* Supabase status */}
       <Card>
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-primary mb-2">
             <Link size={18} />
             <h2 className="font-semibold">Supabase</h2>
           </div>
-          <div>
-            <label className="text-sm text-text-muted block mb-1.5">URL du projet</label>
-            <input
-              type="url"
-              value={supabaseUrl}
-              onChange={(e) => setSupabaseUrl(e.target.value)}
-              placeholder="https://xxx.supabase.co"
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="text-sm text-text-muted block mb-1.5">Anon Key</label>
-            <input
-              type="password"
-              value={supabaseAnonKey}
-              onChange={(e) => setSupabaseAnonKey(e.target.value)}
-              placeholder="eyJhbGciOiJ..."
-              className={inputClass}
-            />
-          </div>
+
+          {hasEnvVars ? (
+            <div className="flex items-center gap-3 p-3 rounded-xl"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)',
+              }}>
+              <CheckCircle size={18} style={{ color: 'var(--color-success)' }} />
+              <div>
+                <p className="text-sm font-medium" style={{ color: 'var(--color-success)' }}>
+                  Connecte via Vercel
+                </p>
+                <p className="text-xs text-text-muted">
+                  Les credentials Supabase sont configures dans les variables d&apos;environnement. Rien a faire !
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 p-3 rounded-xl"
+                style={{
+                  backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
+                }}>
+                <AlertCircle size={18} style={{ color: 'var(--color-warning)' }} />
+                <p className="text-xs text-text-muted">
+                  Pas de variables d&apos;environnement detectees. Configure manuellement ou ajoute <code className="font-mono text-text">NEXT_PUBLIC_SUPABASE_URL</code> et <code className="font-mono text-text">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> dans Vercel.
+                </p>
+              </div>
+              <div>
+                <label className="text-sm text-text-muted block mb-1.5">URL du projet</label>
+                <input
+                  type="url"
+                  value={supabaseUrl}
+                  onChange={(e) => setSupabaseUrl(e.target.value)}
+                  placeholder="https://xxx.supabase.co"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="text-sm text-text-muted block mb-1.5">Anon Key</label>
+                <input
+                  type="password"
+                  value={supabaseAnonKey}
+                  onChange={(e) => setSupabaseAnonKey(e.target.value)}
+                  placeholder="eyJhbGciOiJ..."
+                  className={inputClass}
+                />
+              </div>
+            </>
+          )}
         </div>
       </Card>
 
+      {/* Sport API keys */}
       <Card>
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-accent-light mb-2">
@@ -117,17 +164,18 @@ export default function SettingsPage() {
       </Card>
 
       <div className="flex gap-3">
-        <Button onClick={handleSave} className="flex-1" disabled={!supabaseUrl || !supabaseAnonKey}>
+        <Button onClick={handleSave} className="flex-1" disabled={!canSave}>
           <Save size={16} />
           {saved ? 'Sauvegarde !' : 'Sauvegarder'}
         </Button>
-        {isConfigured && (
+        {!hasEnvVars && isConfigured && (
           <Button variant="danger" onClick={resetConfig}>
             <Trash2 size={16} />
           </Button>
         )}
       </div>
 
+      {/* Theme */}
       <Card>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -157,6 +205,7 @@ export default function SettingsPage() {
         </div>
       </Card>
 
+      {/* Notifications */}
       {isNotificationSupported() && (
         <Card>
           <div className="flex items-center justify-between">
@@ -186,6 +235,7 @@ export default function SettingsPage() {
         </Card>
       )}
 
+      {/* Sport preferences */}
       {isConfigured && (
         <NextLink href="/settings/sports">
           <Card className="mt-4 flex items-center justify-between cursor-pointer hover:border-primary/50 transition-colors">

@@ -11,6 +11,21 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
   const { config } = useConfig();
 
   const client = useMemo(() => {
+    // Try env vars first
+    const envUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const envKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (envUrl && envKey) {
+      return createClient<Database>(envUrl, envKey, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+        },
+      });
+    }
+
+    // Fallback to config from localStorage
     if (!config) return null;
     return createClient<Database>(config.supabaseUrl, config.supabaseAnonKey, {
       auth: {
