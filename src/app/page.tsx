@@ -7,6 +7,9 @@ import { WeekCalendar } from '@/components/week/WeekCalendar';
 import { CadenceIcon, CadenceLogoStacked } from '@/components/ui/CadenceLogo';
 import { Heart, CalendarPlus, Share, Plus, Star, Flame, Check, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { StreakBadge } from '@/components/checkin/StreakBadge';
+import { QuickCheckin } from '@/components/checkin/QuickCheckin';
+import { WeeklyRecap } from '@/components/week/WeeklyRecap';
 
 // ─── Landing page ─────────────────────────────────────────────────────────────
 function LandingPage() {
@@ -191,7 +194,7 @@ function LandingPage() {
 // ─── App home ─────────────────────────────────────────────────────────────────
 function AppHome() {
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-stagger">
       <div className="flex items-center justify-between">
         <CadenceLogoStacked className="w-28" />
         <div className="flex gap-2">
@@ -209,6 +212,9 @@ function AppHome() {
           </Link>
         </div>
       </div>
+      <StreakBadge />
+      <QuickCheckin />
+      <WeeklyRecap />
       <WeekCalendar />
     </div>
   );

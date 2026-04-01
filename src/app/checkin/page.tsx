@@ -49,7 +49,7 @@ export default function CheckinPage() {
   const hasEvening = todayCheckins.some(c => c.type === 'evening');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-stagger">
       <div>
         <h1 className="text-2xl font-bold">Check-in</h1>
         <p className="text-text-muted text-sm mt-1">Comment tu te sens ?</p>

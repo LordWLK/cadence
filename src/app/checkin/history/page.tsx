@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { MoodChart } from '@/components/checkin/MoodChart';
+import { MoodHeatmap } from '@/components/checkin/MoodHeatmap';
+import { MoodInsights } from '@/components/checkin/MoodInsights';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useCheckins } from '@/lib/hooks/useCheckins';
@@ -110,6 +112,12 @@ export default function HistoryPage() {
       <Card>
         <MoodChart />
       </Card>
+
+      <Card>
+        <MoodHeatmap />
+      </Card>
+
+      <MoodInsights />
 
       <div className="space-y-3">
         <p className="text-xs text-text-dim uppercase tracking-wide">Detail par jour</p>

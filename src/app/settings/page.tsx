@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/providers/ConfigProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Save, Trash2, Link, Key, Volleyball, Bell, BellOff } from 'lucide-react';
+import { Save, Trash2, Link, Key, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon } from 'lucide-react';
+import { useTheme } from '@/lib/hooks/useTheme';
 import NextLink from 'next/link';
 import { requestNotificationPermission, isNotificationSupported, getNotificationPermission, scheduleDailyReminders } from '@/lib/utils/notifications';
 
 export default function SettingsPage() {
   const { config, updateConfig, resetConfig, isConfigured } = useConfig();
+  const { theme, toggleTheme } = useTheme();
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
   const [theSportsDbKey, setTheSportsDbKey] = useState('123');
@@ -125,6 +127,35 @@ export default function SettingsPage() {
           </Button>
         )}
       </div>
+
+      <Card>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {theme === 'dark' ? <MoonIcon size={18} className="text-accent-light" /> : <SunIcon size={18} className="text-warning" />}
+            <div>
+              <p className="font-medium text-sm">Theme</p>
+              <p className="text-xs text-text-muted">
+                {theme === 'dark' ? 'Mode sombre actif' : 'Mode clair actif'}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="relative w-12 h-7 rounded-full transition-colors"
+            style={{
+              backgroundColor: theme === 'dark' ? 'var(--color-primary)' : 'var(--color-border-strong)',
+            }}
+            aria-label="Changer le theme"
+          >
+            <span
+              className="absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow-sm transition-transform"
+              style={{
+                transform: theme === 'dark' ? 'translateX(20px)' : 'translateX(0)',
+              }}
+            />
+          </button>
+        </div>
+      </Card>
 
       {isNotificationSupported() && (
         <Card>

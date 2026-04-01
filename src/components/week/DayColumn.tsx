@@ -28,8 +28,8 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
       className="flex flex-col rounded-xl p-1 min-h-[120px] transition-all"
       style={{
         backgroundColor: isToday
-          ? 'color-mix(in srgb, #7c3aed 12%, white)'
-          : '#e8e4db',
+          ? 'color-mix(in srgb, #7c3aed 12%, var(--color-surface))'
+          : 'var(--color-surface-alt)',
         outline: isToday
           ? '1.5px solid color-mix(in srgb, #7c3aed 35%, transparent)'
           : 'none',
@@ -39,13 +39,13 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
       <div className="text-center py-1">
         <p
           className="text-[11px] font-bold leading-none"
-          style={{ color: isToday ? '#7c3aed' : '#6b6355' }}
+          style={{ color: isToday ? '#7c3aed' : 'var(--color-text-muted)' }}
         >
           {dayLabel}
         </p>
         <p
           className="text-base font-bold leading-tight mt-0.5"
-          style={{ color: isToday ? '#7c3aed' : '#1a1612' }}
+          style={{ color: isToday ? '#7c3aed' : 'var(--color-text)' }}
         >
           {dayNumber}
         </p>
@@ -55,13 +55,13 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
       <div className="flex justify-center gap-1 mb-1" role="group" aria-label="Check-ins du jour">
         <div
           className="w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: hasMorning ? '#d97706' : '#d4cfc5' }}
+          style={{ backgroundColor: hasMorning ? '#d97706' : 'var(--color-border)' }}
           title={hasMorning ? 'Check-in matin fait' : 'Pas de check-in matin'}
           aria-label={hasMorning ? 'Check-in matin fait' : 'Pas de check-in matin'}
         />
         <div
           className="w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: hasEvening ? '#4f46e5' : '#d4cfc5' }}
+          style={{ backgroundColor: hasEvening ? '#4f46e5' : 'var(--color-border)' }}
           title={hasEvening ? 'Check-in soir fait' : 'Pas de check-in soir'}
           aria-label={hasEvening ? 'Check-in soir fait' : 'Pas de check-in soir'}
         />
@@ -83,8 +83,8 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
               key={a.id}
               className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium"
               style={{
-                backgroundColor: 'white',
-                color: cat?.hex ?? '#6b6355',
+                backgroundColor: 'var(--color-surface-elevated)',
+                color: cat?.hex ?? 'var(--color-text-muted)',
               }}
               title={a.title}
             >
@@ -93,7 +93,7 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
           );
         })}
         {activities.length > 2 && (
-          <p className="text-[8px] text-center" style={{ color: '#9e9080' }}>
+          <p className="text-[8px] text-center" style={{ color: 'var(--color-text-dim)' }}>
             +{activities.length - 2}
           </p>
         )}
@@ -102,7 +102,7 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
           <EventBadge key={e.id} event={e} />
         ))}
         {events.length > 1 && (
-          <p className="text-[8px] text-center" style={{ color: '#9e9080' }}>
+          <p className="text-[8px] text-center" style={{ color: 'var(--color-text-dim)' }}>
             +{events.length - 1}
           </p>
         )}

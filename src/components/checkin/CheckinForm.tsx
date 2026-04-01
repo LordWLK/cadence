@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { Sun, Moon, Send, AlertCircle } from 'lucide-react';
+import { hapticSuccess, hapticError } from '@/lib/utils/haptics';
+import { Confetti } from '@/components/ui/Confetti';
 
 interface CheckinFormProps {
   onSuccess?: () => void;
@@ -21,6 +23,7 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
   const [type, setType] = useState<'morning' | 'evening'>('morning');
   const [coherenceWarning, setCoherenceWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,12 +52,16 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
       date: new Date().toISOString().split('T')[0],
     });
     if (result) {
+      hapticSuccess();
+      setShowConfetti(true);
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
+        setShowConfetti(false);
         onSuccess?.();
       }, 1500);
     } else {
+      hapticError();
       setSubmitError(hookError ?? "Impossible d'enregistrer. Verifie ta connexion et ta configuration Supabase.");
     }
   };
@@ -63,6 +70,8 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
 
   if (success) {
     return (
+      <>
+      <Confetti active={showConfetti} />
       <Card className="text-center py-8 space-y-3">
         <div className="text-4xl">{mood >= 4 ? '✨' : mood >= 3 ? '👍' : '💪'}</div>
         <p className="font-medium">Check-in enregistre !</p>
@@ -70,6 +79,7 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
           {isMorning ? "Bonne journee !" : "Bonne nuit !"}
         </p>
       </Card>
+      </>
     );
   }
 

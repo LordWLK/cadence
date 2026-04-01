@@ -34,10 +34,22 @@ export function useActivities() {
     return (data ?? []) as WeeklyActivity[];
   }, [supabase, user]);
 
+  const getByDateRange = useCallback(async (start: string, end: string) => {
+    if (!supabase || !user) return [];
+    const { data } = await supabase
+      .from('weekly_activities')
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('planned_date', start)
+      .lte('planned_date', end)
+      .order('planned_date', { ascending: true });
+    return (data ?? []) as WeeklyActivity[];
+  }, [supabase, user]);
+
   const remove = useCallback(async (id: string) => {
     if (!supabase) return;
     await supabase.from('weekly_activities').delete().eq('id', id);
   }, [supabase]);
 
-  return { create, getByWeek, remove, loading };
+  return { create, getByWeek, getByDateRange, remove, loading };
 }

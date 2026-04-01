@@ -1,6 +1,7 @@
 'use client';
 
 import { MOOD_EMOJIS, MOOD_LABELS, MOOD_HEX } from '@/lib/config/constants';
+import { hapticSelect } from '@/lib/utils/haptics';
 
 interface MoodSelectorProps {
   value: number;
@@ -20,10 +21,10 @@ export function MoodSelector({ value, onChange }: MoodSelectorProps) {
             <button
               key={mood}
               type="button"
-              onClick={() => onChange(mood)}
+              onClick={() => { hapticSelect(); onChange(mood); }}
               aria-label={`Humeur : ${MOOD_LABELS[index]}`}
               className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all flex-1 ${
-                isSelected ? 'scale-110' : 'bg-surface-elevated hover:bg-border'
+                isSelected ? 'animate-bounce-in' : 'bg-surface-elevated hover:bg-border'
               }`}
               style={isSelected ? {
                 backgroundColor: `${hex}20`,
