@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { DayColumn } from './DayColumn';
 import { Button } from '@/components/ui/Button';
 import { useCheckins } from '@/lib/hooks/useCheckins';
@@ -9,63 +9,81 @@ import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { useAuth } from '@/providers/AuthProvider';
 import { getWeekStart, getWeekEnd, getWeekDays, formatDate, formatDateISO, isToday } from '@/lib/utils/dates';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { addWeeks } from 'date-fns';
+import { addWeeks, format } from 'date-fns';
 import type { Checkin, WeeklyActivity, SelectedEvent } from '@/lib/supabase/types';
 
 export function WeekCalendar() {
   const { user } = useAuth();
   const { getByDateRange: getCheckins } = useCheckins();
-  const { getByWeek: getActivities } = useActivities();
-  const { getByWeek: getEvents } = useSelectedEvents();
+  const { getByWeek: getActivities }   = useActivities();
+  const { getByWeek: getEvents }       = useSelectedEvents();
 
-  const [weekOffset, setWeekOffset] = useState(0);
-  const [checkins, setCheckins] = useState<Checkin[]>([]);
-  const [activities, setActivities] = useState<WeeklyActivity[]>([]);
-  const [events, setEvents] = useState<SelectedEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [weekOffset, setWeekOffset]   = useState(0);
+  const [checkins, setCheckins]       = useState<Checkin[]>([]);
+  const [activities, setActivities]   = useState<WeeklyActivity[]>([]);
+  const [events, setEvents]           = useState<SelectedEvent[]>([]);
+  const [loading, setLoading]         = useState(false); // false par défaut → colonnes visibles immédiatement
 
-  const baseWeekStart = getWeekStart();
-  const currentWeekStart = addWeeks(baseWeekStart, weekOffset);
-  const currentWeekEnd = getWeekEnd(currentWeekStart);
-  const days = getWeekDays(currentWeekStart);
+  // Memoize dates pour éviter les re-runs infinis de useEffect
+  const currentWeekStart = useMemo(
+    () => addWeeks(getWeekStart(), weekOffset),
+    [weekOffset]
+  );
+  const currentWeekEnd = useMemo(
+    () => getWeekEnd(currentWeekStart),
+    [currentWeekStart]
+  );
+  const days = useMemo(
+    () => getWeekDays(currentWeekStart),
+    [currentWeekStart]
+  );
+
+  const wsISO = useMemo(() => formatDateISO(currentWeekStart), [currentWeekStart]);
+  const weISO = useMemo(() => formatDateISO(currentWeekEnd),   [currentWeekEnd]);
+
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    const [c, a, e] = await Promise.all([
+      getCheckins(wsISO, weISO),
+      getActivities(wsISO),
+      getEvents(wsISO, weISO),
+    ]);
+    setCheckins(c);
+    setActivities(a);
+    setEvents(e);
+    setLoading(false);
+  }, [user, wsISO, weISO, getCheckins, getActivities, getEvents]);
 
   useEffect(() => {
-    if (!user) { setLoading(false); return; }
-    const load = async () => {
-      setLoading(true);
-      const wsISO = formatDateISO(currentWeekStart);
-      const weISO = formatDateISO(currentWeekEnd);
-      const [c, a, e] = await Promise.all([
-        getCheckins(wsISO, weISO),
-        getActivities(wsISO),
-        getEvents(wsISO, weISO),
-      ]);
-      setCheckins(c);
-      setActivities(a);
-      setEvents(e);
-      setLoading(false);
-    };
-    load();
-  }, [user, weekOffset, getCheckins, getActivities, getEvents, currentWeekStart, currentWeekEnd]);
+    loadData();
+  }, [loadData]);
 
-  const getCheckinsByDate = (date: string) => checkins.filter(c => c.date === date);
+  const getCheckinsByDate  = (date: string) => checkins.filter(c => c.date === date);
   const getActivitiesByDate = (date: string) => activities.filter(a => a.planned_date === date);
-  const getEventsByDate = (date: string) => events.filter(e => e.event_date.startsWith(date));
+  const getEventsByDate    = (date: string) => events.filter(e => e.event_date.startsWith(date));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
+      {/* Navigation semaine */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={() => setWeekOffset(o => o - 1)}>
           <ChevronLeft size={16} />
         </Button>
         <div className="text-center">
-          <p className="text-sm font-medium">
-            {formatDate(currentWeekStart, 'dd MMM')} - {formatDate(currentWeekEnd, 'dd MMM')}
+          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+            {format(currentWeekStart, 'dd MMM')} – {format(currentWeekEnd, 'dd MMM')}
           </p>
-          {weekOffset === 0 && <p className="text-xs text-primary">Cette semaine</p>}
+          {weekOffset === 0 && (
+            <p className="text-xs" style={{ color: 'var(--color-primary)' }}>Cette semaine</p>
+          )}
           {weekOffset !== 0 && (
-            <button onClick={() => setWeekOffset(0)} className="text-xs text-text-muted hover:text-primary transition-colors">
-              Revenir a cette semaine
+            <button
+              onClick={() => setWeekOffset(0)}
+              className="text-xs hover:underline"
+              style={{ color: 'var(--color-text-muted)' }}
+            >
+              Revenir à cette semaine
             </button>
           )}
         </div>
@@ -74,14 +92,13 @@ export function WeekCalendar() {
         </Button>
       </div>
 
-      {loading ? (
-        <div className="grid grid-cols-7 gap-1.5">
-          {[...Array(7)].map((_, i) => (
-            <div key={i} className="h-32 bg-surface-alt rounded-xl animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-7 gap-1.5">
+      {/* Grille jours — toujours visible, indicateur de chargement léger */}
+      <div className="relative">
+        {loading && (
+          <div className="absolute inset-0 rounded-xl z-10 pointer-events-none"
+               style={{ backgroundColor: 'color-mix(in srgb, var(--color-surface) 60%, transparent)' }} />
+        )}
+        <div className="grid grid-cols-7 gap-1">
           {days.map((day) => {
             const dateISO = formatDateISO(day);
             return (
@@ -96,7 +113,7 @@ export function WeekCalendar() {
             );
           })}
         </div>
-      )}
+      </div>
     </div>
   );
 }
