@@ -9,6 +9,7 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string) => Promise<{ error: string | null }>;
+  verifyOtp: (email: string, token: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   isLoading: true,
   signIn: async () => ({ error: null }),
+  verifyOtp: async () => ({ error: null }),
   signOut: async () => {},
 });
 
@@ -44,10 +46,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const signIn = useCallback(async (email: string) => {
-    if (!supabase) return { error: 'Supabase non configure' };
+    if (!supabase) return { error: 'Supabase non configuré' };
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+      // No emailRedirectTo — we want a 6-digit code, not a magic link
+    });
+    return { error: error?.message ?? null };
+  }, [supabase]);
+
+  const verifyOtp = useCallback(async (email: string, token: string) => {
+    if (!supabase) return { error: 'Supabase non configuré' };
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email',
     });
     return { error: error?.message ?? null };
   }, [supabase]);
@@ -59,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, isLoading, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user: session?.user ?? null, isLoading, signIn, verifyOtp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
