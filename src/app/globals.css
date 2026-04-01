@@ -1,59 +1,73 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: oklch(0.65 0.25 280);
-  --color-primary-light: oklch(0.75 0.2 280);
-  --color-primary-dark: oklch(0.5 0.25 280);
-  --color-accent: oklch(0.55 0.22 265);
-  --color-accent-light: oklch(0.65 0.18 265);
+  /* ─── Brand primary ─── */
+  --color-primary:       #7c3aed;
+  --color-primary-light: #9b5ff7;
+  --color-primary-dark:  #5b21b6;
+  --color-primary-soft:  #ede9fd;  /* hover / badge bg */
 
-  --color-surface: oklch(0.13 0.02 280);
-  --color-surface-alt: oklch(0.18 0.02 280);
-  --color-surface-elevated: oklch(0.22 0.02 280);
-  --color-border: oklch(0.28 0.02 280);
+  /* ─── Accent indigo ─── */
+  --color-accent:        #4f46e5;
+  --color-accent-light:  #818cf8;
 
-  --color-text: oklch(0.92 0.01 280);
-  --color-text-muted: oklch(0.6 0.02 280);
-  --color-text-dim: oklch(0.45 0.02 280);
+  /* ─── Surfaces — fond crème doux ─── */
+  --color-surface:          #f7f4ef;   /* fond principal — crème chaud */
+  --color-surface-alt:      #eeeae1;   /* sidebar, zones secondaires */
+  --color-surface-elevated: #ffffff;   /* cards, modales */
+  --color-surface-input:    #fdfbf7;   /* champs de formulaire */
+  --color-border:           #ddd8cc;   /* séparateurs */
+  --color-border-strong:    #c9c3b5;   /* bordures actives */
 
-  --color-sport-football: oklch(0.7 0.2 145);
-  --color-sport-basketball: oklch(0.75 0.18 55);
-  --color-sport-mma: oklch(0.65 0.22 25);
+  /* ─── Texte ─── */
+  --color-text:       #1a1612;   /* titres, corps */
+  --color-text-muted: #6b6355;   /* labels secondaires */
+  --color-text-dim:   #9e9080;   /* placeholders, hints */
 
-  --color-mood-1: oklch(0.6 0.2 25);
-  --color-mood-2: oklch(0.65 0.18 55);
-  --color-mood-3: oklch(0.7 0.15 90);
-  --color-mood-4: oklch(0.7 0.18 145);
-  --color-mood-5: oklch(0.75 0.2 160);
+  /* ─── Sport ─── */
+  --color-sport-football:   #16a34a;
+  --color-sport-basketball: #ea580c;
+  --color-sport-mma:        #dc2626;
 
-  --color-success: oklch(0.7 0.2 145);
-  --color-warning: oklch(0.75 0.18 80);
-  --color-error: oklch(0.65 0.22 25);
+  /* ─── Humeur ─── */
+  --color-mood-1: #ef4444;
+  --color-mood-2: #f97316;
+  --color-mood-3: #eab308;
+  --color-mood-4: #84cc16;
+  --color-mood-5: #22c55e;
+
+  /* ─── États ─── */
+  --color-success: #16a34a;
+  --color-warning: #d97706;
+  --color-error:   #dc2626;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
   height: -webkit-fill-available;
 }
 
 body {
   background-color: var(--color-surface);
   color: var(--color-text);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: -webkit-fill-available;
 }
 
+/* iPhone safe area */
 .pb-safe {
   padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
 }
 
+/* ─── Scrollbar ─── */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }
 
+/* ─── Range slider ─── */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -65,31 +79,37 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-track {
   height: 6px;
   border-radius: 3px;
-  background: var(--color-surface-elevated);
+  background: var(--color-surface-alt);
 }
 
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--color-primary);
-  margin-top: -7px;
-  box-shadow: 0 0 8px oklch(0.65 0.25 280 / 0.4);
+  margin-top: -8px;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 35%, transparent);
 }
 
 input[type="range"]::-moz-range-track {
   height: 6px;
   border-radius: 3px;
-  background: var(--color-surface-elevated);
+  background: var(--color-surface-alt);
 }
 
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: var(--color-primary);
   border: none;
-  box-shadow: 0 0 8px oklch(0.65 0.25 280 / 0.4);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+/* ─── Texte sélectionné ─── */
+::selection {
+  background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  color: var(--color-text);
 }

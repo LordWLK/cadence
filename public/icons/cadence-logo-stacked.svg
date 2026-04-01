@@ -1,0 +1,8 @@
+<svg width="240" height="200" viewBox="0 0 240 200" xmlns="http://www.w3.org/2000/svg">
+  <rect x="65" y="20" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.12"/>
+  <rect x="82" y="37" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.25"/>
+  <rect x="99" y="20" width="60" height="60" rx="6" fill="#7c3aed" opacity="1"/>
+  <text x="129" y="60" text-anchor="middle" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="30" font-weight="500" fill="#ffffff">C</text>
+  <text x="120" y="125" text-anchor="middle" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="36" font-weight="500" letter-spacing="6" fill="#0f0f0f">cadence</text>
+  <text x="120" y="150" text-anchor="middle" font-family="JetBrains Mono, Fira Code, monospace" font-size="9" font-weight="400" fill="#888888" letter-spacing="4">PLAN · FEEL · LIVE</text>
+</svg>

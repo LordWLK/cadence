@@ -2,21 +2,37 @@ import type { HTMLAttributes } from 'react';
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: 'default' | 'elevated' | 'sport';
-  sportColor?: string;
+  sportColor?: 'football' | 'basketball' | 'mma';
 }
 
-export function Card({ variant = 'default', sportColor, className = '', children, ...props }: CardProps) {
+const SPORT_BORDERS: Record<string, string> = {
+  football:   'border-l-[var(--color-sport-football)]',
+  basketball: 'border-l-[var(--color-sport-basketball)]',
+  mma:        'border-l-[var(--color-sport-mma)]',
+};
+
+export function Card({
+  variant = 'default',
+  sportColor,
+  className = '',
+  children,
+  ...props
+}: CardProps) {
   const base = 'rounded-2xl p-4 transition-all';
+
   const variants = {
-    default: 'bg-surface-alt border border-border',
-    elevated: 'bg-surface-elevated border border-border shadow-lg',
-    sport: `bg-surface-alt border-l-4`,
+    default:  'bg-[var(--color-surface-elevated)] border border-[var(--color-border)]',
+    elevated: 'bg-[var(--color-surface-elevated)] border border-[var(--color-border)] shadow-sm shadow-black/5',
+    sport:    `bg-[var(--color-surface-elevated)] border border-[var(--color-border)] border-l-4 shadow-sm`,
   };
 
-  const sportBorder = sportColor ? `border-l-${sportColor}` : '';
+  const sportBorder = sportColor ? SPORT_BORDERS[sportColor] : '';
 
   return (
-    <div className={`${base} ${variants[variant]} ${sportBorder} ${className}`} {...props}>
+    <div
+      className={`${base} ${variants[variant]} ${sportBorder} ${className}`}
+      {...props}
+    >
       {children}
     </div>
   );
