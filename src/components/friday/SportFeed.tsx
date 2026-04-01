@@ -6,20 +6,21 @@ import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { EventCard } from './EventCard';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { getNextWeekStart, getWeekEnd, formatDateISO } from '@/lib/utils/dates';
 import { Star, Flame, RefreshCw, Wifi } from 'lucide-react';
+import { addDays } from 'date-fns';
 
 export function SportFeed() {
   const { fetchFeed, clearCache, yourMatches, bigMatches, loading } = useSportFeed();
   const { create } = useSelectedEvents();
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
-  const nextWeekStart = useMemo(() => getNextWeekStart(), []);
-  const nextWeekEnd   = useMemo(() => getWeekEnd(nextWeekStart), [nextWeekStart]);
+  // Semaine glissante : aujourd'hui + 7 jours
+  const today = useMemo(() => new Date(), []);
+  const weekEnd = useMemo(() => addDays(today, 7), [today]);
 
   useEffect(() => {
-    fetchFeed(nextWeekStart, nextWeekEnd);
-  }, [fetchFeed, nextWeekStart, nextWeekEnd]);
+    fetchFeed(today, weekEnd);
+  }, [fetchFeed, today, weekEnd]);
 
   const handleAdd = async (event: SportFeedEvent) => {
     const result = await create({
@@ -36,8 +37,8 @@ export function SportFeed() {
   };
 
   const handleRefresh = () => {
-    clearCache(nextWeekStart);
-    fetchFeed(nextWeekStart, nextWeekEnd);
+    clearCache(today);
+    fetchFeed(today, weekEnd);
   };
 
   if (loading) {
@@ -58,7 +59,7 @@ export function SportFeed() {
     return (
       <Card>
         <div className="text-center py-6 space-y-2">
-          <p className="text-sm text-text-muted">Aucun match trouve pour la semaine prochaine</p>
+          <p className="text-sm text-text-muted">Aucun match trouve pour les 7 prochains jours</p>
           <p className="text-xs text-text-dim">
             Ajoute des equipes favoris dans les reglages sport pour voir des matchs ici
           </p>
