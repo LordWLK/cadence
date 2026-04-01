@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { MoodSelector } from './MoodSelector';
 import { EnergySlider } from './EnergySlider';
+import { PhotoOCR } from './PhotoOCR';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useCheckins } from '@/lib/hooks/useCheckins';
@@ -122,9 +123,17 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
           )}
 
           <div>
-            <label className="text-sm text-text-muted block mb-1.5">
-              {isMorning ? "Ton intention pour la journee" : "Qu'est-ce que t'as compris aujourd'hui ?"}
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm text-text-muted">
+                {isMorning ? "Ton intention pour la journee" : "Qu'est-ce que t'as compris aujourd'hui ?"}
+              </label>
+              <PhotoOCR
+                onTextExtracted={(text) => {
+                  setNote((prev) => prev ? `${prev}\n${text}` : text);
+                }}
+                disabled={loading}
+              />
+            </div>
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
