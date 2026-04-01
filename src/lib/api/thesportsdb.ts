@@ -3,7 +3,7 @@ import { getConfig } from '@/lib/config/storage';
 const BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
 
 function getApiKey(): string {
-  return getConfig()?.theSportsDbKey || '123';
+  return '123';
 }
 
 function apiUrl(endpoint: string): string {

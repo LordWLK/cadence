@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/providers/ConfigProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Save, Trash2, Link, Key, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, CheckCircle, AlertCircle } from 'lucide-react';
+import { Save, Trash2, Link, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, CheckCircle, AlertCircle } from 'lucide-react';
 import { useTheme } from '@/lib/hooks/useTheme';
 import NextLink from 'next/link';
 import { requestNotificationPermission, isNotificationSupported, getNotificationPermission, scheduleDailyReminders } from '@/lib/utils/notifications';
@@ -16,9 +16,6 @@ export default function SettingsPage() {
   // Supabase fields (only needed when no env vars)
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
-
-  // Sport API key
-  const [theSportsDbKey, setTheSportsDbKey] = useState('123');
 
   const [saved, setSaved] = useState(false);
   const [notifPermission, setNotifPermission] = useState<string | null>(null);
@@ -34,21 +31,18 @@ export default function SettingsPage() {
       setSupabaseUrl(config.supabaseUrl);
       setSupabaseAnonKey(config.supabaseAnonKey);
     }
-    setTheSportsDbKey(sportConfig.theSportsDbKey || '123');
-  }, [config, sportConfig, hasEnvVars]);
+  }, [config, hasEnvVars]);
 
   const handleSave = () => {
-    // Save sport config
-    updateSportConfig({
-      theSportsDbKey: theSportsDbKey || '123',
-    });
+    // Force TheSportsDB key to 123
+    updateSportConfig({ theSportsDbKey: '123' });
 
     // If no env vars, also save Supabase config
     if (!hasEnvVars && supabaseUrl && supabaseAnonKey) {
       updateConfig({
         supabaseUrl,
         supabaseAnonKey,
-        theSportsDbKey: theSportsDbKey || '123',
+        theSportsDbKey: '123',
       });
     }
 
@@ -124,31 +118,6 @@ export default function SettingsPage() {
               </div>
             </>
           )}
-        </div>
-      </Card>
-
-      {/* Sport API keys */}
-      <Card>
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-accent-light mb-2">
-            <Key size={18} />
-            <h2 className="font-semibold">APIs Sport</h2>
-          </div>
-          <div>
-            <label className="text-sm text-text-muted block mb-1.5">
-              TheSportsDB Key <span className="text-text-dim">(defaut: 123 = gratuit)</span>
-            </label>
-            <input
-              type="text"
-              value={theSportsDbKey}
-              onChange={(e) => setTheSportsDbKey(e.target.value)}
-              placeholder="123"
-              className={inputClass}
-            />
-          </div>
-          <p className="text-xs text-text-dim">
-            Toutes les donnees sport (foot, NBA, MMA) passent par TheSportsDB.
-          </p>
         </div>
       </Card>
 
