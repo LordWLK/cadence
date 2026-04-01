@@ -37,16 +37,6 @@ const serwist = new Serwist({
         ],
       }),
     },
-    // BallDontLie API
-    {
-      matcher: ({ url }) => url.hostname === 'api.balldontlie.io',
-      handler: new StaleWhileRevalidate({
-        cacheName: "balldontlie-api",
-        plugins: [
-          new ExpirationPlugin({ maxEntries: 64, maxAgeSeconds: 60 * 60 * 6 }),
-        ],
-      }),
-    },
     // Sport team badges / images — cache first (long-lived)
     {
       matcher: ({ url }) => url.hostname === 'www.thesportsdb.com' && url.pathname.startsWith('/images/'),

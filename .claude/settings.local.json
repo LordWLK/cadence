@@ -21,7 +21,10 @@
       "Bash(cp \"C:/Users/a.wilk/Downloads/cadence/cadence-icon.svg\" \"C:/Users/a.wilk/projets claude/Cadence/public/icons/cadence-icon.svg\")",
       "Bash(cp \"C:/Users/a.wilk/Downloads/cadence/cadence-icon-mono.svg\" \"C:/Users/a.wilk/projets claude/Cadence/public/icons/cadence-icon-mono.svg\")",
       "Bash(cp \"C:/Users/a.wilk/Downloads/cadence/cadence-logo-horizontal-dark.svg\" \"C:/Users/a.wilk/projets claude/Cadence/public/icons/cadence-logo-dark.svg\")",
-      "Bash(cp \"C:/Users/a.wilk/Downloads/cadence/cadence-logo-stacked.svg\" \"C:/Users/a.wilk/projets claude/Cadence/public/icons/cadence-logo-stacked.svg\")"
+      "Bash(cp \"C:/Users/a.wilk/Downloads/cadence/cadence-logo-stacked.svg\" \"C:/Users/a.wilk/projets claude/Cadence/public/icons/cadence-logo-stacked.svg\")",
+      "Bash(pnpm build:*)",
+      "Bash(find 'C:/Users/a.wilk/projets claude/Cadence' -type f \\\\\\(-name *sw* -o -name *service*worker* \\\\\\))",
+      "Bash(npx vercel:*)"
     ]
   }
 }

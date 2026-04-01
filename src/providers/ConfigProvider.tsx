@@ -26,7 +26,7 @@ const ConfigContext = createContext<ConfigContextValue | null>(null);
 
 export function ConfigProvider({ children }: { children: ReactNode }) {
   const [config, setConfigState] = useState<AppConfig | null>(null);
-  const [sportConfig, setSportConfigState] = useState<SportConfig>({ theSportsDbKey: '123', ballDontLieKey: '' });
+  const [sportConfig, setSportConfigState] = useState<SportConfig>({ theSportsDbKey: '123' });
   const [mounted, setMounted] = useState(false);
   const hasEnvVars = hasEnvSupabase();
 
@@ -51,7 +51,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const resetConfig = useCallback(() => {
     clearConfig();
     setConfigState(getConfig()); // Will still return env-based config if env vars exist
-    setSportConfigState({ theSportsDbKey: '123', ballDontLieKey: '' });
+    setSportConfigState({ theSportsDbKey: '123' });
   }, []);
 
   if (!mounted) return null;

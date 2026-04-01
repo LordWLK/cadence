@@ -67,8 +67,8 @@ export const KNOWN_DERBIES: [string, string][] = [
 // Champions League knockout stage identifiers
 export const CL_KNOCKOUT_KEYWORDS = ['final', 'semi-final', 'quarter-final', 'round of 16', 'knockout'];
 
-// NBA: top teams are dynamically determined from standings (top 6 per conference)
-export const NBA_SEASON = new Date().getMonth() >= 9 ? new Date().getFullYear() + 1 : new Date().getFullYear(); // NBA season straddles calendar years
+// NBA big match keywords (via TheSportsDB)
+export const NBA_BIG_MATCH_KEYWORDS = ['playoff', 'finals', 'semi-final', 'conference final', 'all-star'];
 
 // UFC/MMA keywords for big match detection
 export const MMA_BIG_MATCH_KEYWORDS = ['title', 'championship', 'main event', 'main card', 'ppv'];

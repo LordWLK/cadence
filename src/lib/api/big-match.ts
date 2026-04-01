@@ -3,9 +3,9 @@ import {
   KNOWN_DERBIES,
   CL_KNOCKOUT_KEYWORDS,
   MMA_BIG_MATCH_KEYWORDS,
+  NBA_BIG_MATCH_KEYWORDS,
 } from '@/lib/config/constants';
 import type { SportsDbEvent } from './thesportsdb';
-import type { BdlGame } from './balldontlie';
 
 export function isFootballBigMatch(event: SportsDbEvent): boolean {
   const leagueTopTeams = TOP_FOOTBALL_TEAMS[event.idLeague];
@@ -37,11 +37,14 @@ export function isFootballBigMatch(event: SportsDbEvent): boolean {
   return false;
 }
 
-export function isNbaBigMatch(game: BdlGame, topTeamIds: Set<number>): boolean {
-  // Playoff games are always big
-  if (game.postseason) return true;
-  // Both teams in top 6 of their conference
-  if (topTeamIds.has(game.home_team.id) && topTeamIds.has(game.visitor_team.id)) return true;
+export function isNbaBigMatch(event: SportsDbEvent): boolean {
+  const text = (
+    (event.strDescriptionEN || '') + ' ' +
+    (event.strEvent || '') + ' ' +
+    (event.strLeague || '')
+  ).toLowerCase();
+  // Playoff/finals keywords
+  if (NBA_BIG_MATCH_KEYWORDS.some(kw => text.includes(kw))) return true;
   return false;
 }
 

@@ -17,9 +17,8 @@ export default function SettingsPage() {
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
 
-  // Sport API keys
+  // Sport API key
   const [theSportsDbKey, setTheSportsDbKey] = useState('123');
-  const [ballDontLieKey, setBallDontLieKey] = useState('');
 
   const [saved, setSaved] = useState(false);
   const [notifPermission, setNotifPermission] = useState<string | null>(null);
@@ -36,14 +35,12 @@ export default function SettingsPage() {
       setSupabaseAnonKey(config.supabaseAnonKey);
     }
     setTheSportsDbKey(sportConfig.theSportsDbKey || '123');
-    setBallDontLieKey(sportConfig.ballDontLieKey || '');
   }, [config, sportConfig, hasEnvVars]);
 
   const handleSave = () => {
     // Save sport config
     updateSportConfig({
       theSportsDbKey: theSportsDbKey || '123',
-      ballDontLieKey,
     });
 
     // If no env vars, also save Supabase config
@@ -52,7 +49,6 @@ export default function SettingsPage() {
         supabaseUrl,
         supabaseAnonKey,
         theSportsDbKey: theSportsDbKey || '123',
-        ballDontLieKey,
       });
     }
 
@@ -150,16 +146,9 @@ export default function SettingsPage() {
               className={inputClass}
             />
           </div>
-          <div>
-            <label className="text-sm text-text-muted block mb-1.5">BallDontLie API Key</label>
-            <input
-              type="password"
-              value={ballDontLieKey}
-              onChange={(e) => setBallDontLieKey(e.target.value)}
-              placeholder="Cle API pour la NBA"
-              className={inputClass}
-            />
-          </div>
+          <p className="text-xs text-text-dim">
+            Toutes les donnees sport (foot, NBA, MMA) passent par TheSportsDB.
+          </p>
         </div>
       </Card>
 

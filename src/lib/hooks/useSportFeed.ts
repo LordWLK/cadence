@@ -3,10 +3,8 @@
 import { useState, useCallback } from 'react';
 import { useSportPrefs } from './useSportPrefs';
 import { getNextEventsByTeam, getNextEventsByLeague, type SportsDbEvent } from '@/lib/api/thesportsdb';
-import { getNbaGames, getNbaStandings, type BdlGame } from '@/lib/api/balldontlie';
 import { isFootballBigMatch, isNbaBigMatch, isMmaBigMatch } from '@/lib/api/big-match';
-import { NBA_SEASON } from '@/lib/config/constants';
-import { eachDayOfInterval, format } from 'date-fns';
+import { format } from 'date-fns';
 
 export interface SportFeedEvent {
   id: string;
@@ -61,22 +59,23 @@ export function useSportFeed() {
       }
     }
 
-    // Football & MMA: fetch from TheSportsDB
+    // All sports use TheSportsDB now
     const footballPrefs = prefs.filter(p => p.sport === 'football');
+    const nbaPrefs = prefs.filter(p => p.sport === 'basketball');
     const mmaPrefs = prefs.filter(p => p.sport === 'mma');
 
-    // Fetch events for favorite teams
-    const teamFetches = [...footballPrefs, ...mmaPrefs]
+    // Fetch events for favorite teams (football + mma + nba franchises)
+    const teamFetches = [...footballPrefs, ...mmaPrefs, ...nbaPrefs]
       .filter(p => p.entity_type !== 'competition')
       .map(async (pref) => {
         const events = await getNextEventsByTeam(pref.entity_id);
         return events
           .filter(e => e.dateEvent >= weekStartStr && e.dateEvent <= weekEndStr)
-          .map(e => eventFromSportsDb(e, pref.sport as 'football' | 'mma', true));
+          .map(e => eventFromSportsDb(e, pref.sport as 'football' | 'mma' | 'basketball', true));
       });
 
-    // Fetch events for followed competitions
-    const leagueFetches = [...footballPrefs, ...mmaPrefs]
+    // Fetch events for followed competitions (football leagues + nba league + mma)
+    const leagueFetches = [...footballPrefs, ...mmaPrefs, ...nbaPrefs]
       .filter(p => p.entity_type === 'competition')
       .map(async (pref) => {
         const events = await getNextEventsByLeague(pref.entity_id);
@@ -84,8 +83,12 @@ export function useSportFeed() {
           .filter(e => e.dateEvent >= weekStartStr && e.dateEvent <= weekEndStr)
           .map(e => {
             const isFav = favoriteTeamIds.has(e.idHomeTeam) || favoriteTeamIds.has(e.idAwayTeam);
-            const isBig = pref.sport === 'football' ? isFootballBigMatch(e) : isMmaBigMatch(e);
-            return eventFromSportsDb(e, pref.sport as 'football' | 'mma', isFav, isBig);
+            const sport = pref.sport as 'football' | 'mma' | 'basketball';
+            let isBig = false;
+            if (sport === 'football') isBig = isFootballBigMatch(e);
+            else if (sport === 'mma') isBig = isMmaBigMatch(e);
+            else if (sport === 'basketball') isBig = isNbaBigMatch(e);
+            return eventFromSportsDb(e, sport, isFav, isBig);
           });
       });
 
@@ -98,53 +101,6 @@ export function useSportFeed() {
           seenEventIds.add(e.sourceApiId);
           allEvents.push(e);
         }
-      }
-    }
-
-    // NBA: fetch from BallDontLie
-    const nbaPrefs = prefs.filter(p => p.sport === 'basketball');
-    if (nbaPrefs.length > 0) {
-      const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
-      const dateStrs = days.map(d => format(d, 'yyyy-MM-dd'));
-      const nbaFavoriteIds = new Set(nbaPrefs.filter(p => p.entity_type === 'franchise').map(p => Number(p.entity_id)));
-
-      try {
-        const [games, standings] = await Promise.all([
-          getNbaGames(dateStrs),
-          getNbaStandings(NBA_SEASON),
-        ]);
-
-        const topTeamIds = new Set<number>();
-        if (standings.length > 0) {
-          const eastTop = standings.filter(s => s.team.conference === 'East').slice(0, 6);
-          const westTop = standings.filter(s => s.team.conference === 'West').slice(0, 6);
-          for (const s of [...eastTop, ...westTop]) {
-            topTeamIds.add(s.team.id);
-          }
-        }
-
-        for (const game of games) {
-          const isFav = nbaFavoriteIds.has(game.home_team.id) || nbaFavoriteIds.has(game.visitor_team.id);
-          const isBig = isNbaBigMatch(game, topTeamIds);
-          const eventId = `nba_${game.id}`;
-          if (!seenEventIds.has(eventId)) {
-            seenEventIds.add(eventId);
-            allEvents.push({
-              id: eventId,
-              sport: 'basketball',
-              title: `${game.visitor_team.full_name} @ ${game.home_team.full_name}`,
-              homeTeam: game.home_team.full_name,
-              awayTeam: game.visitor_team.full_name,
-              competition: game.postseason ? 'NBA Playoffs' : 'NBA',
-              date: game.date,
-              isBigMatch: isBig,
-              isFavorite: isFav,
-              sourceApiId: eventId,
-            });
-          }
-        }
-      } catch {
-        // NBA API might fail if no key
       }
     }
 
@@ -173,11 +129,16 @@ export function useSportFeed() {
 
 function eventFromSportsDb(
   event: SportsDbEvent,
-  sport: 'football' | 'mma',
+  sport: 'football' | 'mma' | 'basketball',
   isFavorite: boolean,
   overrideBigMatch?: boolean
 ): SportFeedEvent {
-  const isBig = overrideBigMatch ?? (sport === 'football' ? isFootballBigMatch(event) : isMmaBigMatch(event));
+  let isBig = overrideBigMatch;
+  if (isBig === undefined) {
+    if (sport === 'football') isBig = isFootballBigMatch(event);
+    else if (sport === 'mma') isBig = isMmaBigMatch(event);
+    else isBig = isNbaBigMatch(event);
+  }
   return {
     id: `sdb_${event.idEvent}`,
     sport,

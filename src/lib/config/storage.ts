@@ -2,13 +2,11 @@ export interface AppConfig {
   supabaseUrl: string;
   supabaseAnonKey: string;
   theSportsDbKey: string; // defaults to '123' (free V1 key)
-  ballDontLieKey: string;
 }
 
 /** Sport-only config stored in localStorage */
 export interface SportConfig {
   theSportsDbKey: string;
-  ballDontLieKey: string;
 }
 
 const STORAGE_KEY = 'cadence_config';
@@ -36,20 +34,17 @@ function getLegacyConfig(): AppConfig | null {
 
 // ─── Sport config (localStorage) ────────────────────────────────────────────
 export function getSportConfig(): SportConfig {
-  if (typeof window === 'undefined') return { theSportsDbKey: '123', ballDontLieKey: '' };
+  if (typeof window === 'undefined') return { theSportsDbKey: '123' };
   const raw = localStorage.getItem(SPORT_STORAGE_KEY);
   if (!raw) {
     // Migration: try reading from old legacy config (no circular call)
     const legacy = getLegacyConfig();
     if (legacy) {
-      return {
-        theSportsDbKey: legacy.theSportsDbKey || '123',
-        ballDontLieKey: legacy.ballDontLieKey || '',
-      };
+      return { theSportsDbKey: legacy.theSportsDbKey || '123' };
     }
-    return { theSportsDbKey: '123', ballDontLieKey: '' };
+    return { theSportsDbKey: '123' };
   }
-  try { return JSON.parse(raw); } catch { return { theSportsDbKey: '123', ballDontLieKey: '' }; }
+  try { return JSON.parse(raw); } catch { return { theSportsDbKey: '123' }; }
 }
 
 export function setSportConfig(config: SportConfig): void {
@@ -69,7 +64,6 @@ export function getConfig(): AppConfig | null {
       supabaseUrl: env.url,
       supabaseAnonKey: env.key,
       theSportsDbKey: sport.theSportsDbKey,
-      ballDontLieKey: sport.ballDontLieKey,
     };
   }
 

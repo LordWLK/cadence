@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { TeamPicker } from '@/components/settings/TeamPicker';
 import { useSportPrefs } from '@/lib/hooks/useSportPrefs';
 import { useAuth } from '@/providers/AuthProvider';
-import { searchTeams, searchPlayers } from '@/lib/api/thesportsdb';
-import { getNbaTeams, type BdlTeam } from '@/lib/api/balldontlie';
+import { searchTeams, searchPlayers, getTeamsByLeague, NBA_LEAGUE_ID, type SportsDbTeam } from '@/lib/api/thesportsdb';
 import { FOOTBALL_LEAGUES, SPORT_HEX } from '@/lib/config/constants';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import Link from 'next/link';
@@ -21,7 +20,7 @@ export default function SportsSettingsPage() {
   const { getAll, add, remove } = useSportPrefs();
   const [prefs, setPrefs] = useState<SportPreference[]>([]);
   const [tab, setTab] = useState<Tab>('football');
-  const [nbaTeams, setNbaTeams] = useState<BdlTeam[]>([]);
+  const [nbaTeams, setNbaTeams] = useState<SportsDbTeam[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadPrefs = useCallback(async () => {
@@ -36,7 +35,9 @@ export default function SportsSettingsPage() {
 
   useEffect(() => {
     if (tab === 'basketball' && nbaTeams.length === 0) {
-      getNbaTeams().then(setNbaTeams);
+      getTeamsByLeague(NBA_LEAGUE_ID).then(teams => {
+        setNbaTeams(teams.sort((a, b) => a.strTeam.localeCompare(b.strTeam)));
+      });
     }
   }, [tab, nbaTeams.length]);
 
@@ -161,31 +162,33 @@ export default function SportsSettingsPage() {
             <Card>
               <p className="text-sm font-medium mb-3">Franchises NBA favorites</p>
               {nbaTeams.length === 0 ? (
-                <p className="text-sm text-text-muted py-4 text-center">
-                  Configure ta cle BallDontLie dans les reglages pour voir les equipes NBA
-                </p>
+                <div className="flex justify-center py-4">
+                  <div className="w-5 h-5 rounded-full border-2 border-[var(--color-sport-basketball)] border-t-transparent animate-spin" />
+                </div>
               ) : (
                 <div className="space-y-1 max-h-80 overflow-y-auto">
                   {nbaTeams.map((team) => {
-                    const isFollowed = sportPrefs('basketball').some(p => p.entity_id === String(team.id));
+                    const isFollowed = sportPrefs('basketball').some(p => p.entity_id === team.idTeam);
                     return (
                       <button
-                        key={team.id}
+                        key={team.idTeam}
                         onClick={() => {
                           if (isFollowed) {
-                            const pref = sportPrefs('basketball').find(p => p.entity_id === String(team.id));
+                            const pref = sportPrefs('basketball').find(p => p.entity_id === team.idTeam);
                             if (pref) handleRemove(pref.id);
                           } else {
-                            handleAdd('basketball', 'franchise', String(team.id), team.full_name);
+                            handleAdd('basketball', 'franchise', team.idTeam, team.strTeam);
                           }
                         }}
                         className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
                           isFollowed ? 'bg-sport-basketball/10 text-sport-basketball' : 'bg-surface-elevated text-text-muted hover:bg-border'
                         }`}
                       >
-                        <div>
-                          <span className="text-sm">{team.full_name}</span>
-                          <span className="text-xs text-text-dim ml-2">{team.conference}</span>
+                        <div className="flex items-center gap-2">
+                          {team.strTeamBadge && (
+                            <img src={team.strTeamBadge + '/tiny'} alt="" className="w-6 h-6 object-contain" />
+                          )}
+                          <span className="text-sm">{team.strTeam}</span>
                         </div>
                         {isFollowed && <Badge variant="basketball">Suivi</Badge>}
                       </button>

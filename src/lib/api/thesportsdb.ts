@@ -85,3 +85,17 @@ export async function searchPlayers(query: string): Promise<Array<{
     return [];
   }
 }
+
+/** Get all teams in a league (e.g., NBA league ID = 4387) */
+export async function getTeamsByLeague(leagueId: string): Promise<SportsDbTeam[]> {
+  try {
+    const res = await fetch(apiUrl(`lookup_all_teams.php?id=${leagueId}`));
+    const data = await res.json();
+    return data.teams || [];
+  } catch {
+    return [];
+  }
+}
+
+// NBA league ID on TheSportsDB
+export const NBA_LEAGUE_ID = '4387';
