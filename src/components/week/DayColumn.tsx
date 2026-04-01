@@ -20,57 +20,56 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
     ? Math.round(checkins.reduce((s, c) => s + c.mood, 0) / checkins.length)
     : null;
 
+  const dayLabel = getDayShort(date).replace('.', '').slice(0, 2).toUpperCase();
+  const dayNumber = formatDate(date, 'dd');
+
   return (
     <div
-      className="flex flex-col rounded-xl p-1.5 min-h-[128px] transition-all"
+      className="flex flex-col rounded-xl p-1 min-h-[120px] transition-all"
       style={{
         backgroundColor: isToday
-          ? 'color-mix(in srgb, #7c3aed 10%, transparent)'
-          : 'var(--color-surface-alt)',
-        outline: isToday ? '1.5px solid color-mix(in srgb, #7c3aed 30%, transparent)' : 'none',
+          ? 'color-mix(in srgb, #7c3aed 12%, white)'
+          : '#e8e4db',
+        outline: isToday
+          ? '1.5px solid color-mix(in srgb, #7c3aed 35%, transparent)'
+          : 'none',
       }}
     >
-      {/* Header: day name + date number */}
-      <div className="text-center mb-1.5">
+      {/* Header */}
+      <div className="text-center py-1">
         <p
-          className="text-[9px] font-semibold uppercase tracking-wide"
-          style={{ color: isToday ? '#7c3aed' : 'var(--color-text-muted)' }}
+          className="text-[11px] font-bold leading-none"
+          style={{ color: isToday ? '#7c3aed' : '#6b6355' }}
         >
-          {getDayShort(date)}
+          {dayLabel}
         </p>
         <p
-          className="text-sm font-bold leading-tight"
-          style={{ color: isToday ? '#7c3aed' : 'var(--color-text)' }}
+          className="text-base font-bold leading-tight mt-0.5"
+          style={{ color: isToday ? '#7c3aed' : '#1a1612' }}
         >
-          {formatDate(date, 'dd')}
+          {dayNumber}
         </p>
       </div>
 
-      {/* Check-in dots: matin (warning) + soir (accent) */}
+      {/* Check-in dots */}
       <div className="flex justify-center gap-1 mb-1">
         <div
           className="w-1.5 h-1.5 rounded-full"
-          style={{
-            backgroundColor: hasMorning
-              ? 'var(--color-warning)'
-              : 'var(--color-border)',
-          }}
+          style={{ backgroundColor: hasMorning ? '#d97706' : '#d4cfc5' }}
           title="Matin"
         />
         <div
           className="w-1.5 h-1.5 rounded-full"
-          style={{
-            backgroundColor: hasEvening
-              ? 'var(--color-accent)'
-              : 'var(--color-border)',
-          }}
+          style={{ backgroundColor: hasEvening ? '#4f46e5' : '#d4cfc5' }}
           title="Soir"
         />
       </div>
 
-      {/* Mood emoji */}
+      {/* Mood */}
       {avgMood && (
-        <p className="text-center text-sm leading-none mb-1">{MOOD_EMOJIS[avgMood - 1]}</p>
+        <p className="text-center text-sm leading-none mb-1">
+          {MOOD_EMOJIS[avgMood - 1]}
+        </p>
       )}
 
       {/* Activities */}
@@ -81,7 +80,10 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
             <div
               key={a.id}
               className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium"
-              style={{ backgroundColor: 'var(--color-surface-elevated)', color: cat?.hex ?? 'var(--color-text-muted)' }}
+              style={{
+                backgroundColor: 'white',
+                color: cat?.hex ?? '#6b6355',
+              }}
               title={a.title}
             >
               {a.title}
@@ -89,7 +91,7 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
           );
         })}
         {activities.length > 2 && (
-          <p className="text-[8px] text-center" style={{ color: 'var(--color-text-dim)' }}>
+          <p className="text-[8px] text-center" style={{ color: '#9e9080' }}>
             +{activities.length - 2}
           </p>
         )}
@@ -98,7 +100,7 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
           <EventBadge key={e.id} event={e} />
         ))}
         {events.length > 1 && (
-          <p className="text-[8px] text-center" style={{ color: 'var(--color-text-dim)' }}>
+          <p className="text-[8px] text-center" style={{ color: '#9e9080' }}>
             +{events.length - 1}
           </p>
         )}
