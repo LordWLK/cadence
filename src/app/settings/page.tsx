@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/providers/ConfigProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Save, Trash2, Link, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, CheckCircle, AlertCircle } from 'lucide-react';
+import { Save, Trash2, Link, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon } from 'lucide-react';
 import { useTheme } from '@/lib/hooks/useTheme';
 import NextLink from 'next/link';
 import { requestNotificationPermission, isNotificationSupported, getNotificationPermission, scheduleDailyReminders } from '@/lib/utils/notifications';
@@ -62,39 +62,14 @@ export default function SettingsPage() {
         <p className="text-text-muted text-sm mt-1">Configure tes connexions</p>
       </div>
 
-      {/* Supabase status */}
-      <Card>
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-primary mb-2">
-            <Link size={18} />
-            <h2 className="font-semibold">Supabase</h2>
-          </div>
-
-          {hasEnvVars ? (
-            <div className="flex items-center gap-3 p-3 rounded-xl"
-              style={{
-                backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)',
-              }}>
-              <CheckCircle size={18} style={{ color: 'var(--color-success)' }} />
-              <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--color-success)' }}>
-                  Connecte via Vercel
-                </p>
-                <p className="text-xs text-text-muted">
-                  Les credentials Supabase sont configures dans les variables d&apos;environnement. Rien a faire !
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-3 p-3 rounded-xl"
-                style={{
-                  backgroundColor: 'color-mix(in srgb, var(--color-warning) 10%, transparent)',
-                }}>
-                <AlertCircle size={18} style={{ color: 'var(--color-warning)' }} />
-                <p className="text-xs text-text-muted">
-                  Pas de variables d&apos;environnement detectees. Configure manuellement ou ajoute <code className="font-mono text-text">NEXT_PUBLIC_SUPABASE_URL</code> et <code className="font-mono text-text">NEXT_PUBLIC_SUPABASE_ANON_KEY</code> dans Vercel.
-                </p>
+      {/* Supabase manual config — only shown when no env vars */}
+      {!hasEnvVars && (
+        <>
+          <Card>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-primary mb-2">
+                <Link size={18} />
+                <h2 className="font-semibold">Supabase</h2>
               </div>
               <div>
                 <label className="text-sm text-text-muted block mb-1.5">URL du projet</label>
@@ -116,22 +91,22 @@ export default function SettingsPage() {
                   className={inputClass}
                 />
               </div>
-            </>
-          )}
-        </div>
-      </Card>
+            </div>
+          </Card>
 
-      <div className="flex gap-3">
-        <Button onClick={handleSave} className="flex-1" disabled={!canSave}>
-          <Save size={16} />
-          {saved ? 'Sauvegarde !' : 'Sauvegarder'}
-        </Button>
-        {!hasEnvVars && isConfigured && (
-          <Button variant="danger" onClick={resetConfig}>
-            <Trash2 size={16} />
-          </Button>
-        )}
-      </div>
+          <div className="flex gap-3">
+            <Button onClick={handleSave} className="flex-1" disabled={!canSave}>
+              <Save size={16} />
+              {saved ? 'Sauvegarde !' : 'Sauvegarder'}
+            </Button>
+            {isConfigured && (
+              <Button variant="danger" onClick={resetConfig}>
+                <Trash2 size={16} />
+              </Button>
+            )}
+          </div>
+        </>
+      )}
 
       {/* Theme */}
       <Card>
