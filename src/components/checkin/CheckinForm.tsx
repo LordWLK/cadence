@@ -13,13 +13,14 @@ interface CheckinFormProps {
 }
 
 export function CheckinForm({ onSuccess }: CheckinFormProps) {
-  const { create, loading } = useCheckins();
+  const { create, loading, error: hookError } = useCheckins();
   const [mood, setMood] = useState(3);
   const [energy, setEnergy] = useState(5);
   const [note, setNote] = useState('');
   const [type, setType] = useState<'morning' | 'evening'>('morning');
   const [coherenceWarning, setCoherenceWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -38,6 +39,7 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     const result = await create({
       type,
       mood,
@@ -51,6 +53,8 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
         setSuccess(false);
         onSuccess?.();
       }, 1500);
+    } else {
+      setSubmitError(hookError ?? "Impossible d'enregistrer. Verifie ta connexion et ta configuration Supabase.");
     }
   };
 
@@ -131,6 +135,14 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
           </div>
         </div>
       </Card>
+
+      {submitError && (
+        <div className="flex items-start gap-2 p-3 rounded-xl text-sm"
+             style={{ backgroundColor: 'color-mix(in srgb, #ef4444 10%, transparent)', color: '#ef4444' }}>
+          <AlertCircle size={16} className="mt-0.5 shrink-0" />
+          <span>{submitError}</span>
+        </div>
+      )}
 
       <Button type="submit" className="w-full" size="lg" disabled={loading}>
         <Send size={16} />
