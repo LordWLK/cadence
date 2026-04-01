@@ -6,10 +6,10 @@ import { Card } from '@/components/ui/Card';
 import { useActivities } from '@/lib/hooks/useActivities';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { getNextWeekStart, getWeekDays, getDayName, formatDateISO, formatDate } from '@/lib/utils/dates';
-import { Plus, Dumbbell, Tv, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { Plus, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Dumbbell, Tv, Users, Lightbulb, Coffee, Sparkles,
+  Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
 };
 
 interface ActivityFormProps {

@@ -5,13 +5,13 @@ import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useActivities } from '@/lib/hooks/useActivities';
 import { useAuth } from '@/providers/AuthProvider';
 import { ACTIVITY_CATEGORIES, MOOD_EMOJIS } from '@/lib/config/constants';
-import { TrendingUp, TrendingDown, Activity, Dumbbell, Users, Lightbulb, Coffee, Tv, Sparkles } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Dumbbell, Users, Lightbulb, Coffee, Briefcase, Sparkles } from 'lucide-react';
 import { subDays, format } from 'date-fns';
 import type { Checkin } from '@/lib/supabase/types';
 import type { WeeklyActivity } from '@/lib/supabase/types';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Dumbbell, Tv, Users, Lightbulb, Coffee, Sparkles,
+  Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
 };
 
 interface Insight {

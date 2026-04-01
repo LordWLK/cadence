@@ -11,12 +11,12 @@ import { getNextWeekStart, getWeekStart, formatDate, formatDateISO, getDayName }
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { SportFeed } from '@/components/friday/SportFeed';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { CalendarPlus, Trash2, LogIn, Dumbbell, Tv, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { CalendarPlus, Trash2, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import type { WeeklyActivity } from '@/lib/supabase/types';
 
 const ICON_MAP: Record<string, React.ElementType> = {
-  Dumbbell, Tv, Users, Lightbulb, Coffee, Sparkles,
+  Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
 };
 
 export default function FridayPage() {
