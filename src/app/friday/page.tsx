@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/Button';
 import { ActivityForm } from '@/components/friday/ActivityForm';
 import { useActivities } from '@/lib/hooks/useActivities';
 import { useAuth } from '@/providers/AuthProvider';
-import { getNextWeekStart, getWeekStart, formatDate, formatDateISO, getDayName } from '@/lib/utils/dates';
+import { getNextWeekStart, getWeekStart, getWeekDays, formatDate, formatDateISO, getDayName } from '@/lib/utils/dates';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { SportFeed } from '@/components/friday/SportFeed';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { CalendarPlus, Trash2, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { CalendarPlus, Trash2, Pencil, Check, X, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import type { WeeklyActivity } from '@/lib/supabase/types';
 
@@ -21,12 +21,18 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 export default function FridayPage() {
   const { user } = useAuth();
-  const { getByWeek, remove } = useActivities();
+  const { getByWeek, update, remove } = useActivities();
   const [activities, setActivities] = useState<WeeklyActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editCategory, setEditCategory] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const nextWeekStart = getNextWeekStart();
   const weekStartISO = formatDateISO(nextWeekStart);
+  const weekDays = getWeekDays(nextWeekStart);
 
   const loadActivities = useCallback(async () => {
     if (!user) return;
@@ -62,6 +68,33 @@ export default function FridayPage() {
 
   const handleRemove = async (id: string) => {
     await remove(id);
+    loadActivities();
+  };
+
+  const startEdit = (activity: WeeklyActivity) => {
+    setEditingId(activity.id);
+    setEditTitle(activity.title);
+    setEditCategory(activity.category);
+    setEditDate(activity.planned_date);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditTitle('');
+    setEditCategory('');
+    setEditDate('');
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editTitle.trim() || !editDate) return;
+    setSaving(true);
+    await update(editingId, {
+      title: editTitle.trim(),
+      category: editCategory,
+      planned_date: editDate,
+    });
+    setSaving(false);
+    cancelEdit();
     loadActivities();
   };
 
@@ -110,10 +143,90 @@ export default function FridayPage() {
                 {getDayName(new Date(date))} {formatDate(date, 'dd MMM')}
               </p>
               {dayActivities.map((activity) => {
+                const isEditing = editingId === activity.id;
+
+                if (isEditing) {
+                  return (
+                    <Card key={activity.id} variant="elevated" className="space-y-3">
+                      {/* Title */}
+                      <input
+                        type="text"
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                        autoFocus
+                        className="w-full bg-surface border border-border rounded-xl px-3 py-2.5 text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors"
+                      />
+
+                      {/* Category picker */}
+                      <div className="grid grid-cols-3 gap-1.5">
+                        {ACTIVITY_CATEGORIES.map((cat) => {
+                          const Icon = ICON_MAP[cat.icon] || Sparkles;
+                          const isSelected = editCategory === cat.id;
+                          return (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => setEditCategory(cat.id)}
+                              className={`flex flex-col items-center gap-0.5 p-2 rounded-lg text-[11px] transition-all ${
+                                isSelected
+                                  ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
+                                  : 'bg-surface text-text-muted'
+                              }`}
+                            >
+                              <Icon size={14} />
+                              <span className="leading-tight text-center">{cat.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Day picker */}
+                      <div className="grid grid-cols-7 gap-1">
+                        {weekDays.map((day) => {
+                          const iso = formatDateISO(day);
+                          const isSelected = editDate === iso;
+                          return (
+                            <button
+                              key={iso}
+                              type="button"
+                              onClick={() => setEditDate(iso)}
+                              className={`flex flex-col items-center p-1.5 rounded-lg text-[11px] transition-all ${
+                                isSelected
+                                  ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
+                                  : 'bg-surface text-text-muted'
+                              }`}
+                            >
+                              <span className="font-medium">{formatDate(day, 'EEE')}</span>
+                              <span className="text-[10px]">{formatDate(day, 'dd')}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={saveEdit}
+                          disabled={saving || !editTitle.trim() || !editDate}
+                        >
+                          <Check size={14} />
+                          {saving ? 'Enregistrement...' : 'Enregistrer'}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={cancelEdit}>
+                          <X size={14} />
+                          Annuler
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                }
+
                 const cat = ACTIVITY_CATEGORIES.find(c => c.id === activity.category);
                 const Icon = cat ? (ICON_MAP[cat.icon] || Sparkles) : Sparkles;
                 return (
-                  <Card key={activity.id} className="flex items-center gap-3">
+                  <Card key={activity.id} className="group flex items-center gap-3">
                     <div className={`shrink-0 ${cat?.color || 'text-text-muted'}`}>
                       <Icon size={18} />
                     </div>
@@ -122,8 +235,14 @@ export default function FridayPage() {
                       <p className="text-xs text-text-dim">{cat?.label}</p>
                     </div>
                     <button
+                      onClick={() => startEdit(activity)}
+                      className="text-text-dim hover:text-primary transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
+                    >
+                      <Pencil size={14} />
+                    </button>
+                    <button
                       onClick={() => setDeleteTarget(activity.id)}
-                      className="text-text-dim hover:text-error transition-colors p-1"
+                      className="text-text-dim hover:text-error transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
                     >
                       <Trash2 size={14} />
                     </button>
