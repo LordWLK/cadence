@@ -12,7 +12,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ConfigGate>
         <SupabaseProvider>
           <AuthProvider>
-            <main className="max-w-lg mx-auto px-4 pt-6">
+            <main className="max-w-lg mx-auto px-4 pt-6 pb-28">
               {children}
             </main>
             <BottomNav />
