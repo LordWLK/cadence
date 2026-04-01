@@ -4,14 +4,20 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/providers/ConfigProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Save, Trash2, Link, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon } from 'lucide-react';
+import { Save, Trash2, Link, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, User, LogOut, Mail, Calendar } from 'lucide-react';
 import { useTheme } from '@/lib/hooks/useTheme';
+import { useAuth } from '@/providers/AuthProvider';
 import NextLink from 'next/link';
+import { useRouter } from 'next/navigation';
 import { requestNotificationPermission, isNotificationSupported, getNotificationPermission, scheduleDailyReminders } from '@/lib/utils/notifications';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export default function SettingsPage() {
   const { config, sportConfig, updateConfig, updateSportConfig, resetConfig, isConfigured, hasEnvVars } = useConfig();
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
+  const router = useRouter();
 
   // Supabase fields (only needed when no env vars)
   const [supabaseUrl, setSupabaseUrl] = useState('');
@@ -55,12 +61,71 @@ export default function SettingsPage() {
   const inputClass =
     'w-full bg-surface-elevated border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors';
 
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Reglages</h1>
-        <p className="text-text-muted text-sm mt-1">Configure tes connexions</p>
+        <p className="text-text-muted text-sm mt-1">Ton compte et tes preferences</p>
       </div>
+
+      {/* Account card */}
+      {user && (
+        <Card>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                style={{ backgroundColor: 'var(--color-primary)' }}
+              >
+                {(user.email?.[0] || 'U').toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm truncate">{user.email}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <Calendar size={11} className="text-text-dim" />
+                  <p className="text-xs text-text-dim">
+                    Membre depuis {format(new Date(user.created_at), 'MMMM yyyy', { locale: fr })}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors"
+              style={{
+                backgroundColor: 'color-mix(in srgb, var(--color-error) 10%, transparent)',
+                color: 'var(--color-error)',
+              }}
+            >
+              <LogOut size={15} />
+              Se deconnecter
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {!user && (
+        <Card>
+          <NextLink href="/login" className="flex items-center gap-3 py-2">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)' }}
+            >
+              <User size={18} style={{ color: 'var(--color-primary)' }} />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-sm">Se connecter</p>
+              <p className="text-xs text-text-muted">Pour sauvegarder tes donnees</p>
+            </div>
+            <span className="text-text-dim">&rarr;</span>
+          </NextLink>
+        </Card>
+      )}
 
       {/* Supabase manual config — only shown when no env vars */}
       {!hasEnvVars && (
