@@ -7,9 +7,9 @@ import { Button } from '@/components/ui/Button';
 import { TeamPicker } from '@/components/settings/TeamPicker';
 import { useSportPrefs } from '@/lib/hooks/useSportPrefs';
 import { useAuth } from '@/providers/AuthProvider';
-import { searchTeams, searchPlayers, getTeamsByLeague, NBA_LEAGUE_ID, type SportsDbTeam } from '@/lib/api/thesportsdb';
+import { searchTeams, searchPlayers } from '@/lib/api/thesportsdb';
 import { TeamBadge } from '@/components/ui/TeamBadge';
-import { FOOTBALL_LEAGUES, SPORT_HEX } from '@/lib/config/constants';
+import { FOOTBALL_LEAGUES, SPORT_HEX, NBA_TEAMS } from '@/lib/config/constants';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import type { SportPreference } from '@/lib/supabase/types';
@@ -21,7 +21,6 @@ export default function SportsSettingsPage() {
   const { getAll, add, remove } = useSportPrefs();
   const [prefs, setPrefs] = useState<SportPreference[]>([]);
   const [tab, setTab] = useState<Tab>('football');
-  const [nbaTeams, setNbaTeams] = useState<SportsDbTeam[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadPrefs = useCallback(async () => {
@@ -33,14 +32,6 @@ export default function SportsSettingsPage() {
   }, [user, getAll]);
 
   useEffect(() => { loadPrefs(); }, [loadPrefs]);
-
-  useEffect(() => {
-    if (tab === 'basketball' && nbaTeams.length === 0) {
-      getTeamsByLeague(NBA_LEAGUE_ID).then(teams => {
-        setNbaTeams(teams.sort((a, b) => a.strTeam.localeCompare(b.strTeam)));
-      });
-    }
-  }, [tab, nbaTeams.length]);
 
   if (!user) {
     return (
@@ -162,39 +153,33 @@ export default function SportsSettingsPage() {
           {tab === 'basketball' && (
             <Card>
               <p className="text-sm font-medium mb-3">Franchises NBA favorites</p>
-              {nbaTeams.length === 0 ? (
-                <div className="flex justify-center py-4">
-                  <div className="w-5 h-5 rounded-full border-2 border-[var(--color-sport-basketball)] border-t-transparent animate-spin" />
-                </div>
-              ) : (
-                <div className="space-y-1 max-h-80 overflow-y-auto">
-                  {nbaTeams.map((team) => {
-                    const isFollowed = sportPrefs('basketball').some(p => p.entity_id === team.idTeam);
-                    return (
-                      <button
-                        key={team.idTeam}
-                        onClick={() => {
-                          if (isFollowed) {
-                            const pref = sportPrefs('basketball').find(p => p.entity_id === team.idTeam);
-                            if (pref) handleRemove(pref.id);
-                          } else {
-                            handleAdd('basketball', 'franchise', team.idTeam, team.strTeam);
-                          }
-                        }}
-                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
-                          isFollowed ? 'bg-sport-basketball/10 text-sport-basketball' : 'bg-surface-elevated text-text-muted hover:bg-border'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <TeamBadge src={team.strTeamBadge ? team.strTeamBadge + '/tiny' : undefined} alt={team.strTeam} size={24} />
-                          <span className="text-sm">{team.strTeam}</span>
-                        </div>
-                        {isFollowed && <Badge variant="basketball">Suivi</Badge>}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              <div className="space-y-1 max-h-80 overflow-y-auto">
+                {NBA_TEAMS.map((team) => {
+                  const isFollowed = sportPrefs('basketball').some(p => p.entity_id === team.id);
+                  return (
+                    <button
+                      key={team.id}
+                      onClick={() => {
+                        if (isFollowed) {
+                          const pref = sportPrefs('basketball').find(p => p.entity_id === team.id);
+                          if (pref) handleRemove(pref.id);
+                        } else {
+                          handleAdd('basketball', 'franchise', team.id, team.name);
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
+                        isFollowed ? 'bg-sport-basketball/10 text-sport-basketball' : 'bg-surface-elevated text-text-muted hover:bg-border'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <TeamBadge src={`https://www.thesportsdb.com/images/media/team/badge/${team.id}/tiny`} alt={team.name} size={24} />
+                        <span className="text-sm">{team.name}</span>
+                      </div>
+                      {isFollowed && <Badge variant="basketball">Suivi</Badge>}
+                    </button>
+                  );
+                })}
+              </div>
             </Card>
           )}
 

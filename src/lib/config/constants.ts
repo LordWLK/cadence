@@ -67,6 +67,40 @@ export const KNOWN_DERBIES: [string, string][] = [
 // Champions League knockout stage identifiers
 export const CL_KNOCKOUT_KEYWORDS = ['final', 'semi-final', 'quarter-final', 'round of 16', 'knockout'];
 
+// All 30 NBA franchises (hardcoded because lookup_all_teams.php returns wrong data with free API key)
+export const NBA_TEAMS: { id: string; name: string }[] = [
+  { id: '134880', name: 'Atlanta Hawks' },
+  { id: '134860', name: 'Boston Celtics' },
+  { id: '134861', name: 'Brooklyn Nets' },
+  { id: '134881', name: 'Charlotte Hornets' },
+  { id: '134870', name: 'Chicago Bulls' },
+  { id: '134871', name: 'Cleveland Cavaliers' },
+  { id: '134875', name: 'Dallas Mavericks' },
+  { id: '134885', name: 'Denver Nuggets' },
+  { id: '134872', name: 'Detroit Pistons' },
+  { id: '134865', name: 'Golden State Warriors' },
+  { id: '134876', name: 'Houston Rockets' },
+  { id: '134873', name: 'Indiana Pacers' },
+  { id: '134866', name: 'Los Angeles Clippers' },
+  { id: '134867', name: 'Los Angeles Lakers' },
+  { id: '134877', name: 'Memphis Grizzlies' },
+  { id: '134882', name: 'Miami Heat' },
+  { id: '134874', name: 'Milwaukee Bucks' },
+  { id: '134886', name: 'Minnesota Timberwolves' },
+  { id: '134878', name: 'New Orleans Pelicans' },
+  { id: '134862', name: 'New York Knicks' },
+  { id: '134887', name: 'Oklahoma City Thunder' },
+  { id: '134883', name: 'Orlando Magic' },
+  { id: '134863', name: 'Philadelphia 76ers' },
+  { id: '134868', name: 'Phoenix Suns' },
+  { id: '134888', name: 'Portland Trail Blazers' },
+  { id: '134869', name: 'Sacramento Kings' },
+  { id: '134879', name: 'San Antonio Spurs' },
+  { id: '134864', name: 'Toronto Raptors' },
+  { id: '134889', name: 'Utah Jazz' },
+  { id: '134884', name: 'Washington Wizards' },
+];
+
 // NBA big match keywords (via TheSportsDB)
 export const NBA_BIG_MATCH_KEYWORDS = ['playoff', 'finals', 'semi-final', 'conference final', 'all-star'];
 
