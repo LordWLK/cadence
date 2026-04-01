@@ -104,5 +104,11 @@ export const NBA_TEAMS: { id: string; name: string }[] = [
 // NBA big match keywords (via TheSportsDB)
 export const NBA_BIG_MATCH_KEYWORDS = ['playoff', 'finals', 'semi-final', 'conference final', 'all-star'];
 
+// MMA organizations (TheSportsDB league IDs)
+export const MMA_LEAGUES: Record<string, { id: string; name: string }> = {
+  ufc: { id: '4443', name: 'UFC' },
+  pfl: { id: '5430', name: 'PFL' },
+};
+
 // UFC/MMA keywords for big match detection
 export const MMA_BIG_MATCH_KEYWORDS = ['title', 'championship', 'main event', 'main card', 'ppv'];

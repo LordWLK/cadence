@@ -9,7 +9,7 @@ import { useSportPrefs } from '@/lib/hooks/useSportPrefs';
 import { useAuth } from '@/providers/AuthProvider';
 import { searchTeams, searchPlayers } from '@/lib/api/thesportsdb';
 import { TeamBadge } from '@/components/ui/TeamBadge';
-import { FOOTBALL_LEAGUES, SPORT_HEX, NBA_TEAMS } from '@/lib/config/constants';
+import { FOOTBALL_LEAGUES, SPORT_HEX, NBA_TEAMS, MMA_LEAGUES } from '@/lib/config/constants';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import type { SportPreference } from '@/lib/supabase/types';
@@ -60,7 +60,7 @@ export default function SportsSettingsPage() {
   const tabs: { id: Tab; label: string; hex: string }[] = [
     { id: 'football', label: 'Football', hex: SPORT_HEX.football },
     { id: 'basketball', label: 'NBA', hex: SPORT_HEX.basketball },
-    { id: 'mma', label: 'MMA/UFC', hex: SPORT_HEX.mma },
+    { id: 'mma', label: 'MMA', hex: SPORT_HEX.mma },
   ];
 
   return (
@@ -184,40 +184,53 @@ export default function SportsSettingsPage() {
           )}
 
           {tab === 'mma' && (
-            <Card>
-              <p className="text-sm font-medium mb-3">Combattants favoris</p>
-              <TeamPicker
-                sport="mma"
-                entityType="fighter"
-                saved={sportPrefs('mma').filter(p => p.entity_type === 'fighter')}
-                onSearch={async (q) => {
-                  const players = await searchPlayers(q);
-                  return players
-                    .filter(p => p.strSport === 'Fighting' || p.strSport === 'MMA')
-                    .map(p => ({ id: p.idPlayer, name: p.strPlayer, subtitle: p.strTeam || p.strNationality, imageUrl: p.strThumb ? p.strThumb + '/tiny' : undefined }));
-                }}
-                onAdd={(item) => handleAdd('mma', 'fighter', item.id, item.name)}
-                onRemove={handleRemove}
-                placeholder="Rechercher un combattant..."
-              />
-              <div className="mt-4">
-                <p className="text-sm font-medium mb-3">Competitions UFC suivies</p>
+            <div className="space-y-4">
+              <Card>
+                <p className="text-sm font-medium mb-3">Combattants favoris</p>
                 <TeamPicker
                   sport="mma"
-                  entityType="competition"
-                  saved={sportPrefs('mma').filter(p => p.entity_type === 'competition')}
+                  entityType="fighter"
+                  saved={sportPrefs('mma').filter(p => p.entity_type === 'fighter')}
                   onSearch={async (q) => {
-                    const teams = await searchTeams(q);
-                    return teams
-                      .filter(t => t.strSport === 'Fighting' || t.strLeague?.toLowerCase().includes('ufc'))
-                      .map(t => ({ id: t.idTeam, name: t.strTeam, subtitle: t.strLeague }));
+                    const players = await searchPlayers(q);
+                    return players
+                      .filter(p => p.strSport === 'Fighting' || p.strSport === 'MMA')
+                      .map(p => ({ id: p.idPlayer, name: p.strPlayer, subtitle: p.strTeam || p.strNationality, imageUrl: p.strThumb ? p.strThumb + '/tiny' : undefined }));
                   }}
-                  onAdd={(item) => handleAdd('mma', 'competition', item.id, item.name)}
+                  onAdd={(item) => handleAdd('mma', 'fighter', item.id, item.name)}
                   onRemove={handleRemove}
-                  placeholder="Rechercher une competition UFC..."
+                  placeholder="Rechercher un combattant..."
                 />
-              </div>
-            </Card>
+              </Card>
+
+              <Card>
+                <p className="text-sm font-medium mb-3">Organisations suivies</p>
+                <div className="space-y-1">
+                  {Object.entries(MMA_LEAGUES).map(([key, league]) => {
+                    const isFollowed = sportPrefs('mma').some(p => p.entity_type === 'competition' && p.entity_id === league.id);
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => {
+                          if (isFollowed) {
+                            const pref = sportPrefs('mma').find(p => p.entity_type === 'competition' && p.entity_id === league.id);
+                            if (pref) handleRemove(pref.id);
+                          } else {
+                            handleAdd('mma', 'competition', league.id, league.name);
+                          }
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
+                          isFollowed ? 'bg-sport-mma/10 text-sport-mma' : 'bg-surface-elevated text-text-muted hover:bg-border'
+                        }`}
+                      >
+                        <span className="text-sm">{league.name}</span>
+                        {isFollowed && <Badge variant="mma">Suivi</Badge>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Card>
+            </div>
           )}
         </>
       )}
