@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { addToQueue, getPendingItems, removeFromQueue, isOnline, onOnline } from '@/lib/utils/offlineQueue';
+import { setBadge, clearBadge } from '@/lib/utils/pwaBadge';
 import type { Checkin, CheckinInsert } from '@/lib/supabase/types';
 
 export function useCheckins() {
@@ -41,6 +42,7 @@ export function useCheckins() {
     }
     const remaining = await getPendingItems();
     setPendingCount(remaining.length);
+    if (remaining.length === 0) clearBadge();
   }, [supabase, user]);
 
   // Listen for online events
@@ -65,6 +67,7 @@ export function useCheckins() {
       });
       const count = (await getPendingItems()).length;
       setPendingCount(count);
+      setBadge(count);
       // Return fake checkin so UI shows success
       return {
         id: `offline-${Date.now()}`,
@@ -128,5 +131,27 @@ export function useCheckins() {
     return (data ?? []) as Checkin[];
   }, [supabase, user]);
 
-  return { create, getToday, getByDateRange, searchNotes, loading, error, pendingCount, syncQueue };
+  const deleteCheckin = useCallback(async (id: string) => {
+    if (!supabase || !user) return false;
+    const { error: err } = await supabase
+      .from('checkins')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+    if (err) { setError(err.message); return false; }
+    return true;
+  }, [supabase, user]);
+
+  const updateCheckin = useCallback(async (id: string, data: { mood?: number; energy?: number; note?: string | null }) => {
+    if (!supabase || !user) return false;
+    const { error: err } = await supabase
+      .from('checkins')
+      .update(data)
+      .eq('id', id)
+      .eq('user_id', user.id);
+    if (err) { setError(err.message); return false; }
+    return true;
+  }, [supabase, user]);
+
+  return { create, getToday, getByDateRange, searchNotes, deleteCheckin, updateCheckin, loading, error, pendingCount, syncQueue };
 }

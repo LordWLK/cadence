@@ -11,6 +11,7 @@ import { StreakBadge } from '@/components/checkin/StreakBadge';
 import { QuickCheckin } from '@/components/checkin/QuickCheckin';
 import { WeeklyRecap } from '@/components/week/WeeklyRecap';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { DaySummary } from '@/components/home/DaySummary';
 
 // ─── Landing page ─────────────────────────────────────────────────────────────
 function LandingPage() {
@@ -214,6 +215,7 @@ function AppHome() {
           </Link>
         </div>
       </div>
+      <DaySummary />
       <StreakBadge />
       <QuickCheckin />
       <WeeklyRecap />

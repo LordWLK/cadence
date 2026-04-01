@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useAuth } from '@/providers/AuthProvider';
 import { MOOD_EMOJIS } from '@/lib/config/constants';
+import { CheckinReminder } from '@/components/checkin/CheckinReminder';
 import { Sun, Moon, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
@@ -75,6 +76,8 @@ export default function CheckinPage() {
           </div>
         </div>
       )}
+
+      <CheckinReminder hasMorning={hasMorning} hasEvening={hasEvening} />
 
       {(!hasMorning || !hasEvening) && (
         <CheckinForm onSuccess={() => setRefreshKey(k => k + 1)} />

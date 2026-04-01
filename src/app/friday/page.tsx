@@ -10,6 +10,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { getNextWeekStart, getWeekStart, formatDate, formatDateISO, getDayName } from '@/lib/utils/dates';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { SportFeed } from '@/components/friday/SportFeed';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CalendarPlus, Trash2, LogIn, Dumbbell, Tv, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import type { WeeklyActivity } from '@/lib/supabase/types';
@@ -57,6 +58,8 @@ export default function FridayPage() {
     grouped[a.planned_date].push(a);
   }
 
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
   const handleRemove = async (id: string) => {
     await remove(id);
     loadActivities();
@@ -70,6 +73,19 @@ export default function FridayPage() {
           Semaine du {formatDate(nextWeekStart, 'dd MMM yyyy')}
         </p>
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Supprimer cette activite ?"
+        message="L'activite sera retiree de ton planning."
+        confirmLabel="Supprimer"
+        variant="danger"
+        onConfirm={() => {
+          if (deleteTarget) handleRemove(deleteTarget);
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       <ActivityForm weekStart={nextWeekStart} onCreated={loadActivities} />
 
@@ -106,7 +122,7 @@ export default function FridayPage() {
                       <p className="text-xs text-text-dim">{cat?.label}</p>
                     </div>
                     <button
-                      onClick={() => handleRemove(activity.id)}
+                      onClick={() => setDeleteTarget(activity.id)}
                       className="text-text-dim hover:text-error transition-colors p-1"
                     >
                       <Trash2 size={14} />

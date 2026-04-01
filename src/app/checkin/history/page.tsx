@@ -10,9 +10,11 @@ import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useAuth } from '@/providers/AuthProvider';
 import { MOOD_EMOJIS } from '@/lib/config/constants';
 import { SearchNotes } from '@/components/checkin/SearchNotes';
+import { MoodByDay } from '@/components/checkin/MoodByDay';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { exportCheckinsCSV, exportCheckinsJSON } from '@/lib/utils/export';
-import { Sun, Moon, LogIn, Download, FileJson, Heart } from 'lucide-react';
+import { Sun, Moon, LogIn, Download, FileJson, Heart, Trash2, Edit3, Check, X } from 'lucide-react';
 import { subDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
@@ -20,10 +22,15 @@ import type { Checkin } from '@/lib/supabase/types';
 
 export default function HistoryPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const { getByDateRange } = useCheckins();
+  const { getByDateRange, deleteCheckin, updateCheckin } = useCheckins();
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
   const [showExport, setShowExport] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<string | null>(null);
+  const [editMood, setEditMood] = useState(3);
+  const [editEnergy, setEditEnergy] = useState(5);
+  const [editNote, setEditNote] = useState('');
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -136,6 +143,26 @@ export default function HistoryPage() {
 
       <MoodInsights />
 
+      <MoodByDay />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Supprimer ce check-in ?"
+        message="Cette action est irreversible. Le check-in sera definitivement supprime."
+        confirmLabel="Supprimer"
+        variant="danger"
+        onConfirm={async () => {
+          if (deleteTarget) {
+            const ok = await deleteCheckin(deleteTarget);
+            if (ok) {
+              setCheckins(prev => prev.filter(c => c.id !== deleteTarget));
+            }
+          }
+          setDeleteTarget(null);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
+
       <div className="space-y-3">
         <p className="text-xs text-text-dim uppercase tracking-wide">Detail par jour</p>
         {loading ? (
@@ -161,17 +188,94 @@ export default function HistoryPage() {
               </p>
               <div className="space-y-2">
                 {dayCheckins.map((c) => (
-                  <div key={c.id} className="flex items-start gap-3">
+                  <div key={c.id} className="flex items-start gap-3 group">
                     <div className="mt-0.5">
                       {c.type === 'morning' ? <Sun size={14} className="text-warning" /> : <Moon size={14} className="text-accent-light" />}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{MOOD_EMOJIS[c.mood - 1]}</span>
-                        <span className="text-xs text-text-muted">Energie: {c.energy}/10</span>
+                    {editTarget === c.id ? (
+                      <div className="flex-1 min-w-0 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={editMood}
+                            onChange={(e) => setEditMood(Number(e.target.value))}
+                            className="text-sm rounded-lg px-2 py-1 border"
+                            style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-input)' }}
+                          >
+                            {MOOD_EMOJIS.map((emoji, i) => (
+                              <option key={i} value={i + 1}>{emoji} {i + 1}</option>
+                            ))}
+                          </select>
+                          <input
+                            type="number"
+                            min={1}
+                            max={10}
+                            value={editEnergy}
+                            onChange={(e) => setEditEnergy(Number(e.target.value))}
+                            className="w-16 text-sm rounded-lg px-2 py-1 border"
+                            style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-input)' }}
+                          />
+                          <span className="text-xs text-text-dim">/10</span>
+                        </div>
+                        <textarea
+                          value={editNote}
+                          onChange={(e) => setEditNote(e.target.value)}
+                          rows={2}
+                          className="w-full text-xs rounded-lg px-2 py-1.5 border resize-none"
+                          style={{ borderColor: 'var(--color-border)', backgroundColor: 'var(--color-surface-input)' }}
+                        />
+                        <div className="flex gap-1">
+                          <button
+                            onClick={async () => {
+                              const ok = await updateCheckin(c.id, { mood: editMood, energy: editEnergy, note: editNote.trim() || null });
+                              if (ok) {
+                                setCheckins(prev => prev.map(x => x.id === c.id ? { ...x, mood: editMood, energy: editEnergy, note: editNote.trim() || null } : x));
+                              }
+                              setEditTarget(null);
+                            }}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium"
+                            style={{ backgroundColor: 'color-mix(in srgb, var(--color-success) 12%, transparent)', color: 'var(--color-success)' }}
+                          >
+                            <Check size={12} /> OK
+                          </button>
+                          <button
+                            onClick={() => setEditTarget(null)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs"
+                            style={{ color: 'var(--color-text-dim)' }}
+                          >
+                            <X size={12} /> Annuler
+                          </button>
+                        </div>
                       </div>
-                      {c.note && <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{c.note}</p>}
-                    </div>
+                    ) : (
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">{MOOD_EMOJIS[c.mood - 1]}</span>
+                          <span className="text-xs text-text-muted">Energie: {c.energy}/10</span>
+                          <div className="ml-auto flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => {
+                                setEditTarget(c.id);
+                                setEditMood(c.mood);
+                                setEditEnergy(c.energy);
+                                setEditNote(c.note || '');
+                              }}
+                              className="p-1 rounded-lg hover:bg-surface-alt transition-colors"
+                              aria-label="Modifier"
+                            >
+                              <Edit3 size={12} style={{ color: 'var(--color-text-dim)' }} />
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget(c.id)}
+                              className="p-1 rounded-lg hover:bg-surface-alt transition-colors"
+                              aria-label="Supprimer"
+                            >
+                              <Trash2 size={12} style={{ color: 'var(--color-error)' }} />
+                            </button>
+                          </div>
+                        </div>
+                        {c.note && <p className="text-xs text-text-muted mt-0.5 line-clamp-2">{c.note}</p>}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

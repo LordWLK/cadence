@@ -8,10 +8,12 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { ErrorBoundary } from '@/components/layout/ErrorBoundary';
 import { Onboarding } from '@/components/layout/Onboarding';
 import { PageTransition } from '@/components/layout/PageTransition';
+import { SplashScreen } from '@/components/layout/SplashScreen';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary>
+      <SplashScreen>
       <Onboarding>
         <ConfigProvider>
           <ConfigGate>
@@ -28,6 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           </ConfigGate>
         </ConfigProvider>
       </Onboarding>
+      </SplashScreen>
     </ErrorBoundary>
   );
 }

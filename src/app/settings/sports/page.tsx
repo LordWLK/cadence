@@ -8,6 +8,7 @@ import { TeamPicker } from '@/components/settings/TeamPicker';
 import { useSportPrefs } from '@/lib/hooks/useSportPrefs';
 import { useAuth } from '@/providers/AuthProvider';
 import { searchTeams, searchPlayers, getTeamsByLeague, NBA_LEAGUE_ID, type SportsDbTeam } from '@/lib/api/thesportsdb';
+import { TeamBadge } from '@/components/ui/TeamBadge';
 import { FOOTBALL_LEAGUES, SPORT_HEX } from '@/lib/config/constants';
 import { ArrowLeft, LogIn } from 'lucide-react';
 import Link from 'next/link';
@@ -185,9 +186,7 @@ export default function SportsSettingsPage() {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {team.strTeamBadge && (
-                            <img src={team.strTeamBadge + '/tiny'} alt="" className="w-6 h-6 object-contain" />
-                          )}
+                          <TeamBadge src={team.strTeamBadge ? team.strTeamBadge + '/tiny' : undefined} alt={team.strTeam} size={24} />
                           <span className="text-sm">{team.strTeam}</span>
                         </div>
                         {isFollowed && <Badge variant="basketball">Suivi</Badge>}
