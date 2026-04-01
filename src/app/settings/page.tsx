@@ -1,0 +1,174 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useConfig } from '@/providers/ConfigProvider';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Save, Trash2, Link, Key, Volleyball, Bell, BellOff } from 'lucide-react';
+import NextLink from 'next/link';
+import { requestNotificationPermission, isNotificationSupported, getNotificationPermission, scheduleDailyReminders } from '@/lib/utils/notifications';
+
+export default function SettingsPage() {
+  const { config, updateConfig, resetConfig, isConfigured } = useConfig();
+  const [supabaseUrl, setSupabaseUrl] = useState('');
+  const [supabaseAnonKey, setSupabaseAnonKey] = useState('');
+  const [theSportsDbKey, setTheSportsDbKey] = useState('3');
+  const [ballDontLieKey, setBallDontLieKey] = useState('');
+  const [saved, setSaved] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && isNotificationSupported()) {
+      setNotifPermission(getNotificationPermission());
+    }
+  }, []);
+
+  useEffect(() => {
+    if (config) {
+      setSupabaseUrl(config.supabaseUrl);
+      setSupabaseAnonKey(config.supabaseAnonKey);
+      setTheSportsDbKey(config.theSportsDbKey || '3');
+      setBallDontLieKey(config.ballDontLieKey || '');
+    }
+  }, [config]);
+
+  const handleSave = () => {
+    if (!supabaseUrl || !supabaseAnonKey) return;
+    updateConfig({
+      supabaseUrl,
+      supabaseAnonKey,
+      theSportsDbKey: theSportsDbKey || '3',
+      ballDontLieKey,
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const inputClass =
+    'w-full bg-surface-elevated border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors';
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Reglages</h1>
+        <p className="text-text-muted text-sm mt-1">Configure tes connexions</p>
+      </div>
+
+      <Card>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-primary mb-2">
+            <Link size={18} />
+            <h2 className="font-semibold">Supabase</h2>
+          </div>
+          <div>
+            <label className="text-sm text-text-muted block mb-1.5">URL du projet</label>
+            <input
+              type="url"
+              value={supabaseUrl}
+              onChange={(e) => setSupabaseUrl(e.target.value)}
+              placeholder="https://xxx.supabase.co"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="text-sm text-text-muted block mb-1.5">Anon Key</label>
+            <input
+              type="password"
+              value={supabaseAnonKey}
+              onChange={(e) => setSupabaseAnonKey(e.target.value)}
+              placeholder="eyJhbGciOiJ..."
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-accent-light mb-2">
+            <Key size={18} />
+            <h2 className="font-semibold">APIs Sport</h2>
+          </div>
+          <div>
+            <label className="text-sm text-text-muted block mb-1.5">
+              TheSportsDB Key <span className="text-text-dim">(defaut: 3 = gratuit)</span>
+            </label>
+            <input
+              type="text"
+              value={theSportsDbKey}
+              onChange={(e) => setTheSportsDbKey(e.target.value)}
+              placeholder="3"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="text-sm text-text-muted block mb-1.5">BallDontLie API Key</label>
+            <input
+              type="password"
+              value={ballDontLieKey}
+              onChange={(e) => setBallDontLieKey(e.target.value)}
+              placeholder="Cle API pour la NBA"
+              className={inputClass}
+            />
+          </div>
+        </div>
+      </Card>
+
+      <div className="flex gap-3">
+        <Button onClick={handleSave} className="flex-1" disabled={!supabaseUrl || !supabaseAnonKey}>
+          <Save size={16} />
+          {saved ? 'Sauvegarde !' : 'Sauvegarder'}
+        </Button>
+        {isConfigured && (
+          <Button variant="danger" onClick={resetConfig}>
+            <Trash2 size={16} />
+          </Button>
+        )}
+      </div>
+
+      {isNotificationSupported() && (
+        <Card>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {notifPermission === 'granted' ? <Bell size={18} className="text-success" /> : <BellOff size={18} className="text-text-dim" />}
+              <div>
+                <p className="font-medium text-sm">Notifications</p>
+                <p className="text-xs text-text-muted">
+                  {notifPermission === 'granted' ? 'Rappels actifs (matin 8h, soir 21h, vendredi 18h)' :
+                   notifPermission === 'denied' ? 'Bloquees dans le navigateur' : 'Rappels check-in et matchs'}
+                </p>
+              </div>
+            </div>
+            {notifPermission !== 'granted' && notifPermission !== 'denied' && (
+              <Button variant="secondary" size="sm" onClick={async () => {
+                const granted = await requestNotificationPermission();
+                setNotifPermission(granted ? 'granted' : 'denied');
+                if (granted) scheduleDailyReminders();
+              }}>
+                Activer
+              </Button>
+            )}
+            {notifPermission === 'granted' && (
+              <span className="text-xs text-success">Actif</span>
+            )}
+          </div>
+        </Card>
+      )}
+
+      {isConfigured && (
+        <NextLink href="/settings/sports">
+          <Card className="mt-4 flex items-center justify-between cursor-pointer hover:border-primary/50 transition-colors">
+            <div className="flex items-center gap-3">
+              <Volleyball size={20} className="text-sport-football" />
+              <div>
+                <p className="font-medium">Preferences sport</p>
+                <p className="text-sm text-text-muted">Equipes, combattants, competitions</p>
+              </div>
+            </div>
+            <span className="text-text-dim">&rarr;</span>
+          </Card>
+        </NextLink>
+      )}
+    </div>
+  );
+}

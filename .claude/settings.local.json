@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpx create-next-app@latest . --typescript --eslint --app --src-dir --import-alias \"@/*\" --no-tailwind --no-git)",
+      "Bash(npm install:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(npx create-next-app@latest . --typescript --eslint --app --src-dir --import-alias \"@/*\" --no-tailwind --no-git --use-pnpm)",
+      "Bash(npx create-next-app@latest cadence-app --typescript --eslint --app --src-dir --import-alias \"@/*\" --no-tailwind --no-git --use-pnpm)",
+      "Bash(cp -r cadence-app/* cadence-app/.* .)",
+      "Bash(rm -rf cadence-app AGENTS.md)",
+      "Bash(pnpm add:*)",
+      "Bash(rm -f src/app/page.module.css)",
+      "Bash(mkdir -p public/icons)",
+      "Bash(npx next:*)",
+      "Bash(mkdir -p src/app/fonts)",
+      "Bash(ls node_modules/.pnpm/geist*/node_modules/geist/dist/fonts/geist-sans/)",
+      "Bash(find node_modules -name GeistVF* -o -name Geist*woff2)",
+      "Bash(node -e \":*)",
+      "Bash(gh auth:*)"
+    ]
+  }
+}

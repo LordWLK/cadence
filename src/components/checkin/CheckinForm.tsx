@@ -1,0 +1,129 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { MoodSelector } from './MoodSelector';
+import { EnergySlider } from './EnergySlider';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { useCheckins } from '@/lib/hooks/useCheckins';
+import { Sun, Moon, Send, AlertCircle } from 'lucide-react';
+
+interface CheckinFormProps {
+  onSuccess?: () => void;
+}
+
+export function CheckinForm({ onSuccess }: CheckinFormProps) {
+  const { create, loading } = useCheckins();
+  const [mood, setMood] = useState(3);
+  const [energy, setEnergy] = useState(5);
+  const [note, setNote] = useState('');
+  const [type, setType] = useState<'morning' | 'evening'>('morning');
+  const [coherenceWarning, setCoherenceWarning] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    setType(hour < 14 ? 'morning' : 'evening');
+  }, []);
+
+  useEffect(() => {
+    if (mood >= 4 && energy <= 3) {
+      setCoherenceWarning("Tu te sens bien mais ton energie est basse. Prends soin de toi !");
+    } else if (mood <= 2 && energy >= 8) {
+      setCoherenceWarning("Beaucoup d'energie mais le moral est bas. Qu'est-ce qui se passe ?");
+    } else {
+      setCoherenceWarning(null);
+    }
+  }, [mood, energy]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = await create({
+      type,
+      mood,
+      energy,
+      note: note.trim() || null,
+      date: new Date().toISOString().split('T')[0],
+    });
+    if (result) {
+      setSuccess(true);
+      setTimeout(() => {
+        setSuccess(false);
+        onSuccess?.();
+      }, 1500);
+    }
+  };
+
+  const isMorning = type === 'morning';
+
+  if (success) {
+    return (
+      <Card className="text-center py-8 space-y-3">
+        <div className="text-4xl">{mood >= 4 ? '✨' : mood >= 3 ? '👍' : '💪'}</div>
+        <p className="font-medium">Check-in enregistre !</p>
+        <p className="text-sm text-text-muted">
+          {isMorning ? "Bonne journee !" : "Bonne nuit !"}
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setType('morning')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all flex-1 ${
+            isMorning ? 'bg-warning/15 text-warning ring-1 ring-warning/30' : 'bg-surface-elevated text-text-muted'
+          }`}
+        >
+          <Sun size={16} />
+          <span className="text-sm font-medium">Matin</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setType('evening')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all flex-1 ${
+            !isMorning ? 'bg-accent/15 text-accent-light ring-1 ring-accent/30' : 'bg-surface-elevated text-text-muted'
+          }`}
+        >
+          <Moon size={16} />
+          <span className="text-sm font-medium">Soir</span>
+        </button>
+      </div>
+
+      <Card>
+        <div className="space-y-6">
+          <MoodSelector value={mood} onChange={setMood} />
+          <EnergySlider value={energy} onChange={setEnergy} />
+
+          {coherenceWarning && (
+            <div className="flex items-start gap-2 p-3 rounded-xl bg-warning/10 text-warning text-sm">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <span>{coherenceWarning}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="text-sm text-text-muted block mb-1.5">
+              {isMorning ? "Ton intention pour la journee" : "Qu'est-ce que t'as compris aujourd'hui ?"}
+            </label>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder={isMorning ? "Aujourd'hui je veux..." : "Aujourd'hui j'ai compris que..."}
+              rows={3}
+              className="w-full bg-surface-elevated border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors resize-none"
+            />
+          </div>
+        </div>
+      </Card>
+
+      <Button type="submit" className="w-full" size="lg" disabled={loading}>
+        <Send size={16} />
+        {loading ? 'Enregistrement...' : 'Enregistrer mon check-in'}
+      </Button>
+    </form>
+  );
+}
