@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/Button';
 import type { Checkin } from '@/lib/supabase/types';
 
 export default function HistoryPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { getByDateRange } = useCheckins();
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,12 +34,20 @@ export default function HistoryPage() {
     load();
   }, [user, getByDateRange]);
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <div className="w-7 h-7 rounded-full border-2 border-[var(--color-primary)] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Historique</h1>
         <Card className="text-center py-8 space-y-4">
-          <p className="text-text-muted">Connecte-toi pour voir ton historique</p>
+          <p className="text-[var(--color-text-muted)]">Connecte-toi pour voir ton historique</p>
           <Link href="/login"><Button><LogIn size={16} /> Se connecter</Button></Link>
         </Card>
       </div>

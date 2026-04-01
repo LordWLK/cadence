@@ -15,7 +15,7 @@ export function CadenceIcon({ className = 'w-12 h-12' }: LogoProps) {
     >
       <rect x="10" y="20" width="60" height="60" rx="7" fill="#7c3aed" opacity="0.12" />
       <rect x="25" y="35" width="60" height="60" rx="7" fill="#7c3aed" opacity="0.25" />
-      <rect x="40" y="20" width="60" height="60" rx="7" fill="#7c3aed" opacity="1" />
+      <rect x="40" y="20" width="60" height="60" rx="7" fill="#7c3aed" />
       <text
         x="70" y="60"
         textAnchor="middle"
@@ -31,7 +31,7 @@ export function CadenceIcon({ className = 'w-12 h-12' }: LogoProps) {
   );
 }
 
-/** Logo horizontal — icône + wordmark + tagline (dark bg) */
+/** Logo horizontal — icône + wordmark + tagline (fond clair) */
 export function CadenceLogoHorizontal({ className = 'h-10' }: LogoProps) {
   return (
     <svg
@@ -42,7 +42,7 @@ export function CadenceLogoHorizontal({ className = 'h-10' }: LogoProps) {
     >
       <rect x="30" y="15" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.12" />
       <rect x="50" y="35" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.25" />
-      <rect x="70" y="15" width="60" height="60" rx="6" fill="#7c3aed" opacity="1" />
+      <rect x="70" y="15" width="60" height="60" rx="6" fill="#7c3aed" />
       <text
         x="100" y="47"
         textAnchor="middle"
@@ -53,6 +53,7 @@ export function CadenceLogoHorizontal({ className = 'h-10' }: LogoProps) {
       >
         C
       </text>
+      {/* wordmark — couleur sombre pour fond clair */}
       <text
         x="155" y="58"
         textAnchor="start"
@@ -60,7 +61,7 @@ export function CadenceLogoHorizontal({ className = 'h-10' }: LogoProps) {
         fontSize="40"
         fontWeight="500"
         letterSpacing="4"
-        fill="#f5f5f5"
+        fill="#1a1612"
       >
         cadence
       </text>
@@ -70,7 +71,7 @@ export function CadenceLogoHorizontal({ className = 'h-10' }: LogoProps) {
         fontFamily="'JetBrains Mono', 'Fira Code', monospace"
         fontSize="10"
         fontWeight="400"
-        fill="#666666"
+        fill="#6b6355"
         letterSpacing="3"
       >
         PLAN · FEEL · LIVE
@@ -79,7 +80,7 @@ export function CadenceLogoHorizontal({ className = 'h-10' }: LogoProps) {
   );
 }
 
-/** Logo stacké — icône au-dessus du wordmark + tagline */
+/** Logo stacké — icône au-dessus du wordmark + tagline (fond clair) */
 export function CadenceLogoStacked({ className = 'w-40' }: LogoProps) {
   return (
     <svg
@@ -90,7 +91,7 @@ export function CadenceLogoStacked({ className = 'w-40' }: LogoProps) {
     >
       <rect x="65" y="20" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.12" />
       <rect x="82" y="37" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.25" />
-      <rect x="99" y="20" width="60" height="60" rx="6" fill="#7c3aed" opacity="1" />
+      <rect x="99" y="20" width="60" height="60" rx="6" fill="#7c3aed" />
       <text
         x="129" y="52"
         textAnchor="middle"
@@ -101,6 +102,7 @@ export function CadenceLogoStacked({ className = 'w-40' }: LogoProps) {
       >
         C
       </text>
+      {/* wordmark — #1a1612 pour être visible sur fond crème */}
       <text
         x="120" y="125"
         textAnchor="middle"
@@ -108,7 +110,7 @@ export function CadenceLogoStacked({ className = 'w-40' }: LogoProps) {
         fontSize="36"
         fontWeight="500"
         letterSpacing="6"
-        fill="#f5f5f5"
+        fill="#1a1612"
       >
         cadence
       </text>
@@ -118,7 +120,7 @@ export function CadenceLogoStacked({ className = 'w-40' }: LogoProps) {
         fontFamily="'JetBrains Mono', 'Fira Code', monospace"
         fontSize="9"
         fontWeight="400"
-        fill="#666666"
+        fill="#6b6355"
         letterSpacing="4"
       >
         PLAN · FEEL · LIVE

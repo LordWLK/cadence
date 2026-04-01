@@ -5,11 +5,11 @@ import { usePathname } from 'next/navigation';
 import { Calendar, Heart, CalendarPlus, BarChart3, Settings } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { href: '/',                icon: Calendar,    label: 'Semaine'   },
-  { href: '/checkin',         icon: Heart,       label: 'Check-in'  },
-  { href: '/friday',          icon: CalendarPlus, label: 'Planifier' },
-  { href: '/checkin/history', icon: BarChart3,   label: 'Historique'},
-  { href: '/settings',        icon: Settings,    label: 'Réglages'  },
+  { href: '/',                icon: Calendar,     label: 'Semaine',   exact: true  },
+  { href: '/checkin',         icon: Heart,        label: 'Check-in',  exact: true  },
+  { href: '/friday',          icon: CalendarPlus, label: 'Planifier', exact: true  },
+  { href: '/checkin/history', icon: BarChart3,    label: 'Historique',exact: true  },
+  { href: '/settings',        icon: Settings,     label: 'Réglages',  exact: false }, // match /settings/*
 ];
 
 export function BottomNav() {
@@ -21,10 +21,10 @@ export function BottomNav() {
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
-        {NAV_ITEMS.map(({ href, icon: Icon, label }) => {
-          const isActive =
-            pathname === href ||
-            (href !== '/' && pathname.startsWith(href));
+        {NAV_ITEMS.map(({ href, icon: Icon, label, exact }) => {
+          const isActive = exact
+            ? pathname === href
+            : pathname === href || pathname.startsWith(href + '/');
 
           return (
             <Link
@@ -37,11 +37,7 @@ export function BottomNav() {
               }`}
             >
               <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
-              <span
-                className={`text-[10px] font-medium tracking-wide ${
-                  isActive ? 'text-[var(--color-primary)]' : ''
-                }`}
-              >
+              <span className="text-[10px] font-medium tracking-wide">
                 {label}
               </span>
             </Link>

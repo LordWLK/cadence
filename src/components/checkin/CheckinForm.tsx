@@ -74,9 +74,15 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
         <button
           type="button"
           onClick={() => setType('morning')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all flex-1 ${
-            isMorning ? 'bg-warning/15 text-warning ring-1 ring-warning/30' : 'bg-surface-elevated text-text-muted'
-          }`}
+          style={isMorning ? {
+            backgroundColor: 'color-mix(in srgb, #7c3aed 12%, transparent)',
+            color: '#7c3aed',
+            outline: '1px solid color-mix(in srgb, #7c3aed 30%, transparent)',
+          } : {
+            backgroundColor: 'var(--color-surface-elevated)',
+            color: 'var(--color-text-muted)',
+          }}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all flex-1"
         >
           <Sun size={16} />
           <span className="text-sm font-medium">Matin</span>
@@ -84,9 +90,15 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
         <button
           type="button"
           onClick={() => setType('evening')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all flex-1 ${
-            !isMorning ? 'bg-accent/15 text-accent-light ring-1 ring-accent/30' : 'bg-surface-elevated text-text-muted'
-          }`}
+          style={!isMorning ? {
+            backgroundColor: 'color-mix(in srgb, #4f46e5 12%, transparent)',
+            color: '#4f46e5',
+            outline: '1px solid color-mix(in srgb, #4f46e5 30%, transparent)',
+          } : {
+            backgroundColor: 'var(--color-surface-elevated)',
+            color: 'var(--color-text-muted)',
+          }}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all flex-1"
         >
           <Moon size={16} />
           <span className="text-sm font-medium">Soir</span>
