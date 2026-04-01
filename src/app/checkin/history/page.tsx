@@ -251,7 +251,7 @@ export default function HistoryPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{MOOD_EMOJIS[c.mood - 1]}</span>
                           <span className="text-xs text-text-muted">Energie: {c.energy}/10</span>
-                          <div className="ml-auto flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="ml-auto flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => {
                                 setEditTarget(c.id);
