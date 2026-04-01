@@ -26,17 +26,25 @@ export function hasEnvSupabase(): boolean {
   return getEnvSupabase() !== null;
 }
 
+// ─── Legacy config (old localStorage format) ────────────────────────────────
+function getLegacyConfig(): AppConfig | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
 // ─── Sport config (localStorage) ────────────────────────────────────────────
 export function getSportConfig(): SportConfig {
   if (typeof window === 'undefined') return { theSportsDbKey: '123', ballDontLieKey: '' };
   const raw = localStorage.getItem(SPORT_STORAGE_KEY);
   if (!raw) {
-    // Migration: try reading from old config
-    const oldConfig = getConfig();
-    if (oldConfig) {
+    // Migration: try reading from old legacy config (no circular call)
+    const legacy = getLegacyConfig();
+    if (legacy) {
       return {
-        theSportsDbKey: oldConfig.theSportsDbKey || '123',
-        ballDontLieKey: oldConfig.ballDontLieKey || '',
+        theSportsDbKey: legacy.theSportsDbKey || '123',
+        ballDontLieKey: legacy.ballDontLieKey || '',
       };
     }
     return { theSportsDbKey: '123', ballDontLieKey: '' };
@@ -66,9 +74,7 @@ export function getConfig(): AppConfig | null {
   }
 
   // Fallback: legacy localStorage config
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  return getLegacyConfig();
 }
 
 export function setConfig(config: AppConfig): void {
