@@ -9,6 +9,7 @@ export type Database = {
           mood: number;
           energy: number;
           note: string | null;
+          photo_url: string | null;
           date: string;
           created_at: string;
         };
@@ -19,6 +20,7 @@ export type Database = {
           mood: number;
           energy: number;
           note?: string | null;
+          photo_url?: string | null;
           date?: string;
           created_at?: string;
         };
@@ -29,6 +31,7 @@ export type Database = {
           mood?: number;
           energy?: number;
           note?: string | null;
+          photo_url?: string | null;
           date?: string;
           created_at?: string;
         };

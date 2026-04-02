@@ -7,6 +7,8 @@ import { PhotoOCR } from './PhotoOCR';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useCheckins } from '@/lib/hooks/useCheckins';
+import { useSupabase } from '@/providers/SupabaseProvider';
+import { useAuth } from '@/providers/AuthProvider';
 import { Sun, Moon, Send, AlertCircle } from 'lucide-react';
 import { hapticSuccess, hapticError } from '@/lib/utils/haptics';
 import { Confetti } from '@/components/ui/Confetti';
@@ -17,6 +19,8 @@ interface CheckinFormProps {
 
 export function CheckinForm({ onSuccess }: CheckinFormProps) {
   const { create, loading, error: hookError } = useCheckins();
+  const supabase = useSupabase();
+  const { user } = useAuth();
   const [mood, setMood] = useState(3);
   const [energy, setEnergy] = useState(5);
   const [note, setNote] = useState('');
@@ -25,6 +29,7 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
   const [success, setSuccess] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -41,20 +46,45 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
     }
   }, [mood, energy]);
 
+  const uploadPhoto = async (file: File): Promise<string | null> => {
+    if (!supabase || !user) return null;
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('checkin-photos').upload(path, file, {
+      cacheControl: '31536000',
+      upsert: false,
+    });
+    if (error) {
+      console.error('Photo upload error:', error);
+      return null;
+    }
+    const { data: urlData } = supabase.storage.from('checkin-photos').getPublicUrl(path);
+    return urlData.publicUrl;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
+
+    // Upload photo if present
+    let photoUrl: string | null = null;
+    if (photoFile) {
+      photoUrl = await uploadPhoto(photoFile);
+    }
+
     const result = await create({
       type,
       mood,
       energy,
       note: note.trim() || null,
+      photo_url: photoUrl,
       date: new Date().toISOString().split('T')[0],
     });
     if (result) {
       hapticSuccess();
       setShowConfetti(true);
       setSuccess(true);
+      setPhotoFile(null);
       setTimeout(() => {
         setSuccess(false);
         setShowConfetti(false);
@@ -141,6 +171,7 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
                 onTextExtracted={(text) => {
                   setNote((prev) => prev ? `${prev}\n${text}` : text);
                 }}
+                onPhotoReady={(file) => setPhotoFile(file)}
                 disabled={loading}
               />
             </div>
@@ -151,6 +182,16 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
               rows={3}
               className="w-full bg-surface-elevated border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors resize-none"
             />
+            {photoFile && (
+              <div className="flex items-center gap-2 mt-1.5 text-xs text-text-muted">
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[color-mix(in_srgb,var(--color-success)_10%,transparent)] text-[var(--color-success)]">
+                  📷 Photo attachee
+                </span>
+                <button type="button" onClick={() => setPhotoFile(null)} className="text-text-dim hover:text-error transition-colors">
+                  Retirer
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </Card>

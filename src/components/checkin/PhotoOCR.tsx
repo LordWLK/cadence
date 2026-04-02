@@ -1,22 +1,26 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Camera, X, Loader2, RotateCcw, Check } from 'lucide-react';
+import { Camera, X, Loader2, RotateCcw, Check, Image } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 interface PhotoOCRProps {
   onTextExtracted: (text: string) => void;
+  onPhotoReady: (file: File) => void;
   disabled?: boolean;
 }
 
-type OCRStatus = 'idle' | 'capturing' | 'processing' | 'done' | 'error';
+type OCRStatus = 'idle' | 'processing' | 'done' | 'error';
 
-export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
+export function PhotoOCR({ onTextExtracted, onPhotoReady, disabled }: PhotoOCRProps) {
   const [status, setStatus] = useState<OCRStatus>('idle');
   const [preview, setPreview] = useState<string | null>(null);
   const [extractedText, setExtractedText] = useState<string>('');
   const [progress, setProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
+  const [photoSaved, setPhotoSaved] = useState(false);
+  const [textUsed, setTextUsed] = useState(false);
+  const currentFileRef = useRef<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleCapture = () => {
@@ -26,6 +30,10 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    currentFileRef.current = file;
+    setPhotoSaved(false);
+    setTextUsed(false);
 
     // Preview
     const reader = new FileReader();
@@ -38,7 +46,6 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
     setExtractedText('');
 
     try {
-      // Dynamic import to avoid loading Tesseract until needed (~2MB)
       const Tesseract = await import('tesseract.js');
 
       const result = await Tesseract.recognize(file, 'fra', {
@@ -53,7 +60,7 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
 
       if (!text) {
         setStatus('error');
-        setErrorMsg('Aucun texte detecte dans cette image. Essaie avec une photo plus nette.');
+        setErrorMsg('Aucun texte detecte. Tu peux quand meme enregistrer la photo.');
         return;
       }
 
@@ -62,16 +69,23 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
     } catch (err) {
       console.error('OCR error:', err);
       setStatus('error');
-      setErrorMsg('Erreur lors de la reconnaissance. Reessaie avec une autre photo.');
+      setErrorMsg('Erreur lors de la reconnaissance. Tu peux quand meme enregistrer la photo.');
     }
 
     // Reset file input
     if (fileInputRef.current) fileInputRef.current.value = '';
   }, []);
 
-  const handleConfirm = () => {
+  const handleConfirmText = () => {
     onTextExtracted(extractedText);
-    reset();
+    setTextUsed(true);
+  };
+
+  const handleSavePhoto = () => {
+    if (currentFileRef.current) {
+      onPhotoReady(currentFileRef.current);
+      setPhotoSaved(true);
+    }
   };
 
   const reset = () => {
@@ -80,9 +94,12 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
     setExtractedText('');
     setProgress(0);
     setErrorMsg('');
+    setPhotoSaved(false);
+    setTextUsed(false);
+    currentFileRef.current = null;
   };
 
-  // ─── Idle state: just the camera button ────────────────────────────────────
+  // ─── Idle state ──────────────────────────────────────────────────────────
   if (status === 'idle') {
     return (
       <>
@@ -99,21 +116,21 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
           type="button"
           onClick={handleCapture}
           disabled={disabled}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95"
           style={{
             backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
             color: 'var(--color-primary)',
           }}
-          aria-label="Prendre une photo pour remplir le texte automatiquement"
+          aria-label="Prendre une photo pour scanner du texte ou enregistrer"
         >
           <Camera size={14} />
-          Scanner du texte
+          Photo
         </button>
       </>
     );
   }
 
-  // ─── Processing / Done / Error ─────────────────────────────────────────────
+  // ─── Processing / Done / Error ─────────────────────────────────────────
   return (
     <div
       className="rounded-xl p-3 space-y-3"
@@ -122,7 +139,6 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
         border: '1px solid var(--color-border)',
       }}
     >
-      {/* Hidden file input for retry */}
       <input
         ref={fileInputRef}
         type="file"
@@ -138,7 +154,7 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
         <span className="text-xs font-medium text-text-muted">
           {status === 'processing' && 'Reconnaissance en cours...'}
           {status === 'done' && 'Texte reconnu'}
-          {status === 'error' && 'Erreur'}
+          {status === 'error' && 'Scan echoue'}
         </span>
         <button
           type="button"
@@ -150,7 +166,7 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
         </button>
       </div>
 
-      {/* Image preview (small thumbnail) */}
+      {/* Image preview */}
       {preview && (
         <div className="flex gap-3">
           <img
@@ -185,7 +201,7 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
               </div>
             )}
 
-            {/* Extracted text preview */}
+            {/* Extracted text */}
             {status === 'done' && (
               <p className="text-xs text-text leading-relaxed line-clamp-3">
                 {extractedText}
@@ -194,7 +210,7 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
 
             {/* Error */}
             {status === 'error' && (
-              <p className="text-xs" style={{ color: '#ef4444' }}>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 {errorMsg}
               </p>
             )}
@@ -203,37 +219,37 @@ export function PhotoOCR({ onTextExtracted, disabled }: PhotoOCRProps) {
       )}
 
       {/* Actions */}
-      <div className="flex gap-2">
-        {status === 'done' && (
-          <>
-            <Button
-              type="button"
-              size="sm"
-              onClick={handleConfirm}
-              className="flex-1"
-            >
-              <Check size={14} />
-              Utiliser ce texte
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleCapture}
-            >
-              <RotateCcw size={14} />
-            </Button>
-          </>
+      <div className="flex flex-wrap gap-2">
+        {/* Use text button (only when OCR succeeded) */}
+        {status === 'done' && !textUsed && (
+          <Button type="button" size="sm" onClick={handleConfirmText} className="flex-1">
+            <Check size={14} />
+            Utiliser le texte
+          </Button>
         )}
-        {status === 'error' && (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={handleCapture}
-          >
-            <Camera size={14} />
-            Reessayer
+        {status === 'done' && textUsed && (
+          <span className="flex items-center gap-1 text-[11px] text-[var(--color-success)] px-2">
+            <Check size={12} /> Texte ajoute
+          </span>
+        )}
+
+        {/* Save photo button (always available when we have a photo) */}
+        {(status === 'done' || status === 'error') && !photoSaved && (
+          <Button type="button" size="sm" variant="secondary" onClick={handleSavePhoto}>
+            <Image size={14} />
+            Enregistrer la photo
+          </Button>
+        )}
+        {photoSaved && (
+          <span className="flex items-center gap-1 text-[11px] text-[var(--color-success)] px-2">
+            <Check size={12} /> Photo enregistree
+          </span>
+        )}
+
+        {/* Retry */}
+        {(status === 'done' || status === 'error') && (
+          <Button type="button" variant="ghost" size="sm" onClick={handleCapture}>
+            <RotateCcw size={14} />
           </Button>
         )}
       </div>
