@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useActivities } from '@/lib/hooks/useActivities';
+import { useBacklog } from '@/lib/hooks/useBacklog';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { getNextWeekStart, getWeekDays, getDayName, formatDateISO, formatDate } from '@/lib/utils/dates';
-import { Plus, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { Plus, Archive, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
@@ -15,14 +16,17 @@ const ICON_MAP: Record<string, React.ElementType> = {
 interface ActivityFormProps {
   weekStart: Date;
   onCreated: () => void;
+  onBacklogCreated?: () => void;
 }
 
-export function ActivityForm({ weekStart, onCreated }: ActivityFormProps) {
+export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: ActivityFormProps) {
   const { create, loading } = useActivities();
+  const backlog = useBacklog();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<string>(ACTIVITY_CATEGORIES[0].id);
   const [plannedDate, setPlannedDate] = useState('');
   const [open, setOpen] = useState(false);
+  const [savingBacklog, setSavingBacklog] = useState(false);
 
   const days = getWeekDays(weekStart);
 
@@ -39,6 +43,21 @@ export function ActivityForm({ weekStart, onCreated }: ActivityFormProps) {
     setPlannedDate('');
     setOpen(false);
     onCreated();
+  };
+
+  const handleBacklog = async () => {
+    if (!title.trim()) return;
+    setSavingBacklog(true);
+    await backlog.create({
+      title: title.trim(),
+      category,
+      recurrence: 'none',
+    });
+    setSavingBacklog(false);
+    setTitle('');
+    setPlannedDate('');
+    setOpen(false);
+    onBacklogCreated?.();
   };
 
   if (!open) {
@@ -117,7 +136,17 @@ export function ActivityForm({ weekStart, onCreated }: ActivityFormProps) {
 
         <div className="flex gap-2">
           <Button type="submit" className="flex-1" disabled={loading || !title.trim() || !plannedDate}>
-            {loading ? 'Ajout...' : 'Ajouter'}
+            {loading ? 'Ajout...' : 'Planifier'}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="flex items-center gap-1.5"
+            disabled={savingBacklog || !title.trim()}
+            onClick={handleBacklog}
+          >
+            <Archive size={14} />
+            {savingBacklog ? '...' : 'Backlog'}
           </Button>
           <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
             Annuler

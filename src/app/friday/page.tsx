@@ -30,6 +30,7 @@ export default function FridayPage() {
   const [editCategory, setEditCategory] = useState('');
   const [editDate, setEditDate] = useState('');
   const [saving, setSaving] = useState(false);
+  const [backlogKey, setBacklogKey] = useState(0);
 
   const nextWeekStart = getNextWeekStart();
   const weekStartISO = formatDateISO(nextWeekStart);
@@ -121,7 +122,7 @@ export default function FridayPage() {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <ActivityForm weekStart={nextWeekStart} onCreated={loadActivities} />
+      <ActivityForm weekStart={nextWeekStart} onCreated={loadActivities} onBacklogCreated={() => setBacklogKey(k => k + 1)} />
 
       {loading ? (
         <div className="space-y-2">
@@ -258,6 +259,7 @@ export default function FridayPage() {
       <SportFeed />
 
       <BacklogDrawer
+        key={backlogKey}
         weekStart={nextWeekStart}
         weekDays={weekDays}
         weekStartISO={weekStartISO}

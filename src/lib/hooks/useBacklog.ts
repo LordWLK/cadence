@@ -3,7 +3,20 @@
 import { useCallback } from 'react';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useAuth } from '@/providers/AuthProvider';
+import { getWeekDays, formatDateISO } from '@/lib/utils/dates';
+import { getDay } from 'date-fns';
 import type { BacklogActivity, BacklogActivityInsert } from '@/lib/supabase/types';
+
+// Map day names to date-fns getDay() values (0=sunday, 1=monday, ...)
+const DAY_NAME_TO_INDEX: Record<string, number> = {
+  lundi: 1,
+  mardi: 2,
+  mercredi: 3,
+  jeudi: 4,
+  vendredi: 5,
+  samedi: 6,
+  dimanche: 0,
+};
 
 export function useBacklog() {
   const supabase = useSupabase();
@@ -53,13 +66,13 @@ export function useBacklog() {
       .eq('user_id', user.id);
   }, [supabase, user]);
 
+  // Pull a backlog item to a specific day — item stays in backlog (always reusable)
   const pullToWeek = useCallback(async (
     backlog: BacklogActivity,
     plannedDate: string,
     weekStart: string,
   ) => {
     if (!supabase || !user) return null;
-    // Create a weekly activity from the backlog item
     const { data: activity, error } = await supabase
       .from('weekly_activities')
       .insert({
@@ -73,15 +86,6 @@ export function useBacklog() {
       .select()
       .single();
     if (error) return null;
-
-    // If one-shot (no recurrence), deactivate the backlog item
-    if (backlog.recurrence === 'none') {
-      await supabase
-        .from('backlog_activities')
-        .update({ is_active: false })
-        .eq('id', backlog.id);
-    }
-
     return activity;
   }, [supabase, user]);
 
@@ -97,5 +101,68 @@ export function useBacklog() {
     return new Set(ids);
   }, [supabase, user]);
 
-  return { getAll, create, update, remove, pullToWeek, getAlreadyPulled };
+  // Auto-populate recurring backlog items into the week
+  const autoPopulateRecurring = useCallback(async (weekStart: Date, weekStartISO: string) => {
+    if (!supabase || !user) return false;
+
+    // 1. Get all active backlog items with a recurring day
+    const { data: recurring } = await supabase
+      .from('backlog_activities')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .neq('recurrence', 'none');
+
+    if (!recurring || recurring.length === 0) return false;
+
+    // 2. Get already pulled items for this week
+    const { data: existing } = await supabase
+      .from('weekly_activities')
+      .select('backlog_id')
+      .eq('user_id', user.id)
+      .eq('week_start', weekStartISO)
+      .not('backlog_id', 'is', null);
+
+    const alreadyPulledIds = new Set((existing ?? []).map(e => e.backlog_id));
+
+    // 3. Get the week days
+    const days = getWeekDays(weekStart);
+
+    // 4. For each recurring item, check if it needs to be added
+    const toInsert: Array<{
+      user_id: string;
+      title: string;
+      category: string;
+      planned_date: string;
+      week_start: string;
+      backlog_id: string;
+    }> = [];
+
+    for (const item of recurring as BacklogActivity[]) {
+      if (alreadyPulledIds.has(item.id)) continue;
+
+      const dayIndex = DAY_NAME_TO_INDEX[item.recurrence];
+      if (dayIndex === undefined) continue;
+
+      // Find the matching day in the week
+      const matchingDay = days.find(d => getDay(d) === dayIndex);
+      if (!matchingDay) continue;
+
+      toInsert.push({
+        user_id: user.id,
+        title: item.title,
+        category: item.category,
+        planned_date: formatDateISO(matchingDay),
+        week_start: weekStartISO,
+        backlog_id: item.id,
+      });
+    }
+
+    if (toInsert.length === 0) return false;
+
+    await supabase.from('weekly_activities').insert(toInsert);
+    return true; // Activities were added
+  }, [supabase, user]);
+
+  return { getAll, create, update, remove, pullToWeek, getAlreadyPulled, autoPopulateRecurring };
 }

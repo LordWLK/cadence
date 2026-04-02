@@ -5,9 +5,8 @@ import { useBacklog } from '@/lib/hooks/useBacklog';
 import { useAuth } from '@/providers/AuthProvider';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { formatDate, formatDateISO } from '@/lib/utils/dates';
-import { ChevronDown, ChevronRight, Plus, Repeat, Trash2, X, Archive, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { ChevronDown, Plus, Repeat, Trash2, X, Archive, CalendarClock, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { BacklogActivity } from '@/lib/supabase/types';
 
@@ -15,17 +14,25 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
 };
 
-const RECURRENCE_LABELS: Record<string, string> = {
-  none: 'Une fois',
-  weekly: 'Hebdo',
-  monthly: 'Mensuel',
-};
-
-const RECURRENCE_OPTIONS: { id: string; label: string }[] = [
-  { id: 'none', label: 'Une fois' },
-  { id: 'weekly', label: 'Hebdo' },
-  { id: 'monthly', label: 'Mensuel' },
+const DAYS_OF_WEEK = [
+  { id: 'lundi', label: 'Lun' },
+  { id: 'mardi', label: 'Mar' },
+  { id: 'mercredi', label: 'Mer' },
+  { id: 'jeudi', label: 'Jeu' },
+  { id: 'vendredi', label: 'Ven' },
+  { id: 'samedi', label: 'Sam' },
+  { id: 'dimanche', label: 'Dim' },
 ];
+
+const DAY_LABELS: Record<string, string> = {
+  lundi: 'Lun',
+  mardi: 'Mar',
+  mercredi: 'Mer',
+  jeudi: 'Jeu',
+  vendredi: 'Ven',
+  samedi: 'Sam',
+  dimanche: 'Dim',
+};
 
 interface BacklogDrawerProps {
   weekStart: Date;
@@ -36,13 +43,14 @@ interface BacklogDrawerProps {
 
 export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: BacklogDrawerProps) {
   const { user } = useAuth();
-  const { getAll, create, remove, pullToWeek, getAlreadyPulled } = useBacklog();
+  const { getAll, create, update, remove, pullToWeek, getAlreadyPulled, autoPopulateRecurring } = useBacklog();
   const [isOpen, setIsOpen] = useState(false);
   const [items, setItems] = useState<BacklogActivity[]>([]);
   const [pulledIds, setPulledIds] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
   const [dayPickerId, setDayPickerId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [autoPopDone, setAutoPopDone] = useState(false);
 
   // Form state
   const [newTitle, setNewTitle] = useState('');
@@ -60,6 +68,18 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
   }, [user, getAll, getAlreadyPulled, weekStartISO]);
 
   useEffect(() => { load(); }, [load]);
+
+  // Auto-populate recurring items once per page load
+  useEffect(() => {
+    if (!user || autoPopDone) return;
+    autoPopulateRecurring(weekStart, weekStartISO).then((added) => {
+      setAutoPopDone(true);
+      if (added) {
+        load();
+        onPulled(); // Refresh the activities list
+      }
+    });
+  }, [user, autoPopDone, weekStart, weekStartISO, autoPopulateRecurring, load, onPulled]);
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -84,6 +104,10 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
   };
 
   if (!user) return null;
+
+  // Separate recurring items and normal backlog
+  const recurringItems = items.filter(i => i.recurrence !== 'none');
+  const normalItems = items.filter(i => i.recurrence === 'none');
 
   return (
     <>
@@ -170,115 +194,188 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
                   })}
                 </div>
 
-                {/* Recurrence */}
-                <div className="flex gap-1.5">
-                  {RECURRENCE_OPTIONS.map((opt) => (
+                {/* Recurrence — day of week or none */}
+                <div>
+                  <p className="text-[11px] text-[var(--color-text-muted)] mb-1.5 flex items-center gap-1">
+                    <CalendarClock size={11} />
+                    Recurrence (optionnel)
+                  </p>
+                  <div className="flex gap-1">
                     <button
-                      key={opt.id}
                       type="button"
-                      onClick={() => setNewRecurrence(opt.id)}
-                      className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] transition-all ${
-                        newRecurrence === opt.id
+                      onClick={() => setNewRecurrence('none')}
+                      className={`px-2 py-1 rounded-lg text-[11px] transition-all ${
+                        newRecurrence === 'none'
                           ? 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]'
                           : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'
                       }`}
                     >
-                      {opt.id !== 'none' && <Repeat size={10} />}
-                      {opt.label}
+                      Aucune
                     </button>
-                  ))}
+                    {DAYS_OF_WEEK.map((day) => (
+                      <button
+                        key={day.id}
+                        type="button"
+                        onClick={() => setNewRecurrence(day.id)}
+                        className={`px-1.5 py-1 rounded-lg text-[11px] transition-all ${
+                          newRecurrence === day.id
+                            ? 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]'
+                            : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'
+                        }`}
+                      >
+                        {day.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="flex gap-2">
                   <Button size="sm" className="flex-1" onClick={handleCreate} disabled={!newTitle.trim()}>
                     Ajouter
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setNewTitle(''); }}>
+                  <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setNewTitle(''); setNewRecurrence('none'); }}>
                     <X size={14} />
                   </Button>
                 </div>
               </div>
             )}
 
-            {/* Backlog items list */}
-            {items.length === 0 && !showForm ? (
+            {/* Recurring items section */}
+            {recurringItems.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide flex items-center gap-1">
+                  <Repeat size={10} />
+                  Recurrents
+                </p>
+                {recurringItems.map((item) => (
+                  <BacklogItem
+                    key={item.id}
+                    item={item}
+                    isPulled={pulledIds.has(item.id)}
+                    showDayPicker={dayPickerId === item.id}
+                    weekDays={weekDays}
+                    onToggleDayPicker={() => setDayPickerId(dayPickerId === item.id ? null : item.id)}
+                    onPull={(date) => handlePull(item, date)}
+                    onDelete={() => setDeleteTarget(item.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Normal backlog items */}
+            {normalItems.length > 0 && (
+              <div className="space-y-1.5">
+                {recurringItems.length > 0 && (
+                  <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide mt-2">
+                    Pour plus tard
+                  </p>
+                )}
+                {normalItems.map((item) => (
+                  <BacklogItem
+                    key={item.id}
+                    item={item}
+                    isPulled={pulledIds.has(item.id)}
+                    showDayPicker={dayPickerId === item.id}
+                    weekDays={weekDays}
+                    onToggleDayPicker={() => setDayPickerId(dayPickerId === item.id ? null : item.id)}
+                    onPull={(date) => handlePull(item, date)}
+                    onDelete={() => setDeleteTarget(item.id)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Empty state */}
+            {items.length === 0 && !showForm && (
               <p className="text-center text-xs text-[var(--color-text-dim)] py-3">
                 Ton backlog est vide
               </p>
-            ) : (
-              <div className="space-y-1.5">
-                {items.map((item) => {
-                  const cat = ACTIVITY_CATEGORIES.find(c => c.id === item.category);
-                  const Icon = cat ? (ICON_MAP[cat.icon] || Sparkles) : Sparkles;
-                  const isPulled = pulledIds.has(item.id);
-                  const showDayPicker = dayPickerId === item.id;
-
-                  return (
-                    <div key={item.id}>
-                      <div
-                        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${
-                          isPulled
-                            ? 'bg-[color-mix(in_srgb,var(--color-success)_8%,transparent)] opacity-60'
-                            : 'bg-[var(--color-surface-elevated)]'
-                        }`}
-                      >
-                        <div className={`shrink-0 ${cat?.color || 'text-[var(--color-text-muted)]'}`}>
-                          <Icon size={15} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm truncate ${isPulled ? 'line-through text-[var(--color-text-muted)]' : ''}`}>
-                            {item.title}
-                          </p>
-                        </div>
-                        {item.recurrence !== 'none' && (
-                          <span className="shrink-0 flex items-center gap-0.5 text-[10px] text-[var(--color-text-dim)] bg-[var(--color-surface)] px-1.5 py-0.5 rounded-full">
-                            <Repeat size={9} />
-                            {RECURRENCE_LABELS[item.recurrence]}
-                          </span>
-                        )}
-                        {!isPulled && (
-                          <button
-                            onClick={() => setDayPickerId(showDayPicker ? null : item.id)}
-                            className="shrink-0 text-[var(--color-primary)] hover:bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)] p-1 rounded-lg transition-colors"
-                            title="Ajouter a la semaine"
-                          >
-                            <Plus size={16} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => setDeleteTarget(item.id)}
-                          className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-error)] p-1 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-
-                      {/* Inline day picker */}
-                      {showDayPicker && (
-                        <div className="mt-1 ml-7 grid grid-cols-7 gap-1 p-2 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border)]">
-                          {weekDays.map((day) => {
-                            const iso = formatDateISO(day);
-                            return (
-                              <button
-                                key={iso}
-                                onClick={() => handlePull(item, iso)}
-                                className="flex flex-col items-center p-1.5 rounded-lg text-[11px] text-[var(--color-text-muted)] hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-[var(--color-primary)] transition-colors"
-                              >
-                                <span className="font-medium">{formatDate(day, 'EEE')}</span>
-                                <span className="text-[10px]">{formatDate(day, 'dd')}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
             )}
           </div>
         )}
       </div>
     </>
+  );
+}
+
+// ─── Backlog Item Component ────────────────────────────────────────────────
+
+interface BacklogItemProps {
+  item: BacklogActivity;
+  isPulled: boolean;
+  showDayPicker: boolean;
+  weekDays: Date[];
+  onToggleDayPicker: () => void;
+  onPull: (date: string) => void;
+  onDelete: () => void;
+}
+
+function BacklogItem({ item, isPulled, showDayPicker, weekDays, onToggleDayPicker, onPull, onDelete }: BacklogItemProps) {
+  const cat = ACTIVITY_CATEGORIES.find(c => c.id === item.category);
+  const Icon = cat ? (ICON_MAP[cat.icon] || Sparkles) : Sparkles;
+  const isRecurring = item.recurrence !== 'none';
+
+  return (
+    <div>
+      <div
+        className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${
+          isPulled
+            ? 'bg-[color-mix(in_srgb,var(--color-success)_8%,transparent)]'
+            : 'bg-[var(--color-surface-elevated)]'
+        }`}
+      >
+        <div className={`shrink-0 ${cat?.color || 'text-[var(--color-text-muted)]'}`}>
+          <Icon size={15} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm truncate ${isPulled ? 'text-[var(--color-text-muted)]' : ''}`}>
+            {item.title}
+          </p>
+        </div>
+        {isRecurring && (
+          <span className="shrink-0 flex items-center gap-0.5 text-[10px] text-[var(--color-text-dim)] bg-[var(--color-surface)] px-1.5 py-0.5 rounded-full">
+            <Repeat size={9} />
+            {DAY_LABELS[item.recurrence] || item.recurrence}
+          </span>
+        )}
+        {isPulled && (
+          <span className="shrink-0 text-[10px] text-[var(--color-success)]">
+            Planifie
+          </span>
+        )}
+        <button
+          onClick={onToggleDayPicker}
+          className="shrink-0 text-[var(--color-primary)] hover:bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)] p-1 rounded-lg transition-colors"
+          title="Ajouter a la semaine"
+        >
+          <Plus size={16} />
+        </button>
+        <button
+          onClick={onDelete}
+          className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-error)] p-1 rounded-lg transition-colors"
+        >
+          <Trash2 size={13} />
+        </button>
+      </div>
+
+      {/* Inline day picker */}
+      {showDayPicker && (
+        <div className="mt-1 ml-7 grid grid-cols-7 gap-1 p-2 bg-[var(--color-surface-elevated)] rounded-xl border border-[var(--color-border)]">
+          {weekDays.map((day) => {
+            const iso = formatDateISO(day);
+            return (
+              <button
+                key={iso}
+                onClick={() => onPull(iso)}
+                className="flex flex-col items-center p-1.5 rounded-lg text-[11px] text-[var(--color-text-muted)] hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] hover:text-[var(--color-primary)] transition-colors"
+              >
+                <span className="font-medium">{formatDate(day, 'EEE')}</span>
+                <span className="text-[10px]">{formatDate(day, 'dd')}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
