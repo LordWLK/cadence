@@ -5,6 +5,7 @@ import { useBacklog } from '@/lib/hooks/useBacklog';
 import { useAuth } from '@/providers/AuthProvider';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { formatDate, formatDateISO } from '@/lib/utils/dates';
+import { DayScroller } from './DayScroller';
 import { RecurrenceSection, DAY_LABELS, FREQ_LABELS } from './RecurrenceSection';
 import { ChevronDown, Plus, Repeat, Pencil, Trash2, Check, X, Archive, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -325,20 +326,7 @@ function EditForm({ editTitle, editCategory, editDay, editRecEnabled, editRecDay
       </div>
       <div>
         <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Jour</label>
-        <div className="grid grid-cols-7 gap-1">
-          {weekDays.map((d) => {
-            const iso = formatDateISO(d);
-            return (
-              <button key={iso} type="button" onClick={() => setEditDay(editDay === iso ? '' : iso)}
-                className={`flex flex-col items-center p-2 rounded-lg text-xs transition-all active:scale-95 ${
-                  editDay === iso ? CHIP_ON : CHIP_OFF
-                }`}>
-                <span className="font-medium">{formatDate(d, 'EEE')}</span>
-                <span className="text-[10px]">{formatDate(d, 'dd')}</span>
-              </button>
-            );
-          })}
-        </div>
+        <DayScroller days={weekDays} selected={editDay} onChange={(iso) => setEditDay(iso)} />
       </div>
       <RecurrenceSection enabled={editRecEnabled} day={editRecDay} freq={editRecFreq}
         onToggle={() => setEditRecEnabled(!editRecEnabled)} onDayChange={setEditRecDay} onFreqChange={setEditRecFreq} />
