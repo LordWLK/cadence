@@ -112,3 +112,54 @@ export const MMA_LEAGUES: Record<string, { id: string; name: string }> = {
 
 // UFC/MMA keywords for big match detection
 export const MMA_BIG_MATCH_KEYWORDS = ['title', 'championship', 'main event', 'main card', 'ppv'];
+
+// UGC Cinemas list (scraped from ugc.fr)
+export const UGC_CINEMAS: { id: string; name: string; city: string }[] = [
+  // Paris
+  { id: '10', name: 'UGC Ciné Cité Les Halles', city: 'Paris' },
+  { id: '12', name: 'UGC Ciné Cité Bercy', city: 'Paris' },
+  { id: '7', name: 'UGC Ciné Cité Maillot', city: 'Paris' },
+  { id: '14', name: 'UGC Montparnasse', city: 'Paris' },
+  { id: '15', name: 'UGC Rotonde', city: 'Paris' },
+  { id: '13', name: 'UGC Odéon', city: 'Paris' },
+  { id: '4', name: 'UGC Danton', city: 'Paris' },
+  { id: '11', name: 'UGC Lyon Bastille', city: 'Paris' },
+  { id: '5', name: 'UGC Gobelins', city: 'Paris' },
+  { id: '9', name: 'UGC Opéra', city: 'Paris' },
+  { id: '37', name: 'UGC Ciné Cité Paris 19', city: 'Paris' },
+  // Île-de-France
+  { id: '20', name: 'UGC Ciné Cité La Défense', city: 'La Défense' },
+  { id: '59', name: 'UGC Issy-les-Moulineaux', city: 'Issy-les-Moulineaux' },
+  { id: '18', name: 'UGC Ciné Cité Rosny', city: 'Rosny-sous-Bois' },
+  { id: '38', name: 'UGC Ciné Cité O Parinor', city: 'Aulnay-sous-Bois' },
+  { id: '21', name: 'UGC Ciné Cité Créteil', city: 'Créteil' },
+  { id: '19', name: 'UGC Ciné Cité Noisy-le-Grand', city: 'Noisy-le-Grand' },
+  { id: '16', name: 'UGC Ciné Cité Cergy-le-Haut', city: 'Cergy' },
+  { id: '17', name: 'UGC Enghien', city: 'Enghien-les-Bains' },
+  { id: '43', name: 'UGC Ciné Cité Vélizy', city: 'Vélizy' },
+  { id: '44', name: 'UGC Ciné Cité Parly', city: 'Le Chesnay' },
+  { id: '6', name: 'UGC Ciné Cité SQY Ouest', city: 'Montigny-le-Bretonneux' },
+  { id: '40', name: 'UGC Roxane', city: 'Versailles' },
+  { id: '41', name: 'UGC Cyrano', city: 'Versailles' },
+  { id: '55', name: 'UGC Plaisir', city: 'Plaisir' },
+  { id: '47', name: 'Le Central', city: 'Île-de-France' },
+  { id: '48', name: 'C2L Saint Germain', city: 'Saint-Germain-en-Laye' },
+  { id: '49', name: 'Le Cin\'Hoche', city: 'Île-de-France' },
+  { id: '54', name: 'C2L Poissy', city: 'Poissy' },
+  { id: '39', name: 'UGC Le Majestic', city: 'Île-de-France' },
+  // Bordeaux
+  { id: '1', name: 'UGC Ciné Cité Bordeaux Gambetta', city: 'Bordeaux' },
+  { id: '57', name: 'UGC Ciné Cité Bassins à Flot', city: 'Bordeaux' },
+  { id: '42', name: 'UGC Talence', city: 'Talence' },
+  // Caen
+  { id: '27', name: 'UGC Ciné Cité Mondeville', city: 'Mondeville' },
+  // Lille
+  { id: '25', name: 'UGC Ciné Cité Lille', city: 'Lille' },
+  { id: '24', name: 'UGC Ciné Cité Villeneuve d\'Ascq', city: 'Villeneuve-d\'Ascq' },
+  { id: '45', name: 'Le Métropole', city: 'Lille' },
+  { id: '46', name: 'Le Majestic', city: 'Lille' },
+  { id: '52', name: 'Les Écrans', city: 'Lille' },
+  // Lyon
+  { id: '32', name: 'UGC Ciné Cité Internationale', city: 'Lyon' },
+  { id: '33', name: 'UGC Ciné Cité Confluence', city: 'Lyon' },
+];

@@ -133,6 +133,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      cinema_preferences: {
+        Row: {
+          id: string;
+          user_id: string;
+          cinema_id: string;
+          cinema_name: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          cinema_id: string;
+          cinema_name: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          cinema_id?: string;
+          cinema_name?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       selected_events: {
         Row: {
           id: string;

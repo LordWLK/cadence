@@ -10,6 +10,8 @@ import { useAuth } from '@/providers/AuthProvider';
 import { getRollingDays, getWeekStart, formatDate, formatDateISO, getDayName } from '@/lib/utils/dates';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { SportFeed } from '@/components/friday/SportFeed';
+import { CinemaFeed } from '@/components/friday/CinemaFeed';
+import { useCinemaPreferences } from '@/lib/hooks/useCinemaPreferences';
 import { BacklogDrawer } from '@/components/friday/BacklogDrawer';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CalendarPlus, Trash2, Pencil, Check, X, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
@@ -32,6 +34,17 @@ export default function FridayPage() {
   const [editDate, setEditDate] = useState('');
   const [saving, setSaving] = useState(false);
   const [backlogKey, setBacklogKey] = useState(0);
+  const [cinemaIds, setCinemaIds] = useState<string[]>([]);
+  const cinemaPrefs = useCinemaPreferences();
+
+  // Load cinema preferences on mount
+  useEffect(() => {
+    if (!user) return;
+    cinemaPrefs.getAll().then(prefs => {
+      setCinemaIds(prefs.map(p => p.cinema_id));
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const rollingDays = getRollingDays(14);
   const startISO = formatDateISO(rollingDays[0]);
@@ -238,6 +251,10 @@ export default function FridayPage() {
       )}
 
       <SportFeed />
+
+      {cinemaIds.length > 0 && (
+        <CinemaFeed preferredCinemaIds={cinemaIds} />
+      )}
 
       <BacklogDrawer
         key={backlogKey}

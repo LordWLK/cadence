@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/providers/ConfigProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Save, Trash2, Link, Volleyball, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, User, LogOut, Mail, Calendar } from 'lucide-react';
+import { Save, Trash2, Link, Volleyball, Film, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, User, LogOut, Mail, Calendar } from 'lucide-react';
 import { useTheme } from '@/lib/hooks/useTheme';
 import { useAuth } from '@/providers/AuthProvider';
 import NextLink from 'next/link';
@@ -248,6 +248,20 @@ export default function SettingsPage() {
           </Card>
         </NextLink>
       )}
+
+      {/* Cinema preferences */}
+      <NextLink href="/settings/cinema">
+        <Card className="flex items-center justify-between cursor-pointer hover:border-primary/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <Film size={20} style={{ color: '#7c3aed' }} />
+            <div>
+              <p className="font-medium">Cinemas UGC</p>
+              <p className="text-sm text-text-muted">Tes cinemas favoris pour les seances</p>
+            </div>
+          </div>
+          <span className="text-text-dim">&rarr;</span>
+        </Card>
+      </NextLink>
     </div>
   );
 }
