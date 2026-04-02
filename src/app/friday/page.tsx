@@ -2,18 +2,19 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ActivityForm } from '@/components/friday/ActivityForm';
+import { DayScroller } from '@/components/friday/DayScroller';
 import { useActivities } from '@/lib/hooks/useActivities';
 import { useAuth } from '@/providers/AuthProvider';
-import { getNextWeekStart, getWeekStart, getWeekDays, formatDate, formatDateISO, getDayName } from '@/lib/utils/dates';
+import { getRollingDays, getWeekStart, formatDate, formatDateISO, getDayName } from '@/lib/utils/dates';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { SportFeed } from '@/components/friday/SportFeed';
 import { BacklogDrawer } from '@/components/friday/BacklogDrawer';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CalendarPlus, Trash2, Pencil, Check, X, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { parseISO } from 'date-fns';
 import type { WeeklyActivity } from '@/lib/supabase/types';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -22,7 +23,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 export default function FridayPage() {
   const { user } = useAuth();
-  const { getByWeek, update, remove } = useActivities();
+  const { getByDateRange, update, remove } = useActivities();
   const [activities, setActivities] = useState<WeeklyActivity[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -32,17 +33,21 @@ export default function FridayPage() {
   const [saving, setSaving] = useState(false);
   const [backlogKey, setBacklogKey] = useState(0);
 
-  const nextWeekStart = getNextWeekStart();
-  const weekStartISO = formatDateISO(nextWeekStart);
-  const weekDays = getWeekDays(nextWeekStart);
+  const rollingDays = getRollingDays(14);
+  const startISO = formatDateISO(rollingDays[0]);
+  const endISO = formatDateISO(rollingDays[rollingDays.length - 1]);
+
+  // For backlog, use the current week start
+  const currentWeekStart = getWeekStart();
+  const currentWeekStartISO = formatDateISO(currentWeekStart);
 
   const loadActivities = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    const data = await getByWeek(weekStartISO);
+    const data = await getByDateRange(startISO, endISO);
     setActivities(data);
     setLoading(false);
-  }, [user, getByWeek, weekStartISO]);
+  }, [user, getByDateRange, startISO, endISO]);
 
   useEffect(() => {
     loadActivities();
@@ -65,8 +70,6 @@ export default function FridayPage() {
     if (!grouped[a.planned_date]) grouped[a.planned_date] = [];
     grouped[a.planned_date].push(a);
   }
-
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const handleRemove = async (id: string) => {
     await remove(id);
@@ -100,12 +103,14 @@ export default function FridayPage() {
     loadActivities();
   };
 
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Planifier ma semaine</h1>
+        <h1 className="text-2xl font-bold">Planifier mes activites</h1>
         <p className="text-text-muted text-sm mt-1">
-          Semaine du {formatDate(nextWeekStart, 'dd MMM yyyy')}
+          {formatDate(rollingDays[0], 'dd MMM')} — {formatDate(rollingDays[rollingDays.length - 1], 'dd MMM yyyy')}
         </p>
       </div>
 
@@ -122,7 +127,7 @@ export default function FridayPage() {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <ActivityForm weekStart={nextWeekStart} onCreated={loadActivities} onBacklogCreated={() => setBacklogKey(k => k + 1)} />
+      <ActivityForm onCreated={loadActivities} onBacklogCreated={() => setBacklogKey(k => k + 1)} />
 
       {loading ? (
         <div className="space-y-2">
@@ -132,7 +137,7 @@ export default function FridayPage() {
         <Card className="text-center py-8 space-y-3">
           <CalendarPlus size={32} className="text-text-dim mx-auto" />
           <p className="text-text-muted text-sm">Rien de prevu pour le moment</p>
-          <p className="text-text-dim text-xs">Ajoute tes activites cool pour la semaine prochaine !</p>
+          <p className="text-text-dim text-xs">Ajoute tes activites pour les 2 prochaines semaines !</p>
         </Card>
       ) : (
         <div className="space-y-4">
@@ -150,7 +155,6 @@ export default function FridayPage() {
                 if (isEditing) {
                   return (
                     <Card key={activity.id} variant="elevated" className="space-y-3">
-                      {/* Title */}
                       <input
                         type="text"
                         value={editTitle}
@@ -159,7 +163,6 @@ export default function FridayPage() {
                         className="w-full bg-surface border border-border rounded-xl px-3 py-2.5 text-sm text-text focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors"
                       />
 
-                      {/* Category picker */}
                       <div className="grid grid-cols-3 gap-1.5">
                         {ACTIVITY_CATEGORIES.map((cat) => {
                           const Icon = ICON_MAP[cat.icon] || Sparkles;
@@ -169,7 +172,7 @@ export default function FridayPage() {
                               key={cat.id}
                               type="button"
                               onClick={() => setEditCategory(cat.id)}
-                              className={`flex flex-col items-center gap-0.5 p-2 rounded-lg text-[11px] transition-all ${
+                              className={`flex flex-col items-center gap-0.5 p-2 rounded-lg text-[11px] transition-all active:scale-95 ${
                                 isSelected
                                   ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
                                   : 'bg-surface text-text-muted'
@@ -182,30 +185,8 @@ export default function FridayPage() {
                         })}
                       </div>
 
-                      {/* Day picker */}
-                      <div className="grid grid-cols-7 gap-1">
-                        {weekDays.map((day) => {
-                          const iso = formatDateISO(day);
-                          const isSelected = editDate === iso;
-                          return (
-                            <button
-                              key={iso}
-                              type="button"
-                              onClick={() => setEditDate(iso)}
-                              className={`flex flex-col items-center p-1.5 rounded-lg text-[11px] transition-all ${
-                                isSelected
-                                  ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
-                                  : 'bg-surface text-text-muted'
-                              }`}
-                            >
-                              <span className="font-medium">{formatDate(day, 'EEE')}</span>
-                              <span className="text-[10px]">{formatDate(day, 'dd')}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <DayScroller days={rollingDays} selected={editDate} onChange={setEditDate} />
 
-                      {/* Actions */}
                       <div className="flex gap-2">
                         <Button
                           size="sm"
@@ -260,9 +241,9 @@ export default function FridayPage() {
 
       <BacklogDrawer
         key={backlogKey}
-        weekStart={nextWeekStart}
-        weekDays={weekDays}
-        weekStartISO={weekStartISO}
+        weekStart={currentWeekStart}
+        weekDays={rollingDays}
+        weekStartISO={currentWeekStartISO}
         onPulled={loadActivities}
       />
     </div>

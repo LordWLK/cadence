@@ -6,21 +6,22 @@ import { Card } from '@/components/ui/Card';
 import { useActivities } from '@/lib/hooks/useActivities';
 import { useBacklog } from '@/lib/hooks/useBacklog';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
-import { getWeekDays, formatDateISO, formatDate } from '@/lib/utils/dates';
+import { getRollingDays, formatDateISO, getWeekStart } from '@/lib/utils/dates';
 import { RecurrenceSection } from './RecurrenceSection';
+import { DayScroller } from './DayScroller';
 import { Plus, Archive, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { parseISO } from 'date-fns';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
 };
 
 interface ActivityFormProps {
-  weekStart: Date;
   onCreated: () => void;
   onBacklogCreated?: () => void;
 }
 
-export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: ActivityFormProps) {
+export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps) {
   const { create, loading } = useActivities();
   const backlog = useBacklog();
   const [title, setTitle] = useState('');
@@ -34,7 +35,7 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
   const [recDay, setRecDay] = useState('lundi');
   const [recFreq, setRecFreq] = useState('weekly');
 
-  const days = getWeekDays(weekStart);
+  const rollingDays = getRollingDays(14);
 
   const resetForm = () => {
     setTitle('');
@@ -49,6 +50,9 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !plannedDate) return;
+
+    // Compute week_start from the selected date
+    const weekStart = getWeekStart(parseISO(plannedDate));
 
     await create({
       title: title.trim(),
@@ -137,25 +141,7 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
 
         <div>
           <label className="text-sm text-text-muted block mb-1.5">Jour</label>
-          <div className="grid grid-cols-7 gap-1">
-            {days.map((day) => {
-              const iso = formatDateISO(day);
-              const isSelected = plannedDate === iso;
-              return (
-                <button
-                  key={iso}
-                  type="button"
-                  onClick={() => setPlannedDate(iso)}
-                  className={`flex flex-col items-center p-2 rounded-lg text-xs transition-all active:scale-95 ${
-                    isSelected ? chipActive : chipInactive
-                  }`}
-                >
-                  <span className="font-medium">{formatDate(day, 'EEE')}</span>
-                  <span className="text-[10px]">{formatDate(day, 'dd')}</span>
-                </button>
-              );
-            })}
-          </div>
+          <DayScroller days={rollingDays} selected={plannedDate} onChange={setPlannedDate} />
         </div>
 
         <RecurrenceSection

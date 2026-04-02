@@ -1,4 +1,4 @@
-import { startOfWeek, endOfWeek, addWeeks, format, isToday as isTodayFns, isFriday as isFridayFns, eachDayOfInterval, parseISO } from 'date-fns';
+import { startOfWeek, endOfWeek, addWeeks, addDays, format, isToday as isTodayFns, isFriday as isFridayFns, eachDayOfInterval, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export function getWeekStart(date: Date = new Date()): Date {
@@ -42,4 +42,9 @@ export function isToday(date: Date): boolean {
 
 export function isFriday(date: Date = new Date()): boolean {
   return isFridayFns(date);
+}
+
+export function getRollingDays(count: number = 14): Date[] {
+  const today = new Date();
+  return eachDayOfInterval({ start: today, end: addDays(today, count - 1) });
 }
