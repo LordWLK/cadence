@@ -223,7 +223,7 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
                   onToggle={() => setNewRecEnabled(!newRecEnabled)} onDayChange={setNewRecDay} onFreqChange={setNewRecFreq} />
                 <div className="flex gap-2">
                   <Button size="sm" className="flex-1" onClick={handleCreate} disabled={!newTitle.trim()}>Ajouter</Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setNewTitle(''); setNewRecEnabled(false); }}><X size={14} /></Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setNewTitle(''); setNewRecEnabled(false); }}><X size={14} /> Annuler</Button>
                 </div>
               </div>
             )}
@@ -346,7 +346,7 @@ function EditForm({ editTitle, editCategory, editDay, editRecEnabled, editRecDay
         <Button size="sm" className="flex-1" onClick={saveEdit} disabled={saving || !editTitle.trim()}>
           <Check size={14} /> {saving ? '...' : 'Enregistrer'}
         </Button>
-        <Button size="sm" variant="ghost" onClick={cancelEdit}><X size={14} /></Button>
+        <Button size="sm" variant="ghost" onClick={cancelEdit}><X size={14} /> Annuler</Button>
       </div>
     </div>
   );
