@@ -1,4 +1,7 @@
-<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'>
-    <rect width='512' height='512' rx='102.4' fill='#1a1025'/>
-    <text x='50%' y='55%' text-anchor='middle' dominant-baseline='middle' font-family='system-ui' font-weight='bold' font-size='256' fill='#8b5cf6'>C</text>
-  </svg>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="102.4" fill="#f7f4ef"/>
+  <rect x="42" y="85" width="256" height="256" rx="30" fill="#7c3aed" opacity="0.12"/>
+  <rect x="106" y="149" width="256" height="256" rx="30" fill="#7c3aed" opacity="0.25"/>
+  <rect x="170" y="85" width="256" height="256" rx="30" fill="#7c3aed"/>
+  <text x="298" y="243" text-anchor="middle" dominant-baseline="middle" font-family="Inter, system-ui, sans-serif" font-size="145" font-weight="600" fill="#ffffff">C</text>
+</svg>
