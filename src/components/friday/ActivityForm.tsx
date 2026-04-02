@@ -9,7 +9,7 @@ import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { getRollingDays, formatDateISO, getWeekStart } from '@/lib/utils/dates';
 import { RecurrenceSection } from './RecurrenceSection';
 import { DayScroller } from './DayScroller';
-import { Plus, Archive, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { Plus, Archive, X, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import { parseISO } from 'date-fns';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -167,7 +167,7 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
             {savingBacklog ? '...' : 'Backlog'}
           </Button>
           <Button type="button" variant="ghost" onClick={resetForm}>
-            Annuler
+            <X size={14} /> Annuler
           </Button>
         </div>
       </form>
