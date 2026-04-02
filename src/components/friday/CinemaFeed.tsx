@@ -7,9 +7,10 @@ import { MovieCard } from './MovieCard';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { UGC_CINEMAS } from '@/lib/config/constants';
+import { DayScroller } from './DayScroller';
 import { Film, RefreshCw, ChevronDown } from 'lucide-react';
 import { format, addDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { getRollingDays } from '@/lib/utils/dates';
 import type { CinemaMovie } from '@/lib/types/cinema';
 
 interface CinemaFeedProps {
@@ -25,15 +26,7 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
   const [showCinemaPicker, setShowCinemaPicker] = useState(false);
 
   const preferredCinemas = UGC_CINEMAS.filter(c => preferredCinemaIds.includes(c.id));
-
-  // Generate date options (today + 6 days)
-  const dateOptions = Array.from({ length: 7 }, (_, i) => {
-    const d = addDays(new Date(), i);
-    return {
-      value: format(d, 'yyyy-MM-dd'),
-      label: i === 0 ? "Aujourd'hui" : format(d, 'EEE dd MMM', { locale: fr }),
-    };
-  });
+  const rollingDays = getRollingDays(14);
 
   // Load showtimes
   useEffect(() => {
@@ -108,57 +101,40 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
         <p className="text-xs text-text-dim uppercase tracking-wide">Seances cinema</p>
       </div>
 
-      {/* Cinema + Date selectors */}
-      <div className="flex gap-2">
-        {/* Cinema picker */}
-        <div className="relative flex-1">
-          <button
-            onClick={() => setShowCinemaPicker(!showCinemaPicker)}
-            className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all active:scale-[0.98]"
+      {/* Cinema picker */}
+      <div className="relative">
+        <button
+          onClick={() => setShowCinemaPicker(!showCinemaPicker)}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all active:scale-[0.98]"
+          style={{ backgroundColor: 'var(--color-surface-elevated)', border: '1px solid var(--color-border)' }}
+        >
+          <span className="truncate">
+            {preferredCinemas.find(c => c.id === selectedCinemaId)?.name || 'Cinema'}
+          </span>
+          <ChevronDown size={14} className={`shrink-0 ml-1 transition-transform ${showCinemaPicker ? 'rotate-180' : ''}`} />
+        </button>
+        {showCinemaPicker && (
+          <div
+            className="absolute z-20 mt-1 w-full rounded-xl overflow-hidden shadow-lg"
             style={{ backgroundColor: 'var(--color-surface-elevated)', border: '1px solid var(--color-border)' }}
           >
-            <span className="truncate">
-              {preferredCinemas.find(c => c.id === selectedCinemaId)?.name || 'Cinema'}
-            </span>
-            <ChevronDown size={14} className={`shrink-0 ml-1 transition-transform ${showCinemaPicker ? 'rotate-180' : ''}`} />
-          </button>
-          {showCinemaPicker && (
-            <div
-              className="absolute z-20 mt-1 w-full rounded-xl overflow-hidden shadow-lg"
-              style={{ backgroundColor: 'var(--color-surface-elevated)', border: '1px solid var(--color-border)' }}
-            >
-              {preferredCinemas.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => { setSelectedCinemaId(c.id); setShowCinemaPicker(false); }}
-                  className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-[var(--color-surface-alt)]"
-                  style={c.id === selectedCinemaId ? { color: 'var(--color-primary)', fontWeight: 600 } : {}}
-                >
-                  {c.name}
-                  <span className="text-text-dim ml-1">{c.city}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Date picker */}
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-          {dateOptions.slice(0, 4).map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => setSelectedDate(opt.value)}
-              className="px-2.5 py-2 rounded-xl text-[11px] font-medium whitespace-nowrap transition-all active:scale-95"
-              style={selectedDate === opt.value
-                ? { backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)', color: 'var(--color-primary)' }
-                : { backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-muted)' }
-              }
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+            {preferredCinemas.map(c => (
+              <button
+                key={c.id}
+                onClick={() => { setSelectedCinemaId(c.id); setShowCinemaPicker(false); }}
+                className="w-full text-left px-3 py-2.5 text-xs transition-colors hover:bg-[var(--color-surface-alt)]"
+                style={c.id === selectedCinemaId ? { color: 'var(--color-primary)', fontWeight: 600 } : {}}
+              >
+                {c.name}
+                <span className="text-text-dim ml-1">{c.city}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
+      {/* Date picker - 14 jours glissants */}
+      <DayScroller days={rollingDays} selected={selectedDate} onChange={setSelectedDate} />
 
       {/* Movies list */}
       {loading ? (
