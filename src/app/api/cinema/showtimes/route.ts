@@ -63,36 +63,93 @@ function parseShowtimesHtml(html: string): CinemaMovie[] {
   const $ = cheerio.load(html);
   const movies: CinemaMovie[] = [];
 
-  // Each film block in UGC HTML
-  $('.component--cinema-filmlist-item, .film-list__item, [class*="film"]').each((_, filmEl) => {
+  // Each film block: .slider-item > .band.component--cinema-list-item
+  $('.component--cinema-list-item').each((_, filmEl) => {
     const $film = $(filmEl);
 
-    const title = $film.find('.film-title, .title, h2, h3').first().text().trim();
+    // Title from .block--title a
+    const $titleLink = $film.find('.block--title a').first();
+    const title = $titleLink.text().trim();
     if (!title) return;
 
-    // Extract metadata
-    const director = $film.find('.director, .realisateur, [class*="director"]').first().text().trim()
-      .replace(/^(De|Par)\s+/i, '');
-    const duration = $film.find('.duration, .duree, [class*="duration"]').first().text().trim();
-    const genre = $film.find('.genre, [class*="genre"]').first().text().trim();
-    const synopsis = $film.find('.synopsis, .description, [class*="synopsis"]').first().text().trim();
-    const label = $film.find('.label-ugc, [class*="label"]').first().text().trim() || null;
-    const posterSrc = $film.find('img').first().attr('src') || $film.find('img').first().attr('data-src') || null;
+    // Genres from data-film-kind attribute
+    const genreStr = $titleLink.attr('data-film-kind') || '';
+    const genres = genreStr ? genreStr.split(',').map(g => g.trim()).filter(Boolean) : [];
 
-    // Parse showtimes
+    // Label (e.g. "Sélection UGC Family") from data-film-label or .film-tag
+    const label = $titleLink.attr('data-film-label')
+      || $film.find('.film-tag').first().text().trim()
+      || null;
+
+    // Poster from img with data-src (lazy loaded)
+    const posterSrc = $film.find('.component--film-presentation img').first().attr('data-src')
+      || $film.find('.component--film-presentation img').first().attr('src')
+      || null;
+
+    // Metadata from .group-info > p.p--medium.color--grey
+    let director = '';
+    let synopsis = '';
+    let duration = '';
+    let casting: string[] = [];
+    let releaseDate = '';
+
+    $film.find('.info-wrapper.main .group-info').each((_, gi) => {
+      const $gi = $(gi);
+      const text = $gi.text().trim();
+
+      if (text.startsWith('De ') || text.startsWith('De\n')) {
+        // Director line: "De Nom Du Réalisateur"
+        const dirMatch = text.match(/^De\s+([\s\S]+?)(?:\s*Avec|\s*Synopsis|\s*Sortie|$)/);
+        if (dirMatch) director = dirMatch[1].trim().split('\n')[0].trim();
+      }
+      if (text.includes('Avec')) {
+        const castMatch = text.match(/Avec\s+([\s\S]+?)(?:\s*Synopsis|\s*Sortie|$)/);
+        if (castMatch) casting = castMatch[1].trim().split(',').map(c => c.trim()).filter(Boolean);
+      }
+      if (text.includes('Synopsis')) {
+        const synMatch = text.match(/Synopsis\s+([\s\S]+?)(?:\s*Sortie|$)/);
+        if (synMatch) synopsis = synMatch[1].trim().split('\n')[0].trim();
+      }
+      if (text.startsWith('Sortie le')) {
+        const dateMatch = text.match(/Sortie le\s+(.+)/);
+        if (dateMatch) releaseDate = dateMatch[1].trim();
+      }
+    });
+
+    // Also check mobile info-wrapper for metadata if desktop didn't have it
+    if (!director) {
+      $film.find('.info-wrapper .group-info p').each((_, p) => {
+        const pText = $(p).text().trim();
+        if (pText.startsWith('De ') && !director) {
+          director = pText.replace(/^De\s+/, '').split('\n')[0].trim();
+        }
+      });
+    }
+
+    // Duration from .p--medium (often like "1h 35min" or "2h 20min")
+    $film.find('.p--medium').each((_, p) => {
+      const pText = $(p).text().trim();
+      const durMatch = pText.match(/(\d+h\s*\d*min?)/i);
+      if (durMatch && !duration) duration = durMatch[1];
+    });
+
+    // Parse showtimes from .component--screening-cards li
     const showtimes: CinemaShowtime[] = [];
-    $film.find('.showtime, .seance, [class*="seance"], [class*="showtime"], .hours-list li, .schedule-item').each((_, stEl) => {
+    // Each screening card is an <li> inside .component--screening-cards
+    $film.find('.component--screening-cards li, .component--screening-cards > a').each((_, stEl) => {
       const $st = $(stEl);
-      const time = $st.find('.time, .hour, .heure').first().text().trim()
-        || $st.text().trim().match(/\d{1,2}[h:]\d{2}/)?.[0]
-        || $st.text().trim();
-      if (!time || time.length > 20) return;
 
-      const room = $st.find('.room, .salle, [class*="salle"]').first().text().trim() || '';
-      const version = $st.find('.version, .lang, [class*="version"]').first().text().trim()
-        || (($st.text().includes('VOSTF') || $st.text().includes('VOST')) ? 'VOSTF' : 'VF');
+      const time = $st.find('.screening-start').text().trim();
+      if (!time) return;
 
-      showtimes.push({ time: time.replace(/\s+/g, ''), room, version });
+      const room = $st.find('.screening-detail').text().trim();
+      const version = $st.find('.screening-lang').text().trim() || 'VF';
+
+      showtimes.push({
+        time: time.replace(/\s+/g, ''),
+        room,
+        version,
+      });
     });
 
     // Build poster URL
@@ -108,10 +165,10 @@ function parseShowtimesHtml(html: string): CinemaMovie[] {
       title,
       director,
       duration,
-      genres: genre ? genre.split(/[,/]/).map(g => g.trim()).filter(Boolean) : [],
+      genres,
       synopsis,
-      casting: [],
-      releaseDate: '',
+      casting,
+      releaseDate,
       posterUrl,
       rating: null,
       label,
