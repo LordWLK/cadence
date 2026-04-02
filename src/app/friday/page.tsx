@@ -142,6 +142,14 @@ export default function FridayPage() {
 
       <ActivityForm onCreated={loadActivities} onBacklogCreated={() => setBacklogKey(k => k + 1)} />
 
+      <BacklogDrawer
+        key={backlogKey}
+        weekStart={currentWeekStart}
+        weekDays={rollingDays}
+        weekStartISO={currentWeekStartISO}
+        onPulled={loadActivities}
+      />
+
       {loading ? (
         <div className="space-y-2">
           {[1,2,3].map(i => <div key={i} className="h-16 bg-surface-alt rounded-2xl animate-pulse" />)}
@@ -256,13 +264,6 @@ export default function FridayPage() {
         <CinemaFeed preferredCinemaIds={cinemaIds} />
       )}
 
-      <BacklogDrawer
-        key={backlogKey}
-        weekStart={currentWeekStart}
-        weekDays={rollingDays}
-        weekStartISO={currentWeekStartISO}
-        onPulled={loadActivities}
-      />
     </div>
   );
 }
