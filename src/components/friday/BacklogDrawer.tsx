@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useBacklog } from '@/lib/hooks/useBacklog';
-import { useActivities } from '@/lib/hooks/useActivities';
 import { useAuth } from '@/providers/AuthProvider';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { formatDate, formatDateISO } from '@/lib/utils/dates';
-import { ChevronDown, Plus, Repeat, Pencil, Trash2, Check, X, Archive, CalendarClock, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { RecurrenceSection, DAY_LABELS, FREQ_LABELS } from './RecurrenceSection';
+import { ChevronDown, Plus, Repeat, Pencil, Trash2, Check, X, Archive, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { BacklogActivity } from '@/lib/supabase/types';
@@ -15,30 +15,10 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
 };
 
-const DAYS_OF_WEEK = [
-  { id: 'lundi', label: 'Lun' },
-  { id: 'mardi', label: 'Mar' },
-  { id: 'mercredi', label: 'Mer' },
-  { id: 'jeudi', label: 'Jeu' },
-  { id: 'vendredi', label: 'Ven' },
-  { id: 'samedi', label: 'Sam' },
-  { id: 'dimanche', label: 'Dim' },
-];
-
-const FREQ_OPTIONS = [
-  { id: 'weekly', label: 'Semaine' },
-  { id: 'biweekly', label: '2 sem.' },
-  { id: 'monthly', label: 'Mois' },
-];
-
-const DAY_LABELS: Record<string, string> = {
-  lundi: 'Lun', mardi: 'Mar', mercredi: 'Mer', jeudi: 'Jeu',
-  vendredi: 'Ven', samedi: 'Sam', dimanche: 'Dim',
-};
-
-const FREQ_LABELS: Record<string, string> = {
-  weekly: '/sem', biweekly: '/2sem', monthly: '/mois',
-};
+// Shared chip classes
+const CHIP = 'rounded-lg transition-all active:scale-95';
+const CHIP_ON = 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)] ring-1 ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]';
+const CHIP_OFF = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]';
 
 interface BacklogDrawerProps {
   weekStart: Date;
@@ -50,7 +30,6 @@ interface BacklogDrawerProps {
 export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: BacklogDrawerProps) {
   const { user } = useAuth();
   const { getAll, create, update, remove, pullToWeek, getAlreadyPulled, autoPopulateRecurring } = useBacklog();
-  const activities = useActivities();
   const [isOpen, setIsOpen] = useState(false);
   const [items, setItems] = useState<BacklogActivity[]>([]);
   const [pulledIds, setPulledIds] = useState<Set<string>>(new Set());
@@ -63,32 +42,30 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
   const [editTitle, setEditTitle] = useState('');
   const [editCategory, setEditCategory] = useState('');
   const [editDay, setEditDay] = useState('');
-  const [editRecurrence, setEditRecurrence] = useState('none');
-  const [editRecurrenceFreq, setEditRecurrenceFreq] = useState('weekly');
+  const [editRecEnabled, setEditRecEnabled] = useState(false);
+  const [editRecDay, setEditRecDay] = useState('lundi');
+  const [editRecFreq, setEditRecFreq] = useState('weekly');
   const [saving, setSaving] = useState(false);
 
   // "Keep in backlog?" dialog
   const [keepDialog, setKeepDialog] = useState<{ item: BacklogActivity; day: string } | null>(null);
 
-  // Form state
+  // Create form state
   const [newTitle, setNewTitle] = useState('');
   const [newCategory, setNewCategory] = useState<string>(ACTIVITY_CATEGORIES[0].id);
-  const [newRecurrence, setNewRecurrence] = useState('none');
-  const [newRecurrenceFreq, setNewRecurrenceFreq] = useState('weekly');
+  const [newRecEnabled, setNewRecEnabled] = useState(false);
+  const [newRecDay, setNewRecDay] = useState('lundi');
+  const [newRecFreq, setNewRecFreq] = useState('weekly');
 
   const load = useCallback(async () => {
     if (!user) return;
-    const [all, pulled] = await Promise.all([
-      getAll(),
-      getAlreadyPulled(weekStartISO),
-    ]);
+    const [all, pulled] = await Promise.all([getAll(), getAlreadyPulled(weekStartISO)]);
     setItems(all);
     setPulledIds(pulled);
   }, [user, getAll, getAlreadyPulled, weekStartISO]);
 
   useEffect(() => { load(); }, [load]);
 
-  // Auto-populate recurring items once
   useEffect(() => {
     if (!user || autoPopDone) return;
     autoPopulateRecurring(weekStart, weekStartISO).then((added) => {
@@ -97,64 +74,64 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
     });
   }, [user, autoPopDone, weekStart, weekStartISO, autoPopulateRecurring, load, onPulled]);
 
+  // ─── Create ──────────────────────────────────────────────────────────────
+
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
     await create({
       title: newTitle.trim(),
       category: newCategory,
-      recurrence: newRecurrence,
-      recurrence_freq: newRecurrence !== 'none' ? newRecurrenceFreq : 'weekly',
+      recurrence: newRecEnabled ? newRecDay : 'none',
+      recurrence_freq: newRecEnabled ? newRecFreq : 'weekly',
     });
-    setNewTitle('');
-    setNewCategory(ACTIVITY_CATEGORIES[0].id);
-    setNewRecurrence('none');
-    setNewRecurrenceFreq('weekly');
+    setNewTitle(''); setNewCategory(ACTIVITY_CATEGORIES[0].id);
+    setNewRecEnabled(false); setNewRecDay('lundi'); setNewRecFreq('weekly');
     setShowForm(false);
     load();
   };
 
-  const handleRemove = async (id: string) => {
-    await remove(id);
-    load();
-  };
-
-  // ─── Edit handlers ───────────────────────────────────────────────────────
+  // ─── Edit ────────────────────────────────────────────────────────────────
 
   const startEdit = (item: BacklogActivity) => {
     setEditingId(item.id);
     setEditTitle(item.title);
     setEditCategory(item.category);
     setEditDay('');
-    setEditRecurrence(item.recurrence);
-    setEditRecurrenceFreq(item.recurrence_freq || 'weekly');
+    setEditRecEnabled(item.recurrence !== 'none');
+    setEditRecDay(item.recurrence !== 'none' ? item.recurrence : 'lundi');
+    setEditRecFreq(item.recurrence_freq || 'weekly');
   };
 
   const cancelEdit = () => {
-    setEditingId(null);
-    setEditTitle('');
-    setEditCategory('');
-    setEditDay('');
-    setEditRecurrence('none');
+    setEditingId(null); setEditTitle(''); setEditCategory(''); setEditDay('');
+    setEditRecEnabled(false);
   };
 
   const saveEdit = async () => {
     if (!editingId || !editTitle.trim()) return;
     setSaving(true);
-
     const item = items.find(i => i.id === editingId);
 
-    // If a day was selected → user wants to plan it this week
+    // If a day was selected → user wants to plan it
     if (editDay && item) {
-      setKeepDialog({ item: { ...item, title: editTitle.trim(), category: editCategory, recurrence: editRecurrence, recurrence_freq: editRecurrenceFreq }, day: editDay });
+      const updatedItem = {
+        ...item,
+        title: editTitle.trim(),
+        category: editCategory,
+        recurrence: editRecEnabled ? editRecDay : 'none',
+        recurrence_freq: editRecEnabled ? editRecFreq : 'weekly',
+      };
+      setKeepDialog({ item: updatedItem, day: editDay });
       setSaving(false);
       return;
     }
 
-    // Just update the backlog item (no day assigned)
+    // Just update the backlog item
     await update(editingId, {
       title: editTitle.trim(),
       category: editCategory,
-      recurrence: editRecurrence,
+      recurrence: editRecEnabled ? editRecDay : 'none',
+      recurrence_freq: editRecEnabled ? editRecFreq : 'weekly',
     });
     setSaving(false);
     cancelEdit();
@@ -165,31 +142,28 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
     if (!keepDialog) return;
     const { item, day } = keepDialog;
 
-    // Create weekly activity
-    await activities.create({
-      title: item.title,
-      category: item.category,
-      planned_date: day,
-      week_start: weekStartISO,
-    });
-
-    // Update the backlog item with any edits
-    await update(item.id, {
+    // 1. First, save any edits to the backlog item
+    const updatedBacklog = await update(item.id, {
       title: item.title,
       category: item.category,
       recurrence: item.recurrence,
+      recurrence_freq: item.recurrence_freq,
     });
 
-    // If not keeping, archive it
-    if (!keep) {
-      await remove(item.id);
-    }
+    // 2. Pull the (now updated) backlog item into the week
+    const backlogForPull = updatedBacklog || item;
+    await pullToWeek(backlogForPull as BacklogActivity, day, weekStartISO);
+
+    // 3. If user doesn't want to keep it, remove from backlog
+    if (!keep) await remove(item.id);
 
     setKeepDialog(null);
     cancelEdit();
     load();
     onPulled();
   };
+
+  const handleRemove = async (id: string) => { await remove(id); load(); };
 
   if (!user) return null;
 
@@ -198,38 +172,23 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
 
   return (
     <>
-      {/* Delete confirm */}
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        title="Retirer du backlog ?"
-        message="L'activite sera archivee."
-        confirmLabel="Archiver"
-        variant="danger"
+      <ConfirmDialog open={deleteTarget !== null} title="Retirer du backlog ?" message="L'activite sera archivee." confirmLabel="Archiver" variant="danger"
         onConfirm={() => { if (deleteTarget) handleRemove(deleteTarget); setDeleteTarget(null); }}
-        onCancel={() => setDeleteTarget(null)}
-      />
+        onCancel={() => setDeleteTarget(null)} />
 
-      {/* Keep in backlog dialog */}
-      <ConfirmDialog
-        open={keepDialog !== null}
-        title="Garder dans le backlog ?"
+      <ConfirmDialog open={keepDialog !== null} title="Garder dans le backlog ?"
         message={`"${keepDialog?.item.title}" sera ajoutee au planning. Veux-tu aussi la garder dans le backlog pour la reutiliser ?`}
-        confirmLabel="Garder"
-        cancelLabel="Non, retirer"
-        onConfirm={() => handleKeepInBacklog(true)}
-        onCancel={() => handleKeepInBacklog(false)}
-      />
+        confirmLabel="Garder" cancelLabel="Non, retirer"
+        onConfirm={() => handleKeepInBacklog(true)} onCancel={() => handleKeepInBacklog(false)} />
 
-      {/* Collapsible section */}
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
-        <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between px-4 py-3">
+        {/* Header */}
+        <button onClick={() => setIsOpen(!isOpen)} className="w-full flex items-center justify-between px-4 py-3 active:bg-[var(--color-surface-elevated)] transition-colors">
           <div className="flex items-center gap-2">
             <Archive size={16} className="text-[var(--color-text-muted)]" />
             <span className="text-sm font-medium">Backlog</span>
             {items.length > 0 && (
-              <span className="text-[11px] text-[var(--color-text-dim)] bg-[var(--color-surface-elevated)] px-1.5 py-0.5 rounded-full">
-                {items.length}
-              </span>
+              <span className="text-[11px] text-[var(--color-text-dim)] bg-[var(--color-surface-elevated)] px-1.5 py-0.5 rounded-full">{items.length}</span>
             )}
           </div>
           <div className={`transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`}>
@@ -241,105 +200,53 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
           <div className="px-4 pb-4 space-y-3">
             {/* Add button */}
             {!showForm && (
-              <button
-                onClick={() => setShowForm(true)}
-                className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_8%,transparent)] rounded-xl hover:bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] transition-colors"
-              >
-                <Plus size={14} />
-                Ajouter au backlog
+              <button onClick={() => setShowForm(true)}
+                className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_8%,transparent)] rounded-xl active:bg-[color-mix(in_srgb,var(--color-primary)_20%,transparent)] transition-colors">
+                <Plus size={14} /> Ajouter au backlog
               </button>
             )}
 
-            {/* Inline creation form */}
+            {/* Create form */}
             {showForm && (
-              <BacklogForm
-                title={newTitle}
-                category={newCategory}
-                recurrence={newRecurrence}
-                recurrenceFreq={newRecurrenceFreq}
-                onTitleChange={setNewTitle}
-                onCategoryChange={setNewCategory}
-                onRecurrenceChange={setNewRecurrence}
-                onRecurrenceFreqChange={setNewRecurrenceFreq}
-                onSave={handleCreate}
-                onCancel={() => { setShowForm(false); setNewTitle(''); setNewRecurrence('none'); }}
-                saveLabel="Ajouter"
-              />
-            )}
-
-            {/* Recurring items */}
-            {recurringItems.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide flex items-center gap-1">
-                  <Repeat size={10} /> Recurrents
-                </p>
-                {recurringItems.map((item) => (
-                  editingId === item.id ? (
-                    <BacklogEditForm
-                      key={item.id}
-                      title={editTitle}
-                      category={editCategory}
-                      day={editDay}
-                      recurrence={editRecurrence}
-                      recurrenceFreq={editRecurrenceFreq}
-                      weekDays={weekDays}
-                      onTitleChange={setEditTitle}
-                      onCategoryChange={setEditCategory}
-                      onDayChange={setEditDay}
-                      onRecurrenceChange={setEditRecurrence}
-                      onRecurrenceFreqChange={setEditRecurrenceFreq}
-                      onSave={saveEdit}
-                      onCancel={cancelEdit}
-                      saving={saving}
-                    />
-                  ) : (
-                    <BacklogItemRow
-                      key={item.id}
-                      item={item}
-                      isPulled={pulledIds.has(item.id)}
-                      onEdit={() => startEdit(item)}
-                      onDelete={() => setDeleteTarget(item.id)}
-                    />
-                  )
-                ))}
+              <div className="p-3 bg-[var(--color-surface-elevated)] rounded-xl space-y-4">
+                <div>
+                  <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Activite</label>
+                  <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder="Ex: Foot avec les potes, Film Netflix..." autoFocus
+                    className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-colors" />
+                </div>
+                <div>
+                  <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Categorie</label>
+                  <CategoryChips selected={newCategory} onChange={setNewCategory} />
+                </div>
+                <RecurrenceSection enabled={newRecEnabled} day={newRecDay} freq={newRecFreq}
+                  onToggle={() => setNewRecEnabled(!newRecEnabled)} onDayChange={setNewRecDay} onFreqChange={setNewRecFreq} />
+                <div className="flex gap-2">
+                  <Button size="sm" className="flex-1" onClick={handleCreate} disabled={!newTitle.trim()}>Ajouter</Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setNewTitle(''); setNewRecEnabled(false); }}><X size={14} /></Button>
+                </div>
               </div>
             )}
 
-            {/* Normal items */}
+            {/* Recurring */}
+            {recurringItems.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide flex items-center gap-1"><Repeat size={10} /> Recurrents</p>
+                {recurringItems.map((item) => editingId === item.id
+                  ? <EditForm key={item.id} {...{ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, saveEdit, cancelEdit }} />
+                  : <ItemRow key={item.id} item={item} isPulled={pulledIds.has(item.id)} onEdit={() => startEdit(item)} onDelete={() => setDeleteTarget(item.id)} />
+                )}
+              </div>
+            )}
+
+            {/* Normal */}
             {normalItems.length > 0 && (
               <div className="space-y-1.5">
-                {recurringItems.length > 0 && (
-                  <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide mt-2">Pour plus tard</p>
+                {recurringItems.length > 0 && <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide mt-2">Pour plus tard</p>}
+                {normalItems.map((item) => editingId === item.id
+                  ? <EditForm key={item.id} {...{ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, saveEdit, cancelEdit }} />
+                  : <ItemRow key={item.id} item={item} isPulled={pulledIds.has(item.id)} onEdit={() => startEdit(item)} onDelete={() => setDeleteTarget(item.id)} />
                 )}
-                {normalItems.map((item) => (
-                  editingId === item.id ? (
-                    <BacklogEditForm
-                      key={item.id}
-                      title={editTitle}
-                      category={editCategory}
-                      day={editDay}
-                      recurrence={editRecurrence}
-                      recurrenceFreq={editRecurrenceFreq}
-                      weekDays={weekDays}
-                      onTitleChange={setEditTitle}
-                      onCategoryChange={setEditCategory}
-                      onDayChange={setEditDay}
-                      onRecurrenceChange={setEditRecurrence}
-                      onRecurrenceFreqChange={setEditRecurrenceFreq}
-                      onSave={saveEdit}
-                      onCancel={cancelEdit}
-                      saving={saving}
-                    />
-                  ) : (
-                    <BacklogItemRow
-                      key={item.id}
-                      item={item}
-                      isPulled={pulledIds.has(item.id)}
-                      onEdit={() => startEdit(item)}
-                      onDelete={() => setDeleteTarget(item.id)}
-                    />
-                  )
-                ))}
               </div>
             )}
 
@@ -353,13 +260,28 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
   );
 }
 
-// ─── Sub-components ────────────────────────────────────────────────────────
+// ─── Shared sub-components ─────────────────────────────────────────────────
 
-function BacklogItemRow({ item, isPulled, onEdit, onDelete }: {
-  item: BacklogActivity;
-  isPulled: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
+function CategoryChips({ selected, onChange }: { selected: string; onChange: (v: string) => void }) {
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {ACTIVITY_CATEGORIES.map((cat) => {
+        const Icon = ICON_MAP[cat.icon] || Sparkles;
+        const isSelected = selected === cat.id;
+        return (
+          <button key={cat.id} type="button" onClick={() => onChange(cat.id)}
+            className={`flex flex-col items-center gap-1 p-2.5 text-xs ${CHIP} ${isSelected ? CHIP_ON : CHIP_OFF}`}>
+            <Icon size={16} />
+            <span className="leading-tight text-center">{cat.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ItemRow({ item, isPulled, onEdit, onDelete }: {
+  item: BacklogActivity; isPulled: boolean; onEdit: () => void; onDelete: () => void;
 }) {
   const cat = ACTIVITY_CATEGORIES.find(c => c.id === item.category);
   const Icon = cat ? (ICON_MAP[cat.icon] || Sparkles) : Sparkles;
@@ -369,112 +291,47 @@ function BacklogItemRow({ item, isPulled, onEdit, onDelete }: {
     <div className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${
       isPulled ? 'bg-[color-mix(in_srgb,var(--color-success)_8%,transparent)]' : 'bg-[var(--color-surface-elevated)]'
     }`}>
-      <div className={`shrink-0 ${cat?.color || 'text-[var(--color-text-muted)]'}`}>
-        <Icon size={15} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm truncate">{item.title}</p>
-      </div>
+      <div className={`shrink-0 ${cat?.color || 'text-[var(--color-text-muted)]'}`}><Icon size={15} /></div>
+      <div className="flex-1 min-w-0"><p className="text-sm truncate">{item.title}</p></div>
       {isRecurring && (
         <span className="shrink-0 flex items-center gap-0.5 text-[10px] text-[var(--color-text-dim)] bg-[var(--color-surface)] px-1.5 py-0.5 rounded-full">
-          <Repeat size={9} />
-          {DAY_LABELS[item.recurrence]}{FREQ_LABELS[item.recurrence_freq] || ''}
+          <Repeat size={9} /> {DAY_LABELS[item.recurrence]}{FREQ_LABELS[item.recurrence_freq] || ''}
         </span>
       )}
-      {isPulled && (
-        <span className="shrink-0 text-[10px] text-[var(--color-success)]">Planifie</span>
-      )}
-      <button onClick={onEdit} className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-primary)] p-1 rounded-lg transition-colors">
-        <Pencil size={13} />
-      </button>
-      <button onClick={onDelete} className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-error)] p-1 rounded-lg transition-colors">
-        <Trash2 size={13} />
-      </button>
+      {isPulled && <span className="shrink-0 text-[10px] text-[var(--color-success)]">Planifie</span>}
+      <button onClick={onEdit} className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-primary)] active:scale-90 p-1 rounded-lg transition-all"><Pencil size={13} /></button>
+      <button onClick={onDelete} className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-error)] active:scale-90 p-1 rounded-lg transition-all"><Trash2 size={13} /></button>
     </div>
   );
 }
 
-function BacklogForm({ title, category, recurrence, recurrenceFreq, onTitleChange, onCategoryChange, onRecurrenceChange, onRecurrenceFreqChange, onSave, onCancel, saveLabel }: {
-  title: string;
-  category: string;
-  recurrence: string;
-  recurrenceFreq: string;
-  onTitleChange: (v: string) => void;
-  onCategoryChange: (v: string) => void;
-  onRecurrenceChange: (v: string) => void;
-  onRecurrenceFreqChange: (v: string) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  saveLabel: string;
+function EditForm({ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, saveEdit, cancelEdit }: {
+  editTitle: string; editCategory: string; editDay: string; editRecEnabled: boolean; editRecDay: string; editRecFreq: string;
+  weekDays: Date[]; saving: boolean;
+  setEditTitle: (v: string) => void; setEditCategory: (v: string) => void; setEditDay: (v: string) => void;
+  setEditRecEnabled: (v: boolean) => void; setEditRecDay: (v: string) => void; setEditRecFreq: (v: string) => void;
+  saveEdit: () => void; cancelEdit: () => void;
 }) {
   return (
-    <div className="p-3 bg-[var(--color-surface-elevated)] rounded-xl space-y-3">
-      <input
-        type="text" value={title} onChange={(e) => onTitleChange(e.target.value)}
-        placeholder="Nom de l'activite..." autoFocus
-        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
-      />
-      <div className="flex flex-wrap gap-1.5">
-        {ACTIVITY_CATEGORIES.map((cat) => {
-          const Icon = ICON_MAP[cat.icon] || Sparkles;
-          return (
-            <button key={cat.id} type="button" onClick={() => onCategoryChange(cat.id)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] transition-all ${
-                category === cat.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'
-              }`}>
-              <Icon size={12} /> {cat.label}
-            </button>
-          );
-        })}
-      </div>
-      <RecurrencePicker
-        recurrence={recurrence} recurrenceFreq={recurrenceFreq}
-        onRecurrenceChange={onRecurrenceChange} onRecurrenceFreqChange={onRecurrenceFreqChange}
-      />
-      <div className="flex gap-2">
-        <Button size="sm" className="flex-1" onClick={onSave} disabled={!title.trim()}>{saveLabel}</Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}><X size={14} /></Button>
-      </div>
-    </div>
-  );
-}
-
-function BacklogEditForm({ title, category, day, recurrence, recurrenceFreq, weekDays, onTitleChange, onCategoryChange, onDayChange, onRecurrenceChange, onRecurrenceFreqChange, onSave, onCancel, saving }: {
-  title: string; category: string; day: string; recurrence: string; recurrenceFreq: string;
-  weekDays: Date[];
-  onTitleChange: (v: string) => void; onCategoryChange: (v: string) => void; onDayChange: (v: string) => void;
-  onRecurrenceChange: (v: string) => void; onRecurrenceFreqChange: (v: string) => void;
-  onSave: () => void; onCancel: () => void; saving: boolean;
-}) {
-  return (
-    <div className="p-3 bg-[var(--color-surface-elevated)] rounded-xl space-y-3 ring-1 ring-[var(--color-primary)]/20">
-      <input
-        type="text" value={title} onChange={(e) => onTitleChange(e.target.value)} autoFocus
-        className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm text-[var(--color-text)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
-      />
-      <div className="flex flex-wrap gap-1.5">
-        {ACTIVITY_CATEGORIES.map((cat) => {
-          const Icon = ICON_MAP[cat.icon] || Sparkles;
-          return (
-            <button key={cat.id} type="button" onClick={() => onCategoryChange(cat.id)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] transition-all ${
-                category === cat.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'
-              }`}>
-              <Icon size={12} /> {cat.label}
-            </button>
-          );
-        })}
-      </div>
-      {/* Day picker for this week */}
+    <div className="p-3 bg-[var(--color-surface-elevated)] rounded-xl space-y-4 ring-1 ring-[color-mix(in_srgb,var(--color-primary)_20%,transparent)]">
       <div>
-        <p className="text-[11px] text-[var(--color-text-dim)] mb-1">Attribuer un jour cette semaine (optionnel)</p>
+        <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Activite</label>
+        <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} autoFocus
+          className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-colors" />
+      </div>
+      <div>
+        <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Categorie</label>
+        <CategoryChips selected={editCategory} onChange={setEditCategory} />
+      </div>
+      <div>
+        <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Jour</label>
         <div className="grid grid-cols-7 gap-1">
           {weekDays.map((d) => {
             const iso = formatDateISO(d);
             return (
-              <button key={iso} type="button" onClick={() => onDayChange(day === iso ? '' : iso)}
-                className={`flex flex-col items-center p-1.5 rounded-lg text-[11px] transition-all ${
-                  day === iso ? 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)] ring-1 ring-[var(--color-primary)]/30' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'
+              <button key={iso} type="button" onClick={() => setEditDay(editDay === iso ? '' : iso)}
+                className={`flex flex-col items-center p-2 rounded-lg text-xs transition-all active:scale-95 ${
+                  editDay === iso ? CHIP_ON : CHIP_OFF
                 }`}>
                 <span className="font-medium">{formatDate(d, 'EEE')}</span>
                 <span className="text-[10px]">{formatDate(d, 'dd')}</span>
@@ -483,52 +340,14 @@ function BacklogEditForm({ title, category, day, recurrence, recurrenceFreq, wee
           })}
         </div>
       </div>
-      <RecurrencePicker
-        recurrence={recurrence} recurrenceFreq={recurrenceFreq}
-        onRecurrenceChange={onRecurrenceChange} onRecurrenceFreqChange={onRecurrenceFreqChange}
-      />
+      <RecurrenceSection enabled={editRecEnabled} day={editRecDay} freq={editRecFreq}
+        onToggle={() => setEditRecEnabled(!editRecEnabled)} onDayChange={setEditRecDay} onFreqChange={setEditRecFreq} />
       <div className="flex gap-2">
-        <Button size="sm" className="flex-1" onClick={onSave} disabled={saving || !title.trim()}>
+        <Button size="sm" className="flex-1" onClick={saveEdit} disabled={saving || !editTitle.trim()}>
           <Check size={14} /> {saving ? '...' : 'Enregistrer'}
         </Button>
-        <Button size="sm" variant="ghost" onClick={onCancel}><X size={14} /></Button>
+        <Button size="sm" variant="ghost" onClick={cancelEdit}><X size={14} /></Button>
       </div>
-    </div>
-  );
-}
-
-function RecurrencePicker({ recurrence, recurrenceFreq, onRecurrenceChange, onRecurrenceFreqChange }: {
-  recurrence: string; recurrenceFreq: string;
-  onRecurrenceChange: (v: string) => void; onRecurrenceFreqChange: (v: string) => void;
-}) {
-  const isEnabled = recurrence !== 'none';
-  return (
-    <div className="space-y-1.5">
-      <p className="text-[11px] text-[var(--color-text-muted)] flex items-center gap-1">
-        <CalendarClock size={11} /> Recurrence
-      </p>
-      <div className="flex gap-1 flex-wrap">
-        <button type="button" onClick={() => onRecurrenceChange('none')}
-          className={`px-2 py-1 rounded-lg text-[11px] transition-all ${!isEnabled ? 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'}`}>
-          Aucune
-        </button>
-        {DAYS_OF_WEEK.map((d) => (
-          <button key={d.id} type="button" onClick={() => onRecurrenceChange(d.id)}
-            className={`px-1.5 py-1 rounded-lg text-[11px] transition-all ${recurrence === d.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'}`}>
-            {d.label}
-          </button>
-        ))}
-      </div>
-      {isEnabled && (
-        <div className="flex gap-1.5">
-          {FREQ_OPTIONS.map((f) => (
-            <button key={f.id} type="button" onClick={() => onRecurrenceFreqChange(f.id)}
-              className={`px-2 py-1 rounded-lg text-[11px] transition-all ${recurrenceFreq === f.id ? 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'}`}>
-              {f.label}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }

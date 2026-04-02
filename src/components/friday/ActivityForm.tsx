@@ -7,27 +7,12 @@ import { useActivities } from '@/lib/hooks/useActivities';
 import { useBacklog } from '@/lib/hooks/useBacklog';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { getWeekDays, formatDateISO, formatDate } from '@/lib/utils/dates';
-import { Plus, Archive, Repeat, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { RecurrenceSection } from './RecurrenceSection';
+import { Plus, Archive, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
 };
-
-const DAYS_OF_WEEK = [
-  { id: 'lundi', label: 'Lun' },
-  { id: 'mardi', label: 'Mar' },
-  { id: 'mercredi', label: 'Mer' },
-  { id: 'jeudi', label: 'Jeu' },
-  { id: 'vendredi', label: 'Ven' },
-  { id: 'samedi', label: 'Sam' },
-  { id: 'dimanche', label: 'Dim' },
-];
-
-const FREQ_OPTIONS = [
-  { id: 'weekly', label: 'Chaque semaine' },
-  { id: 'biweekly', label: 'Toutes les 2 sem.' },
-  { id: 'monthly', label: 'Chaque mois' },
-];
 
 interface ActivityFormProps {
   weekStart: Date;
@@ -44,10 +29,10 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
   const [open, setOpen] = useState(false);
   const [savingBacklog, setSavingBacklog] = useState(false);
 
-  // Recurrence state
-  const [recurrenceEnabled, setRecurrenceEnabled] = useState(false);
-  const [recurrenceDay, setRecurrenceDay] = useState('none');
-  const [recurrenceFreq, setRecurrenceFreq] = useState('weekly');
+  // Recurrence
+  const [recEnabled, setRecEnabled] = useState(false);
+  const [recDay, setRecDay] = useState('lundi');
+  const [recFreq, setRecFreq] = useState('weekly');
 
   const days = getWeekDays(weekStart);
 
@@ -55,9 +40,9 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
     setTitle('');
     setPlannedDate('');
     setCategory(ACTIVITY_CATEGORIES[0].id);
-    setRecurrenceEnabled(false);
-    setRecurrenceDay('none');
-    setRecurrenceFreq('weekly');
+    setRecEnabled(false);
+    setRecDay('lundi');
+    setRecFreq('weekly');
     setOpen(false);
   };
 
@@ -65,7 +50,6 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
     e.preventDefault();
     if (!title.trim() || !plannedDate) return;
 
-    // Create the weekly activity
     await create({
       title: title.trim(),
       category,
@@ -73,13 +57,13 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
       week_start: formatDateISO(weekStart),
     });
 
-    // If recurrence is enabled, also create a backlog item
-    if (recurrenceEnabled && recurrenceDay !== 'none') {
+    // If recurrence is on, also create a backlog item
+    if (recEnabled) {
       await backlog.create({
         title: title.trim(),
         category,
-        recurrence: recurrenceDay,
-        recurrence_freq: recurrenceFreq,
+        recurrence: recDay,
+        recurrence_freq: recFreq,
       });
       onBacklogCreated?.();
     }
@@ -94,8 +78,8 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
     await backlog.create({
       title: title.trim(),
       category,
-      recurrence: recurrenceEnabled ? recurrenceDay : 'none',
-      recurrence_freq: recurrenceEnabled ? recurrenceFreq : 'weekly',
+      recurrence: recEnabled ? recDay : 'none',
+      recurrence_freq: recEnabled ? recFreq : 'weekly',
     });
     setSavingBacklog(false);
     resetForm();
@@ -111,6 +95,10 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
     );
   }
 
+  const chipBase = 'rounded-xl transition-all active:scale-95';
+  const chipActive = 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)] ring-1 ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]';
+  const chipInactive = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]';
+
   return (
     <Card variant="elevated">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -122,7 +110,7 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ex: Foot avec les potes, Film Netflix..."
             autoFocus
-            className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-text placeholder:text-text-dim focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors"
+            className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-colors"
           />
         </div>
 
@@ -137,11 +125,7 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
                   key={cat.id}
                   type="button"
                   onClick={() => setCategory(cat.id)}
-                  className={`flex flex-col items-center gap-1 p-2.5 rounded-xl text-xs transition-all ${
-                    isSelected
-                      ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
-                      : 'bg-surface text-text-muted hover:bg-surface-elevated'
-                  }`}
+                  className={`flex flex-col items-center gap-1 p-2.5 ${chipBase} text-xs ${isSelected ? chipActive : chipInactive}`}
                 >
                   <Icon size={16} />
                   <span className="leading-tight text-center">{cat.label}</span>
@@ -162,10 +146,8 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
                   key={iso}
                   type="button"
                   onClick={() => setPlannedDate(iso)}
-                  className={`flex flex-col items-center p-2 rounded-lg text-xs transition-all ${
-                    isSelected
-                      ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
-                      : 'bg-surface text-text-muted hover:bg-surface-elevated'
+                  className={`flex flex-col items-center p-2 rounded-lg text-xs transition-all active:scale-95 ${
+                    isSelected ? chipActive : chipInactive
                   }`}
                 >
                   <span className="font-medium">{formatDate(day, 'EEE')}</span>
@@ -176,65 +158,14 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
           </div>
         </div>
 
-        {/* Recurrence */}
-        <div className="space-y-2">
-          <button
-            type="button"
-            onClick={() => setRecurrenceEnabled(!recurrenceEnabled)}
-            className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
-              recurrenceEnabled ? 'text-primary' : 'text-text-muted'
-            }`}
-          >
-            <Repeat size={13} />
-            Recurrence
-            <span className={`w-8 h-4 rounded-full relative transition-colors ${recurrenceEnabled ? 'bg-primary' : 'bg-border'}`}>
-              <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${recurrenceEnabled ? 'left-4' : 'left-0.5'}`} />
-            </span>
-          </button>
-
-          {recurrenceEnabled && (
-            <div className="space-y-2 pl-5 border-l-2 border-primary/20">
-              <div>
-                <p className="text-[11px] text-text-dim mb-1">Jour de recurrence</p>
-                <div className="flex gap-1">
-                  {DAYS_OF_WEEK.map((d) => (
-                    <button
-                      key={d.id}
-                      type="button"
-                      onClick={() => setRecurrenceDay(d.id)}
-                      className={`px-1.5 py-1 rounded-lg text-[11px] transition-all ${
-                        recurrenceDay === d.id
-                          ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
-                          : 'bg-surface text-text-muted'
-                      }`}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-[11px] text-text-dim mb-1">Frequence</p>
-                <div className="flex gap-1.5">
-                  {FREQ_OPTIONS.map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      onClick={() => setRecurrenceFreq(f.id)}
-                      className={`px-2 py-1 rounded-lg text-[11px] transition-all ${
-                        recurrenceFreq === f.id
-                          ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
-                          : 'bg-surface text-text-muted'
-                      }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <RecurrenceSection
+          enabled={recEnabled}
+          day={recDay}
+          freq={recFreq}
+          onToggle={() => setRecEnabled(!recEnabled)}
+          onDayChange={setRecDay}
+          onFreqChange={setRecFreq}
+        />
 
         <div className="flex gap-2">
           <Button type="submit" className="flex-1" disabled={loading || !title.trim() || !plannedDate}>
@@ -243,7 +174,6 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
           <Button
             type="button"
             variant="secondary"
-            className="flex items-center gap-1.5"
             disabled={savingBacklog || !title.trim()}
             onClick={handleBacklog}
           >
