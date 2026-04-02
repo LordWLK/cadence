@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, Heart, CalendarPlus, BarChart3, Settings } from 'lucide-react';
+import { Calendar, Heart, CalendarDays, BarChart3, Settings } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/',                icon: Calendar,     label: 'Semaine',   exact: true  },
   { href: '/checkin',         icon: Heart,        label: 'Check-in',  exact: true  },
-  { href: '/friday',          icon: CalendarPlus, label: 'Planifier', exact: true  },
+  { href: '/friday',          icon: CalendarDays, label: 'Planifier', exact: true  },
   { href: '/checkin/history', icon: BarChart3,    label: 'Historique',exact: true  },
   { href: '/settings',        icon: Settings,     label: 'Réglages',  exact: false }, // match /settings/*
 ];
