@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, Heart, PenSquare, BarChart3, Settings } from 'lucide-react';
+import { Calendar, Heart, Pencil, BarChart3, Settings } from 'lucide-react';
 
 const NAV_ITEMS = [
   { href: '/',                icon: Calendar,     label: 'Semaine',   exact: true  },
   { href: '/checkin',         icon: Heart,        label: 'Check-in',  exact: true  },
-  { href: '/friday',          icon: PenSquare,    label: 'Planifier', exact: true  },
+  { href: '/friday',          icon: Pencil,       label: 'Planifier', exact: true  },
   { href: '/checkin/history', icon: BarChart3,    label: 'Historique',exact: true  },
   { href: '/settings',        icon: Settings,     label: 'Réglages',  exact: false }, // match /settings/*
 ];
@@ -38,7 +38,7 @@ export function BottomNav() {
                   : 'text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)]'
               }`}
             >
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
+              <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} fill="none" />
               <span className="text-[10px] font-medium tracking-wide">
                 {label}
               </span>
