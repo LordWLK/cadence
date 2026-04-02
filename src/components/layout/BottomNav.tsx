@@ -17,8 +17,8 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface-elevated)]/95 backdrop-blur-lg border-t border-[var(--color-border)]"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--color-border)]"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)', backgroundColor: 'var(--color-surface-elevated)' }}
     >
       <div className="flex items-center justify-around h-16 max-w-lg mx-auto px-2">
         {NAV_ITEMS.map(({ href, icon: Icon, label, exact }) => {
