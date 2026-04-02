@@ -9,11 +9,11 @@ import type { SportFeedEvent } from '@/lib/hooks/useSportFeed';
 
 interface EventCardProps {
   event: SportFeedEvent;
-  onAdd: (event: SportFeedEvent) => void;
+  onToggle: (event: SportFeedEvent) => void;
   isAdded: boolean;
 }
 
-export function EventCard({ event, onAdd, isAdded }: EventCardProps) {
+export function EventCard({ event, onToggle, isAdded }: EventCardProps) {
   const hex = SPORT_HEX[event.sport] || '#16a34a';
   const sportLabel = event.sport === 'football' ? 'Football' : event.sport === 'basketball' ? 'NBA' : 'MMA';
 
@@ -51,16 +51,15 @@ export function EventCard({ event, onAdd, isAdded }: EventCardProps) {
           <p className="text-xs text-text-dim capitalize">{dateStr}</p>
         </div>
         <button
-          onClick={() => !isAdded && onAdd(event)}
-          disabled={isAdded}
-          aria-label={isAdded ? 'Deja ajoute' : 'Ajouter a ma semaine'}
-          className="shrink-0 p-2 rounded-xl transition-all"
+          onClick={() => onToggle(event)}
+          aria-label={isAdded ? 'Retirer de ma semaine' : 'Ajouter a ma semaine'}
+          className="shrink-0 p-2 rounded-xl transition-all active:scale-90"
           style={isAdded
             ? { backgroundColor: '#16a34a18', color: '#16a34a' }
             : { backgroundColor: `${hex}18`, color: hex }
           }
         >
-          {isAdded ? <Check size={16} /> : <Plus size={16} />}
+          {isAdded ? <Check size={16} strokeWidth={2.5} /> : <Plus size={16} />}
         </button>
       </div>
     </div>

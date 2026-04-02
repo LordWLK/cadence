@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSportFeed, type SportFeedEvent } from '@/lib/hooks/useSportFeed';
 import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { EventCard } from './EventCard';
@@ -11,28 +11,60 @@ import { addDays } from 'date-fns';
 
 export function SportFeed() {
   const { fetchFeed, clearCache, yourMatches, bigMatches, loading } = useSportFeed();
-  const { create } = useSelectedEvents();
-  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  const { create, getByWeek, remove } = useSelectedEvents();
+  // Map: event sourceApiId -> selected_events row id (for removal)
+  const [selectedMap, setSelectedMap] = useState<Map<string, string>>(new Map());
 
-  // Semaine glissante : aujourd'hui + 7 jours
   const today = useMemo(() => new Date(), []);
   const weekEnd = useMemo(() => addDays(today, 7), [today]);
+
+  const todayISO = useMemo(() => today.toISOString().split('T')[0], [today]);
+  const weekEndISO = useMemo(() => weekEnd.toISOString().split('T')[0], [weekEnd]);
+
+  // Load already-selected events from DB
+  const loadSelected = useCallback(async () => {
+    const events = await getByWeek(todayISO, weekEndISO);
+    const map = new Map<string, string>();
+    for (const ev of events) {
+      if (ev.source_api_id) {
+        map.set(ev.source_api_id, ev.id);
+      }
+    }
+    setSelectedMap(map);
+  }, [getByWeek, todayISO, weekEndISO]);
+
+  useEffect(() => {
+    loadSelected();
+  }, [loadSelected]);
 
   useEffect(() => {
     fetchFeed(today, weekEnd);
   }, [fetchFeed, today, weekEnd]);
 
-  const handleAdd = async (event: SportFeedEvent) => {
-    const result = await create({
-      sport: event.sport,
-      event_title: event.title,
-      event_date: event.date,
-      competition: event.competition,
-      is_big_match: event.isBigMatch,
-      source_api_id: event.sourceApiId,
-    });
-    if (result) {
-      setAddedIds(prev => new Set([...prev, event.id]));
+  const handleToggle = async (event: SportFeedEvent) => {
+    const existingId = selectedMap.get(event.sourceApiId);
+
+    if (existingId) {
+      // Already selected → remove
+      await remove(existingId);
+      setSelectedMap(prev => {
+        const next = new Map(prev);
+        next.delete(event.sourceApiId);
+        return next;
+      });
+    } else {
+      // Not selected → add
+      const result = await create({
+        sport: event.sport,
+        event_title: event.title,
+        event_date: event.date,
+        competition: event.competition,
+        is_big_match: event.isBigMatch,
+        source_api_id: event.sourceApiId,
+      });
+      if (result) {
+        setSelectedMap(prev => new Map(prev).set(event.sourceApiId, result.id));
+      }
     }
   };
 
@@ -91,8 +123,8 @@ export function SportFeed() {
             <EventCard
               key={event.id}
               event={event}
-              onAdd={handleAdd}
-              isAdded={addedIds.has(event.id)}
+              onToggle={handleToggle}
+              isAdded={selectedMap.has(event.sourceApiId)}
             />
           ))}
         </div>
@@ -108,8 +140,8 @@ export function SportFeed() {
             <EventCard
               key={event.id}
               event={event}
-              onAdd={handleAdd}
-              isAdded={addedIds.has(event.id)}
+              onToggle={handleToggle}
+              isAdded={selectedMap.has(event.sourceApiId)}
             />
           ))}
         </div>
