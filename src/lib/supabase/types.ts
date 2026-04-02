@@ -74,6 +74,7 @@ export type Database = {
           title: string;
           category: string;
           recurrence: string;
+          recurrence_freq: string;
           is_active: boolean;
           created_at: string;
         };
@@ -83,6 +84,7 @@ export type Database = {
           title: string;
           category: string;
           recurrence?: string;
+          recurrence_freq?: string;
           is_active?: boolean;
           created_at?: string;
         };
@@ -92,6 +94,7 @@ export type Database = {
           title?: string;
           category?: string;
           recurrence?: string;
+          recurrence_freq?: string;
           is_active?: boolean;
           created_at?: string;
         };

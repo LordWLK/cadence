@@ -44,7 +44,7 @@ export function useBacklog() {
     return item as BacklogActivity;
   }, [supabase, user]);
 
-  const update = useCallback(async (id: string, data: { title?: string; category?: string; recurrence?: string }) => {
+  const update = useCallback(async (id: string, data: { title?: string; category?: string; recurrence?: string; recurrence_freq?: string }) => {
     if (!supabase || !user) return null;
     const { data: item, error } = await supabase
       .from('backlog_activities')

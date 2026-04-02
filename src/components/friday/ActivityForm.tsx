@@ -6,12 +6,28 @@ import { Card } from '@/components/ui/Card';
 import { useActivities } from '@/lib/hooks/useActivities';
 import { useBacklog } from '@/lib/hooks/useBacklog';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
-import { getNextWeekStart, getWeekDays, getDayName, formatDateISO, formatDate } from '@/lib/utils/dates';
-import { Plus, Archive, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { getWeekDays, formatDateISO, formatDate } from '@/lib/utils/dates';
+import { Plus, Archive, Repeat, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
 };
+
+const DAYS_OF_WEEK = [
+  { id: 'lundi', label: 'Lun' },
+  { id: 'mardi', label: 'Mar' },
+  { id: 'mercredi', label: 'Mer' },
+  { id: 'jeudi', label: 'Jeu' },
+  { id: 'vendredi', label: 'Ven' },
+  { id: 'samedi', label: 'Sam' },
+  { id: 'dimanche', label: 'Dim' },
+];
+
+const FREQ_OPTIONS = [
+  { id: 'weekly', label: 'Chaque semaine' },
+  { id: 'biweekly', label: 'Toutes les 2 sem.' },
+  { id: 'monthly', label: 'Chaque mois' },
+];
 
 interface ActivityFormProps {
   weekStart: Date;
@@ -28,20 +44,47 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
   const [open, setOpen] = useState(false);
   const [savingBacklog, setSavingBacklog] = useState(false);
 
+  // Recurrence state
+  const [recurrenceEnabled, setRecurrenceEnabled] = useState(false);
+  const [recurrenceDay, setRecurrenceDay] = useState('none');
+  const [recurrenceFreq, setRecurrenceFreq] = useState('weekly');
+
   const days = getWeekDays(weekStart);
+
+  const resetForm = () => {
+    setTitle('');
+    setPlannedDate('');
+    setCategory(ACTIVITY_CATEGORIES[0].id);
+    setRecurrenceEnabled(false);
+    setRecurrenceDay('none');
+    setRecurrenceFreq('weekly');
+    setOpen(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !plannedDate) return;
+
+    // Create the weekly activity
     await create({
       title: title.trim(),
       category,
       planned_date: plannedDate,
       week_start: formatDateISO(weekStart),
     });
-    setTitle('');
-    setPlannedDate('');
-    setOpen(false);
+
+    // If recurrence is enabled, also create a backlog item
+    if (recurrenceEnabled && recurrenceDay !== 'none') {
+      await backlog.create({
+        title: title.trim(),
+        category,
+        recurrence: recurrenceDay,
+        recurrence_freq: recurrenceFreq,
+      });
+      onBacklogCreated?.();
+    }
+
+    resetForm();
     onCreated();
   };
 
@@ -51,12 +94,11 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
     await backlog.create({
       title: title.trim(),
       category,
-      recurrence: 'none',
+      recurrence: recurrenceEnabled ? recurrenceDay : 'none',
+      recurrence_freq: recurrenceEnabled ? recurrenceFreq : 'weekly',
     });
     setSavingBacklog(false);
-    setTitle('');
-    setPlannedDate('');
-    setOpen(false);
+    resetForm();
     onBacklogCreated?.();
   };
 
@@ -134,6 +176,66 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
           </div>
         </div>
 
+        {/* Recurrence */}
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={() => setRecurrenceEnabled(!recurrenceEnabled)}
+            className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${
+              recurrenceEnabled ? 'text-primary' : 'text-text-muted'
+            }`}
+          >
+            <Repeat size={13} />
+            Recurrence
+            <span className={`w-8 h-4 rounded-full relative transition-colors ${recurrenceEnabled ? 'bg-primary' : 'bg-border'}`}>
+              <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${recurrenceEnabled ? 'left-4' : 'left-0.5'}`} />
+            </span>
+          </button>
+
+          {recurrenceEnabled && (
+            <div className="space-y-2 pl-5 border-l-2 border-primary/20">
+              <div>
+                <p className="text-[11px] text-text-dim mb-1">Jour de recurrence</p>
+                <div className="flex gap-1">
+                  {DAYS_OF_WEEK.map((d) => (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => setRecurrenceDay(d.id)}
+                      className={`px-1.5 py-1 rounded-lg text-[11px] transition-all ${
+                        recurrenceDay === d.id
+                          ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
+                          : 'bg-surface text-text-muted'
+                      }`}
+                    >
+                      {d.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-[11px] text-text-dim mb-1">Frequence</p>
+                <div className="flex gap-1.5">
+                  {FREQ_OPTIONS.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setRecurrenceFreq(f.id)}
+                      className={`px-2 py-1 rounded-lg text-[11px] transition-all ${
+                        recurrenceFreq === f.id
+                          ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
+                          : 'bg-surface text-text-muted'
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="flex gap-2">
           <Button type="submit" className="flex-1" disabled={loading || !title.trim() || !plannedDate}>
             {loading ? 'Ajout...' : 'Planifier'}
@@ -148,7 +250,7 @@ export function ActivityForm({ weekStart, onCreated, onBacklogCreated }: Activit
             <Archive size={14} />
             {savingBacklog ? '...' : 'Backlog'}
           </Button>
-          <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+          <Button type="button" variant="ghost" onClick={resetForm}>
             Annuler
           </Button>
         </div>
