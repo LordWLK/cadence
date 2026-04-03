@@ -6,7 +6,7 @@ import { useActivities } from '@/lib/hooks/useActivities';
 import { useAuth } from '@/providers/AuthProvider';
 import { ACTIVITY_CATEGORIES, MOOD_EMOJIS } from '@/lib/config/constants';
 import { TrendingUp, TrendingDown, Activity, Dumbbell, Users, Lightbulb, Coffee, Briefcase, Sparkles } from 'lucide-react';
-import { subDays, format } from 'date-fns';
+import { getDateRangeISO, groupByDate } from '@/lib/utils/dates';
 import type { Checkin } from '@/lib/supabase/types';
 import type { WeeklyActivity } from '@/lib/supabase/types';
 
@@ -32,10 +32,7 @@ export function MoodInsights() {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     const load = async () => {
-      const end = new Date();
-      const start = subDays(end, 30);
-      const startISO = format(start, 'yyyy-MM-dd');
-      const endISO = format(end, 'yyyy-MM-dd');
+      const { startISO, endISO } = getDateRangeISO(30);
       const [c, a] = await Promise.all([
         getByDateRange(startISO, endISO),
         getActivitiesByRange(startISO, endISO),
@@ -54,11 +51,7 @@ export function MoodInsights() {
 
     // Average mood by date
     const moodByDate: Record<string, number> = {};
-    const checkinsByDate: Record<string, Checkin[]> = {};
-    for (const c of checkins) {
-      if (!checkinsByDate[c.date]) checkinsByDate[c.date] = [];
-      checkinsByDate[c.date].push(c);
-    }
+    const checkinsByDate = groupByDate(checkins);
     for (const [date, dayCheckins] of Object.entries(checkinsByDate)) {
       moodByDate[date] = dayCheckins.reduce((s, c) => s + c.mood, 0) / dayCheckins.length;
     }

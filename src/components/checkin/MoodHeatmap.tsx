@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useAuth } from '@/providers/AuthProvider';
 import { MOOD_HEX } from '@/lib/config/constants';
+import { getDateRangeISO, groupByDate, formatDateISO } from '@/lib/utils/dates';
 import { subDays, format, startOfWeek, eachDayOfInterval } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { Checkin } from '@/lib/supabase/types';
@@ -17,12 +18,8 @@ export function MoodHeatmap() {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     const load = async () => {
-      const end = new Date();
-      const start = subDays(end, 90);
-      const data = await getByDateRange(
-        format(start, 'yyyy-MM-dd'),
-        format(end, 'yyyy-MM-dd')
-      );
+      const { startISO, endISO } = getDateRangeISO(90);
+      const data = await getByDateRange(startISO, endISO);
       setCheckins(data);
       setLoading(false);
     };
@@ -37,18 +34,14 @@ export function MoodHeatmap() {
     const days = eachDayOfInterval({ start: gridStart, end });
 
     // Group checkins by date
-    const byDate: Record<string, Checkin[]> = {};
-    for (const c of checkins) {
-      if (!byDate[c.date]) byDate[c.date] = [];
-      byDate[c.date].push(c);
-    }
+    const byDate = groupByDate(checkins);
 
     // Build grid: array of weeks, each week has 7 days
     const weeks: Array<Array<{ date: string; mood: number | null; isInRange: boolean }>> = [];
     let currentWeek: Array<{ date: string; mood: number | null; isInRange: boolean }> = [];
 
     for (const day of days) {
-      const iso = format(day, 'yyyy-MM-dd');
+      const iso = formatDateISO(day);
       const dayCheckins = byDate[iso] || [];
       const avgMood = dayCheckins.length > 0
         ? Math.round(dayCheckins.reduce((s, c) => s + c.mood, 0) / dayCheckins.length)
@@ -104,11 +97,11 @@ export function MoodHeatmap() {
       </div>
 
       {/* Month labels */}
-      <div className="flex gap-[3px] pl-5 text-[9px] text-text-dim">
+      <div className="flex gap-[2px] pl-6 text-[10px] text-text-dim">
         {months.map((m, i) => (
           <span
             key={i}
-            style={{ marginLeft: i === 0 ? `${m.col * 13}px` : undefined }}
+            style={{ marginLeft: i === 0 ? `${m.col * 16}px` : undefined }}
           >
             {m.label}
           </span>
@@ -116,20 +109,20 @@ export function MoodHeatmap() {
       </div>
 
       {/* Grid */}
-      <div className="flex gap-[3px] overflow-x-auto">
+      <div className="flex gap-[2px] overflow-x-auto">
         {/* Day labels */}
-        <div className="flex flex-col gap-[3px] shrink-0 text-[9px] text-text-dim pt-0.5">
-          <span className="h-[10px]">L</span>
-          <span className="h-[10px]"></span>
-          <span className="h-[10px]">M</span>
-          <span className="h-[10px]"></span>
-          <span className="h-[10px]">V</span>
-          <span className="h-[10px]"></span>
-          <span className="h-[10px]">D</span>
+        <div className="flex flex-col gap-[2px] shrink-0 text-[10px] text-text-dim pt-0.5">
+          <span className="h-[14px] leading-[14px]">L</span>
+          <span className="h-[14px]"></span>
+          <span className="h-[14px] leading-[14px]">M</span>
+          <span className="h-[14px]"></span>
+          <span className="h-[14px] leading-[14px]">V</span>
+          <span className="h-[14px]"></span>
+          <span className="h-[14px] leading-[14px]">D</span>
         </div>
 
         {grid.map((week, wi) => (
-          <div key={wi} className="flex flex-col gap-[3px]">
+          <div key={wi} className="flex flex-col gap-[2px]">
             {week.map((day) => {
               const bgColor = !day.isInRange
                 ? 'transparent'
@@ -139,7 +132,7 @@ export function MoodHeatmap() {
               return (
                 <div
                   key={day.date}
-                  className="w-[10px] h-[10px] rounded-sm transition-colors"
+                  className="w-[14px] h-[14px] rounded-sm transition-colors"
                   style={{ backgroundColor: bgColor }}
                   title={day.mood !== null
                     ? `${day.date}: humeur ${day.mood}/5`

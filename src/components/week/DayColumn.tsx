@@ -31,14 +31,14 @@ export function DayColumn({ date, checkins, activities, events, isToday, isSelec
       className="flex flex-col rounded-xl p-1 min-h-[120px] transition-all cursor-pointer active:scale-[0.97]"
       style={{
         backgroundColor: isSelected
-          ? 'color-mix(in srgb, #7c3aed 18%, var(--color-surface))'
+          ? 'color-mix(in srgb, var(--color-primary) 18%, var(--color-surface))'
           : isToday
-            ? 'color-mix(in srgb, #7c3aed 12%, var(--color-surface))'
+            ? 'color-mix(in srgb, var(--color-primary) 12%, var(--color-surface))'
             : 'var(--color-surface-alt)',
         outline: isSelected
-          ? '2px solid #7c3aed'
+          ? '2px solid var(--color-primary)'
           : isToday
-            ? '1.5px solid color-mix(in srgb, #7c3aed 35%, transparent)'
+            ? '1.5px solid color-mix(in srgb, var(--color-primary) 35%, transparent)'
             : 'none',
       }}
     >
@@ -46,13 +46,13 @@ export function DayColumn({ date, checkins, activities, events, isToday, isSelec
       <div className="text-center py-1">
         <p
           className="text-[11px] font-bold leading-none"
-          style={{ color: isToday ? '#7c3aed' : 'var(--color-text-muted)' }}
+          style={{ color: isToday ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
         >
           {dayLabel}
         </p>
         <p
           className="text-base font-bold leading-tight mt-0.5"
-          style={{ color: isToday ? '#7c3aed' : 'var(--color-text)' }}
+          style={{ color: isToday ? 'var(--color-primary)' : 'var(--color-text)' }}
         >
           {dayNumber}
         </p>

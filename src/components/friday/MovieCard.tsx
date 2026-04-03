@@ -18,7 +18,7 @@ export function MovieCard({ movie, onToggle, addedShowtimes }: MovieCardProps) {
       className="rounded-2xl overflow-hidden"
       style={{
         backgroundColor: 'var(--color-surface-alt)',
-        borderLeft: '4px solid #7c3aed',
+        borderLeft: '4px solid var(--color-primary)',
       }}
     >
       <div className="p-3">

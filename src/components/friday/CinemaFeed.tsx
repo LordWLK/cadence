@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { UGC_CINEMAS } from '@/lib/config/constants';
 import { DayScroller } from './DayScroller';
-import { Film, RefreshCw, ChevronDown } from 'lucide-react';
+import { Film, RefreshCw, ChevronDown, AlertCircle } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { getRollingDays } from '@/lib/utils/dates';
 import type { CinemaMovie } from '@/lib/types/cinema';
@@ -18,7 +18,7 @@ interface CinemaFeedProps {
 }
 
 export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
-  const { movies, loading, cinemaName, fetchShowtimes } = useCinemaFeed();
+  const { movies, loading, error, cinemaName, fetchShowtimes } = useCinemaFeed();
   const { create, getByWeek, remove } = useSelectedEvents();
   const [selectedCinemaId, setSelectedCinemaId] = useState(preferredCinemaIds[0] || '');
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -141,6 +141,16 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
         <div className="space-y-2">
           {[1, 2, 3].map(i => <div key={i} className="h-24 bg-surface-elevated rounded-xl animate-pulse" />)}
         </div>
+      ) : error ? (
+        <Card>
+          <div className="text-center py-6 space-y-2">
+            <AlertCircle size={24} className="mx-auto" style={{ color: 'var(--color-error)' }} />
+            <p className="text-sm" style={{ color: 'var(--color-error)' }}>{error}</p>
+            <Button variant="ghost" size="sm" onClick={() => fetchShowtimes(selectedCinemaId, selectedDate)}>
+              <RefreshCw size={14} /> Réessayer
+            </Button>
+          </div>
+        </Card>
       ) : movies.length === 0 ? (
         <Card>
           <div className="text-center py-6 space-y-2">

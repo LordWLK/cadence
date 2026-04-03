@@ -1,4 +1,4 @@
-import { startOfWeek, endOfWeek, addWeeks, addDays, format, isToday as isTodayFns, isFriday as isFridayFns, eachDayOfInterval, parseISO } from 'date-fns';
+import { startOfWeek, endOfWeek, addWeeks, addDays, subDays, format, isToday as isTodayFns, isFriday as isFridayFns, eachDayOfInterval, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export function getWeekStart(date: Date = new Date()): Date {
@@ -47,4 +47,26 @@ export function isFriday(date: Date = new Date()): boolean {
 export function getRollingDays(count: number = 14): Date[] {
   const today = new Date();
   return eachDayOfInterval({ start: today, end: addDays(today, count - 1) });
+}
+
+/** Returns { startISO, endISO } for a date range ending today, going back `days` days */
+export function getDateRangeISO(days: number): { startISO: string; endISO: string } {
+  const end = new Date();
+  const start = subDays(end, days);
+  return { startISO: format(start, 'yyyy-MM-dd'), endISO: format(end, 'yyyy-MM-dd') };
+}
+
+/** Returns 'morning' or 'evening' based on current hour (cutoff at 14h) */
+export function getTimeOfDay(): 'morning' | 'evening' {
+  return new Date().getHours() < 14 ? 'morning' : 'evening';
+}
+
+/** Groups checkins by date into a Record<dateString, Checkin[]> */
+export function groupByDate<T extends { date: string }>(items: T[]): Record<string, T[]> {
+  const grouped: Record<string, T[]> = {};
+  for (const item of items) {
+    if (!grouped[item.date]) grouped[item.date] = [];
+    grouped[item.date].push(item);
+  }
+  return grouped;
 }

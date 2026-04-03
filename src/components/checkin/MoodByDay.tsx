@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/Card';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useAuth } from '@/providers/AuthProvider';
 import { MOOD_EMOJIS } from '@/lib/config/constants';
-import { subDays, format, getDay } from 'date-fns';
+import { getDateRangeISO } from '@/lib/utils/dates';
+import { getDay } from 'date-fns';
 
 const DAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -18,12 +19,8 @@ export function MoodByDay() {
   useEffect(() => {
     if (!user) { setLoading(false); return; }
     const load = async () => {
-      const end = new Date();
-      const start = subDays(end, 90);
-      const checkins = await getByDateRange(
-        format(start, 'yyyy-MM-dd'),
-        format(end, 'yyyy-MM-dd')
-      );
+      const { startISO, endISO } = getDateRangeISO(90);
+      const checkins = await getByDateRange(startISO, endISO);
 
       // Group by day of week (0=Monday ... 6=Sunday)
       const buckets: { sum: number; count: number }[] = Array.from({ length: 7 }, () => ({ sum: 0, count: 0 }));

@@ -253,7 +253,7 @@ export default function SettingsPage() {
       <NextLink href="/settings/cinema">
         <Card className="flex items-center justify-between cursor-pointer hover:border-primary/50 transition-colors">
           <div className="flex items-center gap-3">
-            <Film size={20} style={{ color: '#7c3aed' }} />
+            <Film size={20} style={{ color: 'var(--color-primary)' }} />
             <div>
               <p className="font-medium">Cinémas UGC</p>
               <p className="text-sm text-text-muted">Tes cinémas favoris pour les séances</p>

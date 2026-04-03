@@ -112,8 +112,8 @@ export default function CinemaSettingsPage() {
               onClick={() => handleToggle({ id: p.cinema_id, name: p.cinema_name })}
               className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-95"
               style={{
-                backgroundColor: 'color-mix(in srgb, #7c3aed 15%, transparent)',
-                color: '#7c3aed',
+                backgroundColor: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+                color: 'var(--color-primary)',
               }}
             >
               {p.cinema_name}
@@ -149,9 +149,9 @@ export default function CinemaSettingsPage() {
                         className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all active:scale-[0.98]"
                         style={isSelected
                           ? {
-                              backgroundColor: 'color-mix(in srgb, #7c3aed 12%, transparent)',
-                              color: '#7c3aed',
-                              boxShadow: 'inset 0 0 0 1px color-mix(in srgb, #7c3aed 30%, transparent)',
+                              backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+                              color: 'var(--color-primary)',
+                              boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 30%, transparent)',
                             }
                           : {
                               backgroundColor: 'var(--color-surface-elevated)',

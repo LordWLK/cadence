@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useCheckins } from '@/lib/hooks/useCheckins';
+import { getDateRangeISO, groupByDate, formatDateISO } from '@/lib/utils/dates';
 import { subDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { Checkin } from '@/lib/supabase/types';
@@ -25,23 +26,16 @@ export function MoodChart() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      const { startISO, endISO } = getDateRangeISO(range);
+      const checkins = await getByDateRange(startISO, endISO);
+
+      const grouped = groupByDate(checkins);
+
       const end = new Date();
-      const start = subDays(end, range);
-      const checkins = await getByDateRange(
-        format(start, 'yyyy-MM-dd'),
-        format(end, 'yyyy-MM-dd')
-      );
-
-      const grouped: Record<string, Checkin[]> = {};
-      for (const c of checkins) {
-        if (!grouped[c.date]) grouped[c.date] = [];
-        grouped[c.date].push(c);
-      }
-
       const chartData: ChartData[] = [];
       for (let i = 0; i <= range; i++) {
         const d = subDays(end, range - i);
-        const dateStr = format(d, 'yyyy-MM-dd');
+        const dateStr = formatDateISO(d);
         const dayCheckins = grouped[dateStr] || [];
         const morning = dayCheckins.find(c => c.type === 'morning');
         const evening = dayCheckins.find(c => c.type === 'evening');

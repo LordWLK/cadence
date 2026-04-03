@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { MOOD_EMOJIS, MOOD_HEX } from '@/lib/config/constants';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { hapticSelect, hapticSuccess } from '@/lib/utils/haptics';
+import { getTimeOfDay } from '@/lib/utils/dates';
 import { Check } from 'lucide-react';
 
 interface QuickCheckinProps {
@@ -18,8 +19,7 @@ export function QuickCheckin({ onDone }: QuickCheckinProps) {
   const handleQuick = async (mood: number) => {
     hapticSelect();
     setSaving(true);
-    const hour = new Date().getHours();
-    const type = hour < 14 ? 'morning' : 'evening';
+    const type = getTimeOfDay();
     const result = await create({
       type,
       mood,

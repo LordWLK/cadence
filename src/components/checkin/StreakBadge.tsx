@@ -5,7 +5,7 @@ import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useAuth } from '@/providers/AuthProvider';
 import { calculateStreak } from '@/lib/utils/streak';
 import { Flame, TrendingUp } from 'lucide-react';
-import { subDays, format } from 'date-fns';
+import { getDateRangeISO } from '@/lib/utils/dates';
 
 export function StreakBadge() {
   const { user } = useAuth();
@@ -15,12 +15,8 @@ export function StreakBadge() {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const end = new Date();
-      const start = subDays(end, 365);
-      const checkins = await getByDateRange(
-        format(start, 'yyyy-MM-dd'),
-        format(end, 'yyyy-MM-dd')
-      );
+      const { startISO, endISO } = getDateRangeISO(365);
+      const checkins = await getByDateRange(startISO, endISO);
       setStreak(calculateStreak(checkins));
     };
     load();

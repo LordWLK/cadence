@@ -129,7 +129,7 @@ export function DayDetail({ date, checkins, activities, events, onClose }: DayDe
             Événements ({events.length})
           </p>
           {events.map(e => {
-            const hex = SPORT_HEX[e.sport] || '#7c3aed';
+            const hex = SPORT_HEX[e.sport] || 'var(--color-primary)';
             return (
               <div
                 key={e.id}

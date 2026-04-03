@@ -6,10 +6,12 @@ import type { CinemaMovie, CinemaFeedResponse } from '@/lib/types/cinema';
 export function useCinemaFeed() {
   const [movies, setMovies] = useState<CinemaMovie[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [cinemaName, setCinemaName] = useState('');
 
   const fetchShowtimes = useCallback(async (cinemaId: string, date: string) => {
     setLoading(true);
+    setError(null);
     setMovies([]);
 
     // Check sessionStorage cache
@@ -36,11 +38,12 @@ export function useCinemaFeed() {
       sessionStorage.setItem(cacheKey, JSON.stringify(data));
     } catch (err) {
       console.error('Cinema feed error:', err);
+      setError('Impossible de charger les séances');
       setMovies([]);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  return { movies, loading, cinemaName, fetchShowtimes };
+  return { movies, loading, error, cinemaName, fetchShowtimes };
 }

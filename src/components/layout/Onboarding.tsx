@@ -7,7 +7,7 @@ import { CadenceLogoStacked } from '@/components/ui/CadenceLogo';
 const SLIDES = [
   {
     icon: Heart,
-    color: '#7c3aed',
+    color: 'var(--color-primary)',
     title: 'Suis ton humeur',
     desc: 'Check-in matin et soir : note ton humeur, ton energie, tes pensees. Visualise tes tendances sur 30 jours.',
   },

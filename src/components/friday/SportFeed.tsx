@@ -6,11 +6,11 @@ import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { EventCard } from './EventCard';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Star, Flame, RefreshCw, Wifi } from 'lucide-react';
+import { Star, Flame, RefreshCw, Wifi, AlertCircle } from 'lucide-react';
 import { addDays } from 'date-fns';
 
 export function SportFeed() {
-  const { fetchFeed, clearCache, yourMatches, bigMatches, loading } = useSportFeed();
+  const { fetchFeed, clearCache, yourMatches, bigMatches, loading, error } = useSportFeed();
   const { create, getByWeek, remove } = useSelectedEvents();
   // Map: event sourceApiId -> selected_events row id (for removal)
   const [selectedMap, setSelectedMap] = useState<Map<string, string>>(new Map());
@@ -82,6 +82,20 @@ export function SportFeed() {
             <span className="text-sm">Chargement des matchs...</span>
           </div>
           {[1,2,3].map(i => <div key={i} className="h-20 bg-surface-elevated rounded-xl animate-pulse" />)}
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <div className="text-center py-6 space-y-2">
+          <AlertCircle size={24} className="mx-auto" style={{ color: 'var(--color-error)' }} />
+          <p className="text-sm" style={{ color: 'var(--color-error)' }}>{error}</p>
+          <Button variant="ghost" size="sm" onClick={handleRefresh}>
+            <RefreshCw size={14} /> Réessayer
+          </Button>
         </div>
       </Card>
     );

@@ -10,6 +10,7 @@ import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { Sun, Moon, Send, AlertCircle } from 'lucide-react';
+import { getTimeOfDay } from '@/lib/utils/dates';
 import { hapticSuccess, hapticError } from '@/lib/utils/haptics';
 import { Confetti } from '@/components/ui/Confetti';
 
@@ -32,8 +33,7 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    setType(hour < 14 ? 'morning' : 'evening');
+    setType(getTimeOfDay());
   }, []);
 
   useEffect(() => {
@@ -120,9 +120,9 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
           type="button"
           onClick={() => setType('morning')}
           style={isMorning ? {
-            backgroundColor: 'color-mix(in srgb, #7c3aed 12%, transparent)',
-            color: '#7c3aed',
-            outline: '1px solid color-mix(in srgb, #7c3aed 30%, transparent)',
+            backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
+            color: 'var(--color-primary)',
+            outline: '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)',
           } : {
             backgroundColor: 'var(--color-surface-elevated)',
             color: 'var(--color-text-muted)',
