@@ -94,7 +94,7 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
     return (
       <Button variant="secondary" onClick={() => setOpen(true)} className="w-full">
         <Plus size={16} />
-        Ajouter une activite
+        Ajouter une activité
       </Button>
     );
   }
@@ -107,7 +107,7 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
     <Card variant="elevated">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="text-sm text-text-muted block mb-1.5">Activite</label>
+          <label className="text-sm text-text-muted block mb-1.5">Activité</label>
           <input
             type="text"
             value={title}
@@ -119,7 +119,7 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
         </div>
 
         <div>
-          <label className="text-sm text-text-muted block mb-1.5">Categorie</label>
+          <label className="text-sm text-text-muted block mb-1.5">Catégorie</label>
           <div className="grid grid-cols-3 gap-2">
             {ACTIVITY_CATEGORIES.map((cat) => {
               const Icon = ICON_MAP[cat.icon] || Sparkles;

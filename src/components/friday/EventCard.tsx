@@ -52,7 +52,7 @@ export function EventCard({ event, onToggle, isAdded }: EventCardProps) {
         </div>
         <button
           onClick={() => onToggle(event)}
-          aria-label={isAdded ? 'Retirer de ma semaine' : 'Ajouter a ma semaine'}
+          aria-label={isAdded ? 'Retirer de ma semaine' : 'Ajouter à ma semaine'}
           className="shrink-0 p-2 rounded-xl transition-all active:scale-90"
           style={isAdded
             ? { backgroundColor: '#16a34a18', color: '#16a34a' }

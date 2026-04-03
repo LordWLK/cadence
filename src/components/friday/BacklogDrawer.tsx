@@ -173,12 +173,12 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
 
   return (
     <>
-      <ConfirmDialog open={deleteTarget !== null} title="Retirer du backlog ?" message="L'activite sera archivee." confirmLabel="Archiver" variant="danger"
+      <ConfirmDialog open={deleteTarget !== null} title="Retirer du backlog ?" message="L'activité sera archivée." confirmLabel="Archiver" variant="danger"
         onConfirm={() => { if (deleteTarget) handleRemove(deleteTarget); setDeleteTarget(null); }}
         onCancel={() => setDeleteTarget(null)} />
 
       <ConfirmDialog open={keepDialog !== null} title="Garder dans le backlog ?"
-        message={`"${keepDialog?.item.title}" sera ajoutee au planning. Veux-tu aussi la garder dans le backlog pour la reutiliser ?`}
+        message={`"${keepDialog?.item.title}" sera ajoutée au planning. Veux-tu aussi la garder dans le backlog pour la réutiliser ?`}
         confirmLabel="Garder" cancelLabel="Non, retirer"
         onConfirm={() => handleKeepInBacklog(true)} onCancel={() => handleKeepInBacklog(false)} />
 
@@ -211,13 +211,13 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
             {showForm && (
               <div className="p-3 bg-[var(--color-surface-elevated)] rounded-xl space-y-4">
                 <div>
-                  <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Activite</label>
+                  <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Activité</label>
                   <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
                     placeholder="Ex: Foot avec les potes, Film Netflix..." autoFocus
                     className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-colors" />
                 </div>
                 <div>
-                  <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Categorie</label>
+                  <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Catégorie</label>
                   <CategoryChips selected={newCategory} onChange={setNewCategory} />
                 </div>
                 <RecurrenceSection enabled={newRecEnabled} day={newRecDay} freq={newRecFreq}
@@ -232,7 +232,7 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
             {/* Recurring */}
             {recurringItems.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide flex items-center gap-1"><Repeat size={10} /> Recurrents</p>
+                <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide flex items-center gap-1"><Repeat size={10} /> Récurrents</p>
                 {recurringItems.map((item) => editingId === item.id
                   ? <EditForm key={item.id} {...{ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, saveEdit, cancelEdit }} />
                   : <ItemRow key={item.id} item={item} isPulled={pulledIds.has(item.id)} onEdit={() => startEdit(item)} onDelete={() => setDeleteTarget(item.id)} />
@@ -299,7 +299,7 @@ function ItemRow({ item, isPulled, onEdit, onDelete }: {
           <Repeat size={9} /> {DAY_LABELS[item.recurrence]}{FREQ_LABELS[item.recurrence_freq] || ''}
         </span>
       )}
-      {isPulled && <span className="shrink-0 text-[10px] text-[var(--color-success)]">Planifie</span>}
+      {isPulled && <span className="shrink-0 text-[10px] text-[var(--color-success)]">Planifié</span>}
       <button onClick={onEdit} className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-primary)] active:scale-90 p-1 rounded-lg transition-all"><Pencil size={13} /></button>
       <button onClick={onDelete} className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-error)] active:scale-90 p-1 rounded-lg transition-all"><Trash2 size={13} /></button>
     </div>
@@ -316,12 +316,12 @@ function EditForm({ editTitle, editCategory, editDay, editRecEnabled, editRecDay
   return (
     <div className="p-3 bg-[var(--color-surface-elevated)] rounded-xl space-y-4 ring-1 ring-[color-mix(in_srgb,var(--color-primary)_20%,transparent)]">
       <div>
-        <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Activite</label>
+        <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Activité</label>
         <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} autoFocus
           className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-colors" />
       </div>
       <div>
-        <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Categorie</label>
+        <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Catégorie</label>
         <CategoryChips selected={editCategory} onChange={setEditCategory} />
       </div>
       <div>

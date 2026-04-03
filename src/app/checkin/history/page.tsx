@@ -148,7 +148,7 @@ export default function HistoryPage() {
       <ConfirmDialog
         open={deleteTarget !== null}
         title="Supprimer ce check-in ?"
-        message="Cette action est irreversible. Le check-in sera definitivement supprime."
+        message="Cette action est irréversible. Le check-in sera définitivement supprime."
         confirmLabel="Supprimer"
         variant="danger"
         onConfirm={async () => {

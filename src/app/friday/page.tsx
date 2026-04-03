@@ -16,7 +16,6 @@ import { BacklogDrawer } from '@/components/friday/BacklogDrawer';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { CalendarPlus, Trash2, Pencil, Check, X, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { parseISO } from 'date-fns';
 import type { WeeklyActivity } from '@/lib/supabase/types';
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -120,7 +119,7 @@ export default function FridayPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Planifier mes activites</h1>
+        <h1 className="text-2xl font-bold">Planifier mes activités</h1>
         <p className="text-text-muted text-sm mt-1">
           {formatDate(rollingDays[0], 'dd MMM')} — {formatDate(rollingDays[rollingDays.length - 1], 'dd MMM yyyy')}
         </p>
@@ -128,8 +127,8 @@ export default function FridayPage() {
 
       <ConfirmDialog
         open={deleteTarget !== null}
-        title="Supprimer cette activite ?"
-        message="L'activite sera retiree de ton planning."
+        title="Supprimer cette activité ?"
+        message="L'activité sera retirée de ton planning."
         confirmLabel="Supprimer"
         variant="danger"
         onConfirm={() => {
@@ -156,12 +155,12 @@ export default function FridayPage() {
       ) : activities.length === 0 ? (
         <Card className="text-center py-8 space-y-3">
           <CalendarPlus size={32} className="text-text-dim mx-auto" />
-          <p className="text-text-muted text-sm">Rien de prevu pour le moment</p>
-          <p className="text-text-dim text-xs">Ajoute tes activites pour les 2 prochaines semaines !</p>
+          <p className="text-text-muted text-sm">Rien de prévu pour le moment</p>
+          <p className="text-text-dim text-xs">Ajoute tes activités pour les 2 prochaines semaines !</p>
         </Card>
       ) : (
         <div className="space-y-4">
-          <p className="text-xs text-text-dim uppercase tracking-wide">Activites prevues</p>
+          <p className="text-xs text-text-dim uppercase tracking-wide">Activités prévues</p>
           {Object.entries(grouped)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([date, dayActivities]) => (

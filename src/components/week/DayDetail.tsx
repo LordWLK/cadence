@@ -104,7 +104,7 @@ export function DayDetail({ date, checkins, activities, events, onClose }: DayDe
       {activities.length > 0 && (
         <div className="space-y-1.5">
           <p className="text-[11px] uppercase tracking-wide font-medium" style={{ color: 'var(--color-text-dim)' }}>
-            Activites ({activities.length})
+            Activités ({activities.length})
           </p>
           {activities.map(a => {
             const cat = ACTIVITY_CATEGORIES.find(c => c.id === a.category);
@@ -126,7 +126,7 @@ export function DayDetail({ date, checkins, activities, events, onClose }: DayDe
       {events.length > 0 && (
         <div className="space-y-1.5">
           <p className="text-[11px] uppercase tracking-wide font-medium" style={{ color: 'var(--color-text-dim)' }}>
-            Evenements ({events.length})
+            Événements ({events.length})
           </p>
           {events.map(e => {
             const hex = SPORT_HEX[e.sport] || '#7c3aed';
@@ -159,7 +159,7 @@ export function DayDetail({ date, checkins, activities, events, onClose }: DayDe
       {/* Rien */}
       {!morning && !evening && activities.length === 0 && events.length === 0 && (
         <p className="text-xs text-center py-3" style={{ color: 'var(--color-text-dim)' }}>
-          Rien de prevu pour cette journee
+          Rien de prévu pour cette journée
         </p>
       )}
     </Card>

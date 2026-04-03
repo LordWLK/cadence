@@ -91,13 +91,13 @@ export function SportFeed() {
     return (
       <Card>
         <div className="text-center py-6 space-y-2">
-          <p className="text-sm text-text-muted">Aucun match trouve pour les 7 prochains jours</p>
+          <p className="text-sm text-text-muted">Aucun match trouvé pour les 7 prochains jours</p>
           <p className="text-xs text-text-dim">
-            Ajoute des equipes favoris dans les reglages sport pour voir des matchs ici
+            Ajoute des equipes favoris dans les réglages sport pour voir des matchs ici
           </p>
           <Button variant="ghost" size="sm" onClick={handleRefresh}>
             <RefreshCw size={14} />
-            Rafraichir
+            Rafraîchir
           </Button>
         </div>
       </Card>

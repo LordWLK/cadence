@@ -15,6 +15,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'cinemaId and date required' }, { status: 400 });
   }
 
+  if (!date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+  }
+
   const cacheKey = `${cinemaId}-${date}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL) {

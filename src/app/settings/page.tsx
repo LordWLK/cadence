@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/providers/ConfigProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Save, Trash2, Link, Volleyball, Film, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, User, LogOut, Mail, Calendar } from 'lucide-react';
+import { Save, Trash2, Link, Volleyball, Film, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, User, LogOut, Calendar } from 'lucide-react';
 import { useTheme } from '@/lib/hooks/useTheme';
 import { useAuth } from '@/providers/AuthProvider';
 import NextLink from 'next/link';
@@ -69,8 +69,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Reglages</h1>
-        <p className="text-text-muted text-sm mt-1">Ton compte et tes preferences</p>
+        <h1 className="text-2xl font-bold">Réglages</h1>
+        <p className="text-text-muted text-sm mt-1">Ton compte et tes préférences</p>
       </div>
 
       {/* Account card */}
@@ -103,7 +103,7 @@ export default function SettingsPage() {
               }}
             >
               <LogOut size={15} />
-              Se deconnecter
+              Se déconnecter
             </button>
           </div>
         </Card>
@@ -240,7 +240,7 @@ export default function SettingsPage() {
             <div className="flex items-center gap-3">
               <Volleyball size={20} className="text-sport-football" />
               <div>
-                <p className="font-medium">Preferences sport</p>
+                <p className="font-medium">Préférences sport</p>
                 <p className="text-sm text-text-muted">Equipes, combattants, competitions</p>
               </div>
             </div>
@@ -255,8 +255,8 @@ export default function SettingsPage() {
           <div className="flex items-center gap-3">
             <Film size={20} style={{ color: '#7c3aed' }} />
             <div>
-              <p className="font-medium">Cinemas UGC</p>
-              <p className="text-sm text-text-muted">Tes cinemas favoris pour les seances</p>
+              <p className="font-medium">Cinémas UGC</p>
+              <p className="text-sm text-text-muted">Tes cinémas favoris pour les séances</p>
             </div>
           </div>
           <span className="text-text-dim">&rarr;</span>

@@ -82,14 +82,14 @@ export function SearchNotes() {
 
       {searched && !loading && results.length === 0 && (
         <p className="text-center text-sm text-[var(--color-text-muted)] py-4">
-          Aucun resultat pour &ldquo;{query}&rdquo;
+          Aucun résultat pour &ldquo;{query}&rdquo;
         </p>
       )}
 
       {results.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs text-[var(--color-text-dim)] uppercase tracking-wide">
-            {results.length} resultat{results.length > 1 ? 's' : ''}
+            {results.length} résultat{results.length > 1 ? 's' : ''}
           </p>
           {results.map((c) => (
             <Card key={c.id}>

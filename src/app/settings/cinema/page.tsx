@@ -31,7 +31,7 @@ export default function CinemaSettingsPage() {
   if (!user) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Cinemas favoris</h1>
+        <h1 className="text-2xl font-bold">Cinémas favoris</h1>
         <Card className="text-center py-8 space-y-4">
           <p className="text-text-muted">Connecte-toi d'abord</p>
           <Link href="/login"><Button><LogIn size={16} /> Se connecter</Button></Link>
@@ -74,11 +74,11 @@ export default function CinemaSettingsPage() {
           <Button variant="ghost" size="sm" aria-label="Retour"><ArrowLeft size={16} /></Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Cinemas UGC</h1>
+          <h1 className="text-2xl font-bold">Cinémas UGC</h1>
           <p className="text-text-muted text-sm">
             {prefs.length > 0
-              ? `${prefs.length} cinema${prefs.length > 1 ? 's' : ''} selectionne${prefs.length > 1 ? 's' : ''}`
-              : 'Choisis tes cinemas favoris'}
+              ? `${prefs.length} cinéma${prefs.length > 1 ? 's' : ''} sélectionné${prefs.length > 1 ? 's' : ''}`
+              : 'Choisis tes cinémas favoris'}
           </p>
         </div>
       </div>
@@ -90,7 +90,7 @@ export default function CinemaSettingsPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher un cinema ou une ville..."
+          placeholder="Rechercher un cinéma ou une ville..."
           className="w-full bg-surface-elevated border border-border rounded-xl pl-9 pr-9 py-2.5 text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/30 transition-colors"
         />
         {search && (
@@ -176,7 +176,7 @@ export default function CinemaSettingsPage() {
 
       {filtered.length === 0 && (
         <Card className="text-center py-6">
-          <p className="text-sm text-text-muted">Aucun cinema trouve</p>
+          <p className="text-sm text-text-muted">Aucun cinéma trouvé</p>
         </Card>
       )}
     </div>

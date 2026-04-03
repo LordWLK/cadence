@@ -86,9 +86,9 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
       <Card>
         <div className="text-center py-6 space-y-2">
           <Film size={28} className="text-text-dim mx-auto" />
-          <p className="text-sm text-text-muted">Aucun cinema configure</p>
+          <p className="text-sm text-text-muted">Aucun cinéma configuré</p>
           <p className="text-xs text-text-dim">
-            Ajoute tes cinemas UGC favoris dans Reglages pour voir les seances ici
+            Ajoute tes cinémas UGC favoris dans Réglages pour voir les séances ici
           </p>
         </div>
       </Card>
@@ -98,7 +98,7 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-text-dim uppercase tracking-wide">Seances cinema</p>
+        <p className="text-xs text-text-dim uppercase tracking-wide">Séances cinéma</p>
       </div>
 
       {/* Cinema picker */}
@@ -144,10 +144,10 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
       ) : movies.length === 0 ? (
         <Card>
           <div className="text-center py-6 space-y-2">
-            <p className="text-sm text-text-muted">Aucune seance trouvee</p>
-            <p className="text-xs text-text-dim">Essaie une autre date ou un autre cinema</p>
+            <p className="text-sm text-text-muted">Aucune séance trouvée</p>
+            <p className="text-xs text-text-dim">Essaie une autre date ou un autre cinéma</p>
             <Button variant="ghost" size="sm" onClick={() => fetchShowtimes(selectedCinemaId, selectedDate)}>
-              <RefreshCw size={14} /> Rafraichir
+              <RefreshCw size={14} /> Rafraîchir
             </Button>
           </div>
         </Card>
