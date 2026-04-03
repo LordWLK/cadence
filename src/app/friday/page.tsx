@@ -34,6 +34,7 @@ export default function FridayPage() {
   const [editDate, setEditDate] = useState('');
   const [saving, setSaving] = useState(false);
   const [backlogKey, setBacklogKey] = useState(0);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [cinemaIds, setCinemaIds] = useState<string[]>([]);
   const cinemaPrefs = useCinemaPreferences();
 
@@ -115,8 +116,6 @@ export default function FridayPage() {
     cancelEdit();
     loadActivities();
   };
-
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   return (
     <div className="space-y-6">
