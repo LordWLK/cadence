@@ -16,7 +16,7 @@ import type { Checkin, WeeklyActivity, SelectedEvent } from '@/lib/supabase/type
 export function WeekCalendar() {
   const { user } = useAuth();
   const { getByDateRange: getCheckins } = useCheckins();
-  const { getByWeek: getActivities }   = useActivities();
+  const { getByDateRange: getActivities } = useActivities();
   const { getByWeek: getEvents }       = useSelectedEvents();
 
   const [weekOffset, setWeekOffset]   = useState(0);
@@ -48,7 +48,7 @@ export function WeekCalendar() {
     setLoading(true);
     const [c, a, e] = await Promise.all([
       getCheckins(wsISO, weISO),
-      getActivities(wsISO),
+      getActivities(wsISO, weISO),
       getEvents(wsISO, weISO),
     ]);
     setCheckins(c);
