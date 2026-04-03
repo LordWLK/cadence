@@ -213,7 +213,7 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
                 <div>
                   <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Activité</label>
                   <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)}
-                    placeholder="Ex: Foot avec les potes, Film Netflix..." autoFocus
+                    placeholder="Ex: Foot avec les potes, Film Netflix..." aria-label="Nom de l'activité" autoFocus
                     className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-colors" />
                 </div>
                 <div>
@@ -300,8 +300,8 @@ function ItemRow({ item, isPulled, onEdit, onDelete }: {
         </span>
       )}
       {isPulled && <span className="shrink-0 text-[10px] text-[var(--color-success)]">Planifié</span>}
-      <button onClick={onEdit} className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-primary)] active:scale-90 p-1 rounded-lg transition-all"><Pencil size={13} /></button>
-      <button onClick={onDelete} className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-error)] active:scale-90 p-1 rounded-lg transition-all"><Trash2 size={13} /></button>
+      <button onClick={onEdit} aria-label="Modifier" className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-primary)] active:scale-90 p-1 rounded-lg transition-all"><Pencil size={13} /></button>
+      <button onClick={onDelete} aria-label="Supprimer" className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-error)] active:scale-90 p-1 rounded-lg transition-all"><Trash2 size={13} /></button>
     </div>
   );
 }
@@ -317,7 +317,7 @@ function EditForm({ editTitle, editCategory, editDay, editRecEnabled, editRecDay
     <div className="p-3 bg-[var(--color-surface-elevated)] rounded-xl space-y-4 ring-1 ring-[color-mix(in_srgb,var(--color-primary)_20%,transparent)]">
       <div>
         <label className="text-sm text-[var(--color-text-muted)] block mb-1.5">Activité</label>
-        <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} autoFocus
+        <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} aria-label="Nom de l'activité" autoFocus
           className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-colors" />
       </div>
       <div>

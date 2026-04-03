@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { formatDate, getDayShort } from '@/lib/utils/dates';
 import { EventBadge } from './EventBadge';
 import { ACTIVITY_CATEGORIES, MOOD_EMOJIS } from '@/lib/config/constants';
@@ -15,7 +16,7 @@ interface DayColumnProps {
   onClick?: () => void;
 }
 
-export function DayColumn({ date, checkins, activities, events, isToday, isSelected, onClick }: DayColumnProps) {
+export const DayColumn = memo(function DayColumn({ date, checkins, activities, events, isToday, isSelected, onClick }: DayColumnProps) {
   const hasMorning = checkins.some(c => c.type === 'morning');
   const hasEvening  = checkins.some(c => c.type === 'evening');
   const avgMood = checkins.length > 0
@@ -116,4 +117,4 @@ export function DayColumn({ date, checkins, activities, events, isToday, isSelec
       </div>
     </div>
   );
-}
+});

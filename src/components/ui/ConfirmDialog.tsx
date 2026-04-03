@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 interface ConfirmDialogProps {
@@ -25,7 +25,10 @@ export function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
+  const confirmRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
+  // Lock body scroll when open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -33,6 +36,41 @@ export function ConfirmDialog({
       document.body.style.overflow = '';
     }
     return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  // Focus trap + ESC key
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!open) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      onCancel();
+      return;
+    }
+    if (e.key === 'Tab' && dialogRef.current) {
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+  }, [open, onCancel]);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Auto-focus confirm button on open
+  useEffect(() => {
+    if (open && confirmRef.current) {
+      confirmRef.current.focus();
+    }
   }, [open]);
 
   if (!open) return null;
@@ -47,6 +85,11 @@ export function ConfirmDialog({
       onClick={(e) => { if (e.target === overlayRef.current) onCancel(); }}
     >
       <div
+        ref={dialogRef}
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message"
         className="w-full max-w-sm rounded-2xl p-5 space-y-4 animate-bounce-in"
         style={{
           backgroundColor: 'var(--color-surface-elevated)',
@@ -63,8 +106,8 @@ export function ConfirmDialog({
             </div>
           )}
           <div>
-            <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{title}</h3>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{message}</p>
+            <h3 id="confirm-dialog-title" className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{title}</h3>
+            <p id="confirm-dialog-message" className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{message}</p>
           </div>
         </div>
 
@@ -80,11 +123,12 @@ export function ConfirmDialog({
             {cancelLabel}
           </button>
           <button
+            ref={confirmRef}
             onClick={onConfirm}
             className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors"
             style={{
               backgroundColor: isDanger ? 'var(--color-error)' : 'var(--color-primary)',
-              color: '#fff',
+              color: 'var(--color-surface-elevated)',
             }}
           >
             {confirmLabel}

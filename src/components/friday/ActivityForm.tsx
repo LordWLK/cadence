@@ -113,6 +113,7 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ex: Foot avec les potes, Film Netflix..."
+            aria-label="Nom de l'activité"
             autoFocus
             className="w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl px-4 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-colors"
           />

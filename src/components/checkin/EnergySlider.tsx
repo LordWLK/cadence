@@ -61,7 +61,7 @@ export function EnergySlider({ value, onChange }: EnergySliderProps) {
           height: 20px;
           border-radius: 50%;
           background: var(--color-primary);
-          border: 2px solid white;
+          border: 2px solid var(--color-surface-elevated);
           box-shadow: 0 0 0 1px var(--color-border, #d4d4d4);
           cursor: pointer;
           margin-top: 0;
@@ -77,7 +77,7 @@ export function EnergySlider({ value, onChange }: EnergySliderProps) {
           height: 20px;
           border-radius: 50%;
           background: var(--color-primary);
-          border: 2px solid white;
+          border: 2px solid var(--color-surface-elevated);
           box-shadow: 0 0 0 1px var(--color-border, #d4d4d4);
           cursor: pointer;
         }

@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { Badge } from '@/components/ui/Badge';
 import { SPORT_HEX } from '@/lib/config/constants';
 import { Plus, Check, Star, Flame } from 'lucide-react';
@@ -13,7 +14,7 @@ interface EventCardProps {
   isAdded: boolean;
 }
 
-export function EventCard({ event, onToggle, isAdded }: EventCardProps) {
+export const EventCard = memo(function EventCard({ event, onToggle, isAdded }: EventCardProps) {
   const hex = SPORT_HEX[event.sport] || '#16a34a';
   const sportLabel = event.sport === 'football' ? 'Football' : event.sport === 'basketball' ? 'NBA' : 'MMA';
 
@@ -55,8 +56,8 @@ export function EventCard({ event, onToggle, isAdded }: EventCardProps) {
           aria-label={isAdded ? 'Retirer de ma semaine' : 'Ajouter à ma semaine'}
           className="shrink-0 p-2 rounded-xl transition-all active:scale-90"
           style={isAdded
-            ? { backgroundColor: '#16a34a18', color: '#16a34a' }
-            : { backgroundColor: `${hex}18`, color: hex }
+            ? { backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)', color: 'var(--color-success)' }
+            : { backgroundColor: `color-mix(in srgb, ${hex} 10%, transparent)`, color: hex }
           }
         >
           {isAdded ? <Check size={16} strokeWidth={2.5} /> : <Plus size={16} />}
@@ -64,4 +65,4 @@ export function EventCard({ event, onToggle, isAdded }: EventCardProps) {
       </div>
     </div>
   );
-}
+});

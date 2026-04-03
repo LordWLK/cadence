@@ -62,11 +62,13 @@ export function SearchNotes() {
           value={query}
           onChange={(e) => handleSearch(e.target.value)}
           placeholder="Rechercher dans tes notes..."
+          aria-label="Rechercher dans tes notes"
           className="w-full bg-[var(--color-surface-elevated)] border border-[var(--color-border)] rounded-xl pl-10 pr-10 py-3 text-sm text-[var(--color-text)] placeholder:text-[var(--color-text-dim)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] transition-colors"
         />
         {query && (
           <button
             onClick={clear}
+            aria-label="Effacer la recherche"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-dim)] hover:text-[var(--color-text-muted)] transition-colors"
           >
             <X size={16} />

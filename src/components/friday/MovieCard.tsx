@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Plus, Check, Clock, ChevronDown, Film } from 'lucide-react';
 import type { CinemaMovie } from '@/lib/types/cinema';
 
@@ -10,7 +10,7 @@ interface MovieCardProps {
   addedShowtimes: Set<string>; // set of "movieId-time" keys
 }
 
-export function MovieCard({ movie, onToggle, addedShowtimes }: MovieCardProps) {
+export const MovieCard = memo(function MovieCard({ movie, onToggle, addedShowtimes }: MovieCardProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -76,9 +76,10 @@ export function MovieCard({ movie, onToggle, addedShowtimes }: MovieCardProps) {
                 <button
                   key={key}
                   onClick={() => onToggle(movie, st.time)}
+                  aria-label={isAdded ? `Retirer la séance de ${st.time}` : `Ajouter la séance de ${st.time}`}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs transition-all active:scale-95"
                   style={isAdded
-                    ? { backgroundColor: '#16a34a18', color: '#16a34a' }
+                    ? { backgroundColor: 'color-mix(in srgb, var(--color-success) 10%, transparent)', color: 'var(--color-success)' }
                     : { backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-muted)' }
                   }
                 >
@@ -109,4 +110,4 @@ export function MovieCard({ movie, onToggle, addedShowtimes }: MovieCardProps) {
       </div>
     </div>
   );
-}
+});

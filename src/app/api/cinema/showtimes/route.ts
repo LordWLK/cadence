@@ -7,6 +7,11 @@ import { UGC_CINEMAS } from '@/lib/config/constants';
 const cache = new Map<string, { data: CinemaMovie[]; ts: number }>();
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
+// Simple rate limiter: IP -> { count, resetTime }
+const rateLimits = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 20; // 20 requests per minute
+
 export async function GET(req: NextRequest) {
   const cinemaId = req.nextUrl.searchParams.get('cinemaId');
   const date = req.nextUrl.searchParams.get('date'); // YYYY-MM-DD
@@ -17,6 +22,19 @@ export async function GET(req: NextRequest) {
 
   if (!date.match(/^\d{4}-\d{2}-\d{2}$/)) {
     return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
+  }
+
+  // Rate limiting
+  const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
+  const now = Date.now();
+  const rateData = rateLimits.get(clientIp);
+  if (rateData && now < rateData.resetTime) {
+    if (rateData.count >= RATE_LIMIT_MAX) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    }
+    rateData.count++;
+  } else {
+    rateLimits.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
   }
 
   const cacheKey = `${cinemaId}-${date}`;

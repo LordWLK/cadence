@@ -110,17 +110,17 @@ export function MoodChart() {
                 <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e8e4db" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis
               dataKey="label"
-              tick={{ fontSize: 10, fill: '#9e9080' }}
+              tick={{ fontSize: 10, fill: 'var(--color-text-dim)' }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               yAxisId="mood"
               domain={[1, 5]}
-              tick={{ fontSize: 10, fill: '#9e9080' }}
+              tick={{ fontSize: 10, fill: 'var(--color-text-dim)' }}
               axisLine={false}
               tickLine={false}
             />
@@ -128,18 +128,18 @@ export function MoodChart() {
               yAxisId="energy"
               orientation="right"
               domain={[1, 10]}
-              tick={{ fontSize: 10, fill: '#9e9080' }}
+              tick={{ fontSize: 10, fill: 'var(--color-text-dim)' }}
               axisLine={false}
               tickLine={false}
               hide
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#ffffff',
-                border: '1px solid #ddd8cc',
+                backgroundColor: 'var(--color-surface-elevated)',
+                border: '1px solid var(--color-border)',
                 borderRadius: '12px',
                 fontSize: '12px',
-                color: '#1a1612',
+                color: 'var(--color-text)',
               }}
               formatter={(value, name) => [
                 String(value ?? ''),
