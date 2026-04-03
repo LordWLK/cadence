@@ -10,6 +10,7 @@ import { CheckinReminder } from '@/components/checkin/CheckinReminder';
 import { Sun, Moon, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import type { Checkin } from '@/lib/supabase/types';
 
 export default function CheckinPage() {
@@ -49,7 +50,15 @@ export default function CheckinPage() {
   const hasMorning = todayCheckins.some(c => c.type === 'morning');
   const hasEvening = todayCheckins.some(c => c.type === 'evening');
 
+  const handleRefresh = async () => {
+    if (user) {
+      const data = await getToday();
+      setTodayCheckins(data);
+    }
+  };
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div className="space-y-6 animate-stagger">
       <div>
         <h1 className="text-2xl font-bold">Check-in</h1>
@@ -91,5 +100,6 @@ export default function CheckinPage() {
         </Card>
       )}
     </div>
+    </PullToRefresh>
   );
 }

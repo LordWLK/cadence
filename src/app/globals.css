@@ -196,30 +196,41 @@ input[type="range"]:focus-visible::-webkit-slider-thumb {
 
 /* ─── Page transitions ─── */
 @keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(30px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(24px) scale(0.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 @keyframes slide-in-left {
-  from { opacity: 0; transform: translateX(-30px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(-24px) scale(0.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 @keyframes page-fade {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .page-slide-left {
-  animation: slide-in-right 0.25s ease-out both;
+  animation: slide-in-right 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .page-slide-right {
-  animation: slide-in-left 0.25s ease-out both;
+  animation: slide-in-left 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .page-fade {
-  animation: page-fade 0.2s ease-out both;
+  animation: page-fade 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─── Toast animations ─── */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-20px) scale(0.95); }
 }
 
 /* Reduced motion */

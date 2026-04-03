@@ -10,6 +10,7 @@ import { Onboarding } from '@/components/layout/Onboarding';
 import { PageTransition } from '@/components/layout/PageTransition';
 import { SplashScreen } from '@/components/layout/SplashScreen';
 import { SessionFromUrl } from '@/components/auth/SessionFromUrl';
+import { ToastProvider } from '@/components/ui/Toast';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -20,13 +21,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <ConfigGate>
             <SupabaseProvider>
               <AuthProvider>
-                <SessionFromUrl />
-                <main className="max-w-lg mx-auto px-4 pt-6 pb-28">
-                  <PageTransition>
-                    {children}
-                  </PageTransition>
-                </main>
-                <BottomNav />
+                <ToastProvider>
+                  <SessionFromUrl />
+                  <main className="max-w-lg mx-auto px-4 pt-6 pb-28">
+                    <PageTransition>
+                      {children}
+                    </PageTransition>
+                  </main>
+                  <BottomNav />
+                </ToastProvider>
               </AuthProvider>
             </SupabaseProvider>
           </ConfigGate>

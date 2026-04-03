@@ -11,6 +11,7 @@ import { StreakBadge } from '@/components/checkin/StreakBadge';
 import { QuickCheckin } from '@/components/checkin/QuickCheckin';
 import { WeeklyRecap } from '@/components/week/WeeklyRecap';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { DaySummary } from '@/components/home/DaySummary';
 
 // ─── Landing page ─────────────────────────────────────────────────────────────
@@ -195,32 +196,39 @@ function LandingPage() {
 
 // ─── App home ─────────────────────────────────────────────────────────────────
 function AppHome() {
+  const handleRefresh = async () => {
+    // Force re-mount children by toggling a key
+    window.location.reload();
+  };
+
   return (
-    <div className="space-y-5 animate-stagger">
-      <OfflineBanner />
-      <div className="flex items-center justify-between">
-        <CadenceLogoStacked className="w-28" />
-        <div className="flex gap-2">
-          <Link href="/checkin">
-            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)] text-[var(--color-primary)] text-xs font-medium hover:bg-[color-mix(in_srgb,var(--color-primary)_16%,transparent)] transition-colors">
-              <Heart size={13} />
-              Check-in
-            </button>
-          </Link>
-          <Link href="/friday">
-            <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] text-xs font-medium hover:bg-[color-mix(in_srgb,var(--color-accent)_16%,transparent)] transition-colors">
-              <CalendarPlus size={13} />
-              Planifier
-            </button>
-          </Link>
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="space-y-5 animate-stagger">
+        <OfflineBanner />
+        <div className="flex items-center justify-between">
+          <CadenceLogoStacked className="w-28" />
+          <div className="flex gap-2">
+            <Link href="/checkin">
+              <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)] text-[var(--color-primary)] text-xs font-medium hover:bg-[color-mix(in_srgb,var(--color-primary)_16%,transparent)] transition-colors">
+                <Heart size={13} />
+                Check-in
+              </button>
+            </Link>
+            <Link href="/friday">
+              <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] text-xs font-medium hover:bg-[color-mix(in_srgb,var(--color-accent)_16%,transparent)] transition-colors">
+                <CalendarPlus size={13} />
+                Planifier
+              </button>
+            </Link>
+          </div>
         </div>
+        <DaySummary />
+        <StreakBadge />
+        <QuickCheckin />
+        <WeeklyRecap />
+        <WeekCalendar />
       </div>
-      <DaySummary />
-      <StreakBadge />
-      <QuickCheckin />
-      <WeeklyRecap />
-      <WeekCalendar />
-    </div>
+    </PullToRefresh>
   );
 }
 

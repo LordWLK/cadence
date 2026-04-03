@@ -14,6 +14,7 @@ import { CinemaFeed } from '@/components/friday/CinemaFeed';
 import { useCinemaPreferences } from '@/lib/hooks/useCinemaPreferences';
 import { BacklogDrawer } from '@/components/friday/BacklogDrawer';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { CalendarPlus, Trash2, Pencil, Check, X, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import type { WeeklyActivity } from '@/lib/supabase/types';
@@ -117,6 +118,7 @@ export default function FridayPage() {
   };
 
   return (
+    <PullToRefresh onRefresh={loadActivities}>
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Planifier mes activités</h1>
@@ -263,5 +265,6 @@ export default function FridayPage() {
       )}
 
     </div>
+    </PullToRefresh>
   );
 }
