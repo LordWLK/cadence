@@ -115,18 +115,22 @@ export function useBacklog() {
 
     if (!recurring || recurring.length === 0) return false;
 
-    // 2. Get already pulled items for this week
+    // 2. Get the week days
+    const days = getWeekDays(weekStart);
+    const dayDates = days.map(d => formatDateISO(d));
+
+    // 3. Get already pulled items for any of these dates (not just by week_start)
     const { data: existing } = await supabase
       .from('weekly_activities')
-      .select('backlog_id')
+      .select('backlog_id, planned_date')
       .eq('user_id', user.id)
-      .eq('week_start', weekStartISO)
+      .in('planned_date', dayDates)
       .not('backlog_id', 'is', null);
 
-    const alreadyPulledIds = new Set((existing ?? []).map(e => e.backlog_id));
-
-    // 3. Get the week days
-    const days = getWeekDays(weekStart);
+    // Track which backlog_id + planned_date combos already exist
+    const alreadyPulledKeys = new Set(
+      (existing ?? []).map(e => `${e.backlog_id}__${e.planned_date}`)
+    );
 
     // 4. For each recurring item, check if it needs to be added
     const toInsert: Array<{
@@ -139,8 +143,6 @@ export function useBacklog() {
     }> = [];
 
     for (const item of recurring as BacklogActivity[]) {
-      if (alreadyPulledIds.has(item.id)) continue;
-
       const dayIndex = DAY_NAME_TO_INDEX[item.recurrence];
       if (dayIndex === undefined) continue;
 
@@ -148,11 +150,15 @@ export function useBacklog() {
       const matchingDay = days.find(d => getDay(d) === dayIndex);
       if (!matchingDay) continue;
 
+      const plannedDate = formatDateISO(matchingDay);
+      const key = `${item.id}__${plannedDate}`;
+      if (alreadyPulledKeys.has(key)) continue;
+
       toInsert.push({
         user_id: user.id,
         title: item.title,
         category: item.category,
-        planned_date: formatDateISO(matchingDay),
+        planned_date: plannedDate,
         week_start: weekStartISO,
         backlog_id: item.id,
       });
