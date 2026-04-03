@@ -11,9 +11,11 @@ interface DayColumnProps {
   activities: WeeklyActivity[];
   events: SelectedEvent[];
   isToday: boolean;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
-export function DayColumn({ date, checkins, activities, events, isToday }: DayColumnProps) {
+export function DayColumn({ date, checkins, activities, events, isToday, isSelected, onClick }: DayColumnProps) {
   const hasMorning = checkins.some(c => c.type === 'morning');
   const hasEvening  = checkins.some(c => c.type === 'evening');
   const avgMood = checkins.length > 0
@@ -25,14 +27,19 @@ export function DayColumn({ date, checkins, activities, events, isToday }: DayCo
 
   return (
     <div
-      className="flex flex-col rounded-xl p-1 min-h-[120px] transition-all"
+      onClick={onClick}
+      className="flex flex-col rounded-xl p-1 min-h-[120px] transition-all cursor-pointer active:scale-[0.97]"
       style={{
-        backgroundColor: isToday
-          ? 'color-mix(in srgb, #7c3aed 12%, var(--color-surface))'
-          : 'var(--color-surface-alt)',
-        outline: isToday
-          ? '1.5px solid color-mix(in srgb, #7c3aed 35%, transparent)'
-          : 'none',
+        backgroundColor: isSelected
+          ? 'color-mix(in srgb, #7c3aed 18%, var(--color-surface))'
+          : isToday
+            ? 'color-mix(in srgb, #7c3aed 12%, var(--color-surface))'
+            : 'var(--color-surface-alt)',
+        outline: isSelected
+          ? '2px solid #7c3aed'
+          : isToday
+            ? '1.5px solid color-mix(in srgb, #7c3aed 35%, transparent)'
+            : 'none',
       }}
     >
       {/* Header */}

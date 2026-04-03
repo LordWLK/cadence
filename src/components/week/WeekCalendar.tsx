@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { DayColumn } from './DayColumn';
+import { DayDetail } from './DayDetail';
 import { Button } from '@/components/ui/Button';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useActivities } from '@/lib/hooks/useActivities';
@@ -23,6 +24,7 @@ export function WeekCalendar() {
   const [activities, setActivities]   = useState<WeeklyActivity[]>([]);
   const [events, setEvents]           = useState<SelectedEvent[]>([]);
   const [loading, setLoading]         = useState(false); // false par défaut → colonnes visibles immédiatement
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   // Memoize dates pour éviter les re-runs infinis de useEffect
   const currentWeekStart = useMemo(
@@ -113,11 +115,24 @@ export function WeekCalendar() {
                 activities={getActivitiesByDate(dateISO)}
                 events={getEventsByDate(dateISO)}
                 isToday={isToday(day)}
+                isSelected={selectedDay === dateISO}
+                onClick={() => setSelectedDay(prev => prev === dateISO ? null : dateISO)}
               />
             );
           })}
         </div>
       </div>
+
+      {/* Day detail panel */}
+      {selectedDay && (
+        <DayDetail
+          date={new Date(selectedDay + 'T00:00:00')}
+          checkins={getCheckinsByDate(selectedDay)}
+          activities={getActivitiesByDate(selectedDay)}
+          events={getEventsByDate(selectedDay)}
+          onClose={() => setSelectedDay(null)}
+        />
+      )}
     </div>
   );
 }
