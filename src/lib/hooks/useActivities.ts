@@ -34,25 +34,51 @@ export function useActivities() {
     return (data ?? []) as WeeklyActivity[];
   }, [supabase, user]);
 
+  /**
+   * Récupère TOUTES les activités visibles pour l'utilisateur sur la période :
+   *  - ses propres activités
+   *  - les activités partagées avec lui (non masquées)
+   *
+   * La RLS garantit qu'il ne verra que celles autorisées. On fait donc une unique
+   * requête sans filtre `user_id` pour profiter des deux policies SELECT.
+   * Les activités reçues masquées sont filtrées côté client (via activity_shares.hidden).
+   */
   const getByDateRange = useCallback(async (start: string, end: string) => {
     if (!supabase || !user) return [];
-    const { data } = await supabase
+
+    // 1. Récupérer toutes les activités visibles sur la plage (RLS filtre automatiquement)
+    const { data: activitiesData } = await supabase
       .from('weekly_activities')
       .select('*')
-      .eq('user_id', user.id)
       .gte('planned_date', start)
       .lte('planned_date', end)
       .order('planned_date', { ascending: true });
-    return (data ?? []) as WeeklyActivity[];
+    const activities = (activitiesData ?? []) as WeeklyActivity[];
+
+    if (activities.length === 0) return [];
+
+    // 2. Récupérer les partages `hidden=true` qui concernent l'utilisateur
+    //    pour exclure ces activités
+    const activityIds = activities.map((a) => a.id);
+    const { data: hiddenSharesData } = await supabase
+      .from('activity_shares')
+      .select('activity_id')
+      .eq('shared_with_user_id', user.id)
+      .eq('hidden', true)
+      .in('activity_id', activityIds);
+    const hiddenIds = new Set((hiddenSharesData ?? []).map((s) => s.activity_id));
+
+    return activities.filter((a) => !hiddenIds.has(a.id));
   }, [supabase, user]);
 
   const update = useCallback(async (id: string, data: { title?: string; category?: string; planned_date?: string }) => {
     if (!supabase || !user) return null;
+    // On ne filtre PAS par user_id : la RLS autorise l'update si je suis propriétaire
+    // OU destinataire d'un partage can_edit=true
     const { data: activity, error } = await supabase
       .from('weekly_activities')
       .update(data)
       .eq('id', id)
-      .eq('user_id', user.id)
       .select()
       .single();
     if (error) return null;

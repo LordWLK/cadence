@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useActivities } from '@/lib/hooks/useActivities';
 import { useBacklog } from '@/lib/hooks/useBacklog';
+import { useActivityShares } from '@/lib/hooks/useActivityShares';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { getRollingDays, formatDateISO, getWeekStart } from '@/lib/utils/dates';
 import { RecurrenceSection } from './RecurrenceSection';
 import { DayScroller } from './DayScroller';
+import { ShareSelector, type ShareTarget } from './ShareSelector';
 import { Plus, Archive, X, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import { parseISO } from 'date-fns';
 
@@ -24,11 +26,13 @@ interface ActivityFormProps {
 export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps) {
   const { create, loading } = useActivities();
   const backlog = useBacklog();
+  const { setSharesForActivity } = useActivityShares();
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<string>(ACTIVITY_CATEGORIES[0].id);
   const [plannedDate, setPlannedDate] = useState('');
   const [open, setOpen] = useState(false);
   const [savingBacklog, setSavingBacklog] = useState(false);
+  const [shares, setShares] = useState<ShareTarget[]>([]);
 
   // Recurrence
   const [recEnabled, setRecEnabled] = useState(false);
@@ -44,6 +48,7 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
     setRecEnabled(false);
     setRecDay('lundi');
     setRecFreq('weekly');
+    setShares([]);
     setOpen(false);
   };
 
@@ -54,12 +59,17 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
     // Compute week_start from the selected date
     const weekStart = getWeekStart(parseISO(plannedDate));
 
-    await create({
+    const created = await create({
       title: title.trim(),
       category,
       planned_date: plannedDate,
       week_start: formatDateISO(weekStart),
     });
+
+    // Partages éventuels (appliqués après création pour avoir l'id)
+    if (created && shares.length > 0) {
+      await setSharesForActivity(created.id, shares);
+    }
 
     // If recurrence is on, also create a backlog item
     if (recEnabled) {
@@ -153,6 +163,8 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
           onDayChange={setRecDay}
           onFreqChange={setRecFreq}
         />
+
+        <ShareSelector value={shares} onChange={setShares} compact />
 
         <div className="flex gap-2">
           <Button type="submit" className="flex-1" disabled={loading || !title.trim() || !plannedDate}>

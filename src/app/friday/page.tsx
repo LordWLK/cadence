@@ -6,7 +6,11 @@ import { Button } from '@/components/ui/Button';
 import { ActivityForm } from '@/components/friday/ActivityForm';
 import { DayScroller } from '@/components/friday/DayScroller';
 import { useActivities } from '@/lib/hooks/useActivities';
+import { useActivityShares, type ActivityShareInfo } from '@/lib/hooks/useActivityShares';
+import { ShareSelector, type ShareTarget } from '@/components/friday/ShareSelector';
+import { Avatar } from '@/components/ui/Avatar';
 import { useAuth } from '@/providers/AuthProvider';
+import { useToast } from '@/components/ui/Toast';
 import { getRollingDays, getWeekStart, formatDate, formatDateISO, getDayName } from '@/lib/utils/dates';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { SportFeed } from '@/components/friday/SportFeed';
@@ -15,7 +19,7 @@ import { useCinemaPreferences } from '@/lib/hooks/useCinemaPreferences';
 import { BacklogDrawer } from '@/components/friday/BacklogDrawer';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { PullToRefresh } from '@/components/ui/PullToRefresh';
-import { CalendarPlus, Trash2, Pencil, Check, X, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
+import { CalendarPlus, Trash2, Pencil, Check, X, LogIn, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles, EyeOff, Eye } from 'lucide-react';
 import Link from 'next/link';
 import type { WeeklyActivity } from '@/lib/supabase/types';
 
@@ -26,12 +30,16 @@ const ICON_MAP: Record<string, React.ElementType> = {
 export default function FridayPage() {
   const { user } = useAuth();
   const { getByDateRange, update, remove } = useActivities();
+  const { getShareInfo, setSharesForActivity, setHidden } = useActivityShares();
+  const { showToast } = useToast();
   const [activities, setActivities] = useState<WeeklyActivity[]>([]);
+  const [shareMap, setShareMap] = useState<Map<string, ActivityShareInfo>>(new Map());
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editCategory, setEditCategory] = useState('');
   const [editDate, setEditDate] = useState('');
+  const [editShares, setEditShares] = useState<ShareTarget[]>([]);
   const [saving, setSaving] = useState(false);
   const [backlogKey, setBacklogKey] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -60,8 +68,14 @@ export default function FridayPage() {
     setLoading(true);
     const data = await getByDateRange(startISO, endISO);
     setActivities(data);
+    if (data.length > 0) {
+      const infoMap = await getShareInfo(data.map((a) => a.id));
+      setShareMap(infoMap);
+    } else {
+      setShareMap(new Map());
+    }
     setLoading(false);
-  }, [user, getByDateRange, startISO, endISO]);
+  }, [user, getByDateRange, getShareInfo, startISO, endISO]);
 
   useEffect(() => {
     loadActivities();
@@ -95,6 +109,14 @@ export default function FridayPage() {
     setEditTitle(activity.title);
     setEditCategory(activity.category);
     setEditDate(activity.planned_date);
+    // Initialise les partages avec ceux déjà enregistrés pour cette activité
+    const info = shareMap.get(activity.id);
+    setEditShares(
+      (info?.sharedWith ?? []).map((s) => ({
+        userId: s.profile.user_id,
+        canEdit: s.share.can_edit,
+      }))
+    );
   };
 
   const cancelEdit = () => {
@@ -102,18 +124,31 @@ export default function FridayPage() {
     setEditTitle('');
     setEditCategory('');
     setEditDate('');
+    setEditShares([]);
   };
 
   const saveEdit = async () => {
     if (!editingId || !editTitle.trim() || !editDate) return;
     setSaving(true);
+    const info = shareMap.get(editingId);
+    const isOwner = info ? !info.isReceived : true;
     await update(editingId, {
       title: editTitle.trim(),
       category: editCategory,
       planned_date: editDate,
     });
+    // Seul le propriétaire peut gérer les partages
+    if (isOwner) {
+      await setSharesForActivity(editingId, editShares);
+    }
     setSaving(false);
     cancelEdit();
+    loadActivities();
+  };
+
+  const hideReceived = async (shareId: string) => {
+    await setHidden(shareId, true);
+    showToast('Activité masquée', 'info');
     loadActivities();
   };
 
@@ -172,6 +207,10 @@ export default function FridayPage() {
               </p>
               {dayActivities.map((activity) => {
                 const isEditing = editingId === activity.id;
+                const info = shareMap.get(activity.id);
+                const isReceived = info?.isReceived ?? false;
+                const isOwner = !isReceived;
+                const canEditActivity = isOwner || (info?.receivedShare?.can_edit ?? false);
 
                 if (isEditing) {
                   return (
@@ -208,6 +247,11 @@ export default function FridayPage() {
 
                       <DayScroller days={rollingDays} selected={editDate} onChange={setEditDate} />
 
+                      {/* Gestion du partage seulement si je suis propriétaire */}
+                      {isOwner && (
+                        <ShareSelector value={editShares} onChange={setEditShares} compact />
+                      )}
+
                       <div className="flex gap-2">
                         <Button
                           size="sm"
@@ -230,26 +274,87 @@ export default function FridayPage() {
                 const cat = ACTIVITY_CATEGORIES.find(c => c.id === activity.category);
                 const Icon = cat ? (ICON_MAP[cat.icon] || Sparkles) : Sparkles;
                 return (
-                  <Card key={activity.id} className="group flex items-center gap-3">
+                  <Card
+                    key={activity.id}
+                    className="group flex items-center gap-3"
+                    style={isReceived ? {
+                      borderStyle: 'dashed',
+                      borderColor: 'color-mix(in srgb, var(--color-primary) 35%, var(--color-border))',
+                    } : undefined}
+                  >
                     <div className={`shrink-0 ${cat?.color || 'text-text-muted'}`}>
                       <Icon size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate">{activity.title}</p>
-                      <p className="text-xs text-text-dim">{cat?.label}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <p className="text-xs text-text-dim truncate">{cat?.label}</p>
+                        {/* Badge reçu */}
+                        {isReceived && info?.receivedFromProfile && (
+                          <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full shrink-0"
+                                style={{
+                                  backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+                                  color: 'var(--color-primary)',
+                                }}>
+                            <Avatar profile={info.receivedFromProfile} size={12} />
+                            <span>de {info.receivedFromProfile.display_name || info.receivedFromProfile.email}</span>
+                            {info.receivedShare?.can_edit ? <Pencil size={8} /> : <Eye size={8} />}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <button
-                      onClick={() => startEdit(activity)}
-                      className="text-text-dim hover:text-primary transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
-                    >
-                      <Pencil size={14} />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(activity.id)}
-                      className="text-text-dim hover:text-error transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                    {/* Avatars des destinataires (si je suis proprio et que c'est partagé) */}
+                    {isOwner && info && info.sharedWith.length > 0 && (
+                      <div className="flex -space-x-1.5 shrink-0" title={`Partagé avec ${info.sharedWith.length} personne(s)`}>
+                        {info.sharedWith.slice(0, 3).map(({ profile, share }) => (
+                          <Avatar
+                            key={share.id}
+                            profile={profile}
+                            size={20}
+                            className="ring-2"
+                            title={`${profile.display_name || profile.email}${share.can_edit ? ' (peut modifier)' : ' (lecture seule)'}`}
+                          />
+                        ))}
+                        {info.sharedWith.length > 3 && (
+                          <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold ring-2"
+                               style={{
+                                 backgroundColor: 'var(--color-surface-elevated)',
+                                 color: 'var(--color-text-muted)',
+                               }}>
+                            +{info.sharedWith.length - 3}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {canEditActivity && (
+                      <button
+                        onClick={() => startEdit(activity)}
+                        className="text-text-dim hover:text-primary transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
+                        aria-label="Modifier"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
+                    {isOwner ? (
+                      <button
+                        onClick={() => setDeleteTarget(activity.id)}
+                        className="text-text-dim hover:text-error transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
+                        aria-label="Supprimer"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    ) : (
+                      info?.receivedShare && (
+                        <button
+                          onClick={() => hideReceived(info.receivedShare!.id)}
+                          className="text-text-dim hover:text-text transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
+                          aria-label="Masquer"
+                          title="Masquer cette activité partagée"
+                        >
+                          <EyeOff size={14} />
+                        </button>
+                      )
+                    )}
                   </Card>
                 );
               })}

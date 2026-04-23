@@ -1,11 +1,13 @@
 'use client';
 
 import { Card } from '@/components/ui/Card';
+import { Avatar } from '@/components/ui/Avatar';
 import { EventBadge } from './EventBadge';
 import { ACTIVITY_CATEGORIES, MOOD_EMOJIS, MOOD_LABELS, SPORT_HEX } from '@/lib/config/constants';
 import { formatDate, getDayName } from '@/lib/utils/dates';
-import { X, Sun, Moon, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles, Zap } from 'lucide-react';
+import { X, Sun, Moon, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles, Zap, Eye, Pencil } from 'lucide-react';
 import type { Checkin, WeeklyActivity, SelectedEvent } from '@/lib/supabase/types';
+import type { ActivityShareInfo } from '@/lib/hooks/useActivityShares';
 
 const ICON_MAP: Record<string, React.ElementType> = {
   Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
@@ -16,10 +18,11 @@ interface DayDetailProps {
   checkins: Checkin[];
   activities: WeeklyActivity[];
   events: SelectedEvent[];
+  getShareInfo?: (activityId: string) => ActivityShareInfo | undefined;
   onClose: () => void;
 }
 
-export function DayDetail({ date, checkins, activities, events, onClose }: DayDetailProps) {
+export function DayDetail({ date, checkins, activities, events, getShareInfo, onClose }: DayDetailProps) {
   const morning = checkins.find(c => c.type === 'morning');
   const evening = checkins.find(c => c.type === 'evening');
 
@@ -109,13 +112,56 @@ export function DayDetail({ date, checkins, activities, events, onClose }: DayDe
           {activities.map(a => {
             const cat = ACTIVITY_CATEGORIES.find(c => c.id === a.category);
             const Icon = cat ? (ICON_MAP[cat.icon] || Sparkles) : Sparkles;
+            const info = getShareInfo?.(a.id);
+            const isReceived = info?.isReceived ?? false;
+            const isShared = info && info.sharedWith.length > 0;
             return (
-              <div key={a.id} className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ backgroundColor: 'var(--color-surface-alt)' }}>
+              <div
+                key={a.id}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                style={{
+                  backgroundColor: 'var(--color-surface-alt)',
+                  border: isReceived
+                    ? '1px dashed color-mix(in srgb, var(--color-primary) 45%, transparent)'
+                    : isShared
+                      ? '1px solid color-mix(in srgb, var(--color-primary) 25%, transparent)'
+                      : 'none',
+                }}
+              >
                 <Icon size={14} style={{ color: cat?.hex || 'var(--color-text-muted)' }} />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{a.title}</p>
-                  <p className="text-[11px]" style={{ color: cat?.hex || 'var(--color-text-dim)' }}>{cat?.label}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <p className="text-[11px] truncate" style={{ color: cat?.hex || 'var(--color-text-dim)' }}>{cat?.label}</p>
+                    {isReceived && info?.receivedFromProfile && (
+                      <span className="inline-flex items-center gap-0.5 text-[10px] shrink-0" style={{ color: 'var(--color-primary)' }}>
+                        <Avatar profile={info.receivedFromProfile} size={12} />
+                        <span>{info.receivedFromProfile.display_name || info.receivedFromProfile.email}</span>
+                        {info.receivedShare?.can_edit ? <Pencil size={8} /> : <Eye size={8} />}
+                      </span>
+                    )}
+                  </div>
                 </div>
+                {/* Avatars destinataires (si je suis proprio) */}
+                {!isReceived && isShared && info && (
+                  <div className="flex -space-x-1.5 shrink-0" title={`Partagé avec ${info.sharedWith.length}`}>
+                    {info.sharedWith.slice(0, 3).map(({ profile, share }) => (
+                      <Avatar
+                        key={share.id}
+                        profile={profile}
+                        size={16}
+                        className="ring-1"
+                        title={profile.display_name || profile.email}
+                      />
+                    ))}
+                    {info.sharedWith.length > 3 && (
+                      <div className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold ring-1"
+                           style={{ backgroundColor: 'var(--color-surface-elevated)', color: 'var(--color-text-muted)' }}>
+                        +{info.sharedWith.length - 3}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}

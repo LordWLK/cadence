@@ -193,6 +193,93 @@ export type Database = {
         };
         Relationships: [];
       };
+      profiles: {
+        Row: {
+          user_id: string;
+          email: string;
+          display_name: string | null;
+          avatar_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          email: string;
+          display_name?: string | null;
+          avatar_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          email?: string;
+          display_name?: string | null;
+          avatar_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      user_contacts: {
+        Row: {
+          id: string;
+          user_id: string;
+          contact_user_id: string;
+          status: 'pending' | 'accepted' | 'blocked';
+          nickname: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string;
+          contact_user_id: string;
+          status?: 'pending' | 'accepted' | 'blocked';
+          nickname?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          contact_user_id?: string;
+          status?: 'pending' | 'accepted' | 'blocked';
+          nickname?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      activity_shares: {
+        Row: {
+          id: string;
+          activity_id: string;
+          shared_by_user_id: string;
+          shared_with_user_id: string;
+          can_edit: boolean;
+          hidden: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          activity_id: string;
+          shared_by_user_id?: string;
+          shared_with_user_id: string;
+          can_edit?: boolean;
+          hidden?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          activity_id?: string;
+          shared_by_user_id?: string;
+          shared_with_user_id?: string;
+          can_edit?: boolean;
+          hidden?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -211,3 +298,23 @@ export type SelectedEvent = Database['public']['Tables']['selected_events']['Row
 export type SelectedEventInsert = Database['public']['Tables']['selected_events']['Insert'];
 export type BacklogActivity = Database['public']['Tables']['backlog_activities']['Row'];
 export type BacklogActivityInsert = Database['public']['Tables']['backlog_activities']['Insert'];
+export type Profile = Database['public']['Tables']['profiles']['Row'];
+export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
+export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+export type UserContact = Database['public']['Tables']['user_contacts']['Row'];
+export type UserContactInsert = Database['public']['Tables']['user_contacts']['Insert'];
+export type ActivityShare = Database['public']['Tables']['activity_shares']['Row'];
+export type ActivityShareInsert = Database['public']['Tables']['activity_shares']['Insert'];
+
+// Types composés utilisés par les hooks
+export type ContactWithProfile = UserContact & {
+  profile: Profile;
+  direction: 'outgoing' | 'incoming'; // émetteur ou destinataire de la demande
+};
+
+export type SharedActivity = WeeklyActivity & {
+  isOwner: boolean;
+  share?: ActivityShare;      // si c'est une activité reçue
+  sharedByProfile?: Profile;  // si c'est une activité reçue
+  sharedWith?: Array<{ share: ActivityShare; profile: Profile }>; // si c'est une activité que je possède
+};

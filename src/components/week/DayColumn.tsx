@@ -5,18 +5,20 @@ import { formatDate, getDayShort } from '@/lib/utils/dates';
 import { EventBadge } from './EventBadge';
 import { ACTIVITY_CATEGORIES, MOOD_EMOJIS } from '@/lib/config/constants';
 import type { Checkin, WeeklyActivity, SelectedEvent } from '@/lib/supabase/types';
+import type { ActivityShareInfo } from '@/lib/hooks/useActivityShares';
 
 interface DayColumnProps {
   date: Date;
   checkins: Checkin[];
   activities: WeeklyActivity[];
   events: SelectedEvent[];
+  getShareInfo?: (activityId: string) => ActivityShareInfo | undefined;
   isToday: boolean;
   isSelected?: boolean;
   onClick?: () => void;
 }
 
-export const DayColumn = memo(function DayColumn({ date, checkins, activities, events, isToday, isSelected, onClick }: DayColumnProps) {
+export const DayColumn = memo(function DayColumn({ date, checkins, activities, events, getShareInfo, isToday, isSelected, onClick }: DayColumnProps) {
   const hasMorning = checkins.some(c => c.type === 'morning');
   const hasEvening  = checkins.some(c => c.type === 'evening');
   const avgMood = checkins.length > 0
@@ -86,17 +88,34 @@ export const DayColumn = memo(function DayColumn({ date, checkins, activities, e
       <div className="space-y-0.5 flex-1">
         {activities.slice(0, 2).map((a) => {
           const cat = ACTIVITY_CATEGORIES.find(c => c.id === a.category);
+          const info = getShareInfo?.(a.id);
+          const isReceived = info?.isReceived ?? false;
+          const isShared = info && info.sharedWith.length > 0;
+          // Dashed border si reçu, solid-primary si partagé par moi, rien sinon
+          const border = isReceived
+            ? '1px dashed color-mix(in srgb, var(--color-primary) 55%, transparent)'
+            : isShared
+              ? '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)'
+              : undefined;
           return (
             <div
               key={a.id}
-              className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium"
+              className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium relative"
               style={{
                 backgroundColor: 'var(--color-surface-elevated)',
                 color: cat?.hex ?? 'var(--color-text-muted)',
+                border,
               }}
-              title={a.title}
+              title={a.title + (isReceived ? ' (partagée avec toi)' : isShared ? ' (partagée)' : '')}
             >
               {a.title}
+              {(isReceived || isShared) && (
+                <span
+                  className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: 'var(--color-primary)' }}
+                  aria-hidden="true"
+                />
+              )}
             </div>
           );
         })}

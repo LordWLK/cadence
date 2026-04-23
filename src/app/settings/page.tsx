@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/providers/ConfigProvider';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
-import { Save, Trash2, Link, Volleyball, Film, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, User, LogOut, Calendar } from 'lucide-react';
+import { Save, Trash2, Link, Volleyball, Film, Bell, BellOff, Moon as MoonIcon, Sun as SunIcon, User, LogOut, Calendar, Users, Pencil } from 'lucide-react';
 import { useTheme } from '@/lib/hooks/useTheme';
 import { useAuth } from '@/providers/AuthProvider';
+import { useProfile } from '@/lib/hooks/useProfile';
+import { Avatar } from '@/components/ui/Avatar';
 import NextLink from 'next/link';
 import { useRouter } from 'next/navigation';
 import { requestNotificationPermission, isNotificationSupported, getNotificationPermission, scheduleDailyReminders } from '@/lib/utils/notifications';
@@ -17,7 +19,11 @@ export default function SettingsPage() {
   const { config, sportConfig, updateConfig, updateSportConfig, resetConfig, isConfigured, hasEnvVars } = useConfig();
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { profile, update: updateProfile } = useProfile();
   const router = useRouter();
+
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
 
   // Supabase fields (only needed when no env vars)
   const [supabaseUrl, setSupabaseUrl] = useState('');
@@ -78,14 +84,50 @@ export default function SettingsPage() {
         <Card>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div
-                className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg"
-                style={{ backgroundColor: 'var(--color-primary)' }}
-              >
-                {(user.email?.[0] || 'U').toUpperCase()}
-              </div>
+              <Avatar profile={profile} size={44} />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-sm truncate">{user.email}</p>
+                {editingName ? (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const t = nameInput.trim();
+                      if (t) await updateProfile({ display_name: t });
+                      setEditingName(false);
+                    }}
+                    className="flex gap-2"
+                  >
+                    <input
+                      autoFocus
+                      type="text"
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      onBlur={() => setEditingName(false)}
+                      maxLength={40}
+                      className="flex-1 rounded-lg px-2 py-1 text-sm"
+                      style={{
+                        backgroundColor: 'var(--color-surface)',
+                        border: '1px solid var(--color-border)',
+                        color: 'var(--color-text)',
+                      }}
+                    />
+                  </form>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setNameInput(profile?.display_name || '');
+                      setEditingName(true);
+                    }}
+                    className="flex items-center gap-1.5 group"
+                  >
+                    <p className="font-semibold text-sm truncate">
+                      {profile?.display_name || user.email}
+                    </p>
+                    <Pencil size={11} className="opacity-0 group-hover:opacity-60" style={{ color: 'var(--color-text-muted)' }} />
+                  </button>
+                )}
+                <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
+                  {user.email}
+                </p>
                 <div className="flex items-center gap-1 mt-0.5">
                   <Calendar size={11} className="text-text-dim" />
                   <p className="text-xs text-text-dim">
@@ -171,6 +213,22 @@ export default function SettingsPage() {
             )}
           </div>
         </>
+      )}
+
+      {/* Mes proches */}
+      {user && (
+        <NextLink href="/settings/contacts">
+          <Card className="flex items-center justify-between cursor-pointer hover:border-primary/50 transition-colors">
+            <div className="flex items-center gap-3">
+              <Users size={20} style={{ color: 'var(--color-primary)' }} />
+              <div>
+                <p className="font-medium">Mes proches</p>
+                <p className="text-sm text-text-muted">Gère tes contacts pour partager des activités</p>
+              </div>
+            </div>
+            <span className="text-text-dim">&rarr;</span>
+          </Card>
+        </NextLink>
       )}
 
       {/* Theme */}

@@ -6,6 +6,7 @@ import { DayDetail } from './DayDetail';
 import { Button } from '@/components/ui/Button';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useActivities } from '@/lib/hooks/useActivities';
+import { useActivityShares, type ActivityShareInfo } from '@/lib/hooks/useActivityShares';
 import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { useAuth } from '@/providers/AuthProvider';
 import { getWeekStart, getWeekEnd, getWeekDays, formatDate, formatDateISO, isToday } from '@/lib/utils/dates';
@@ -17,12 +18,14 @@ export function WeekCalendar() {
   const { user } = useAuth();
   const { getByDateRange: getCheckins } = useCheckins();
   const { getByDateRange: getActivities } = useActivities();
+  const { getShareInfo } = useActivityShares();
   const { getByWeek: getEvents }       = useSelectedEvents();
 
   const [weekOffset, setWeekOffset]   = useState(0);
   const [checkins, setCheckins]       = useState<Checkin[]>([]);
   const [activities, setActivities]   = useState<WeeklyActivity[]>([]);
   const [events, setEvents]           = useState<SelectedEvent[]>([]);
+  const [shareMap, setShareMap]       = useState<Map<string, ActivityShareInfo>>(new Map());
   const [loading, setLoading]         = useState(false); // false par défaut → colonnes visibles immédiatement
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
@@ -54,8 +57,14 @@ export function WeekCalendar() {
     setCheckins(c);
     setActivities(a);
     setEvents(e);
+    if (a.length > 0) {
+      const info = await getShareInfo(a.map((x) => x.id));
+      setShareMap(info);
+    } else {
+      setShareMap(new Map());
+    }
     setLoading(false);
-  }, [user, wsISO, weISO, getCheckins, getActivities, getEvents]);
+  }, [user, wsISO, weISO, getCheckins, getActivities, getEvents, getShareInfo]);
 
   useEffect(() => {
     loadData();
@@ -64,6 +73,7 @@ export function WeekCalendar() {
   const getCheckinsByDate  = (date: string) => checkins.filter(c => c.date === date);
   const getActivitiesByDate = (date: string) => activities.filter(a => a.planned_date === date);
   const getEventsByDate    = (date: string) => events.filter(e => e.event_date.startsWith(date));
+  const getShareByActivityId = (id: string) => shareMap.get(id);
 
   return (
     <div className="space-y-3">
@@ -114,6 +124,7 @@ export function WeekCalendar() {
                 checkins={getCheckinsByDate(dateISO)}
                 activities={getActivitiesByDate(dateISO)}
                 events={getEventsByDate(dateISO)}
+                getShareInfo={getShareByActivityId}
                 isToday={isToday(day)}
                 isSelected={selectedDay === dateISO}
                 onClick={() => setSelectedDay(prev => prev === dateISO ? null : dateISO)}
@@ -130,6 +141,7 @@ export function WeekCalendar() {
           checkins={getCheckinsByDate(selectedDay)}
           activities={getActivitiesByDate(selectedDay)}
           events={getEventsByDate(selectedDay)}
+          getShareInfo={getShareByActivityId}
           onClose={() => setSelectedDay(null)}
         />
       )}

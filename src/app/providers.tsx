@@ -11,6 +11,7 @@ import { PageTransition } from '@/components/layout/PageTransition';
 import { SplashScreen } from '@/components/layout/SplashScreen';
 import { SessionFromUrl } from '@/components/auth/SessionFromUrl';
 import { ToastProvider } from '@/components/ui/Toast';
+import { DisplayNameModal } from '@/components/settings/DisplayNameModal';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               <AuthProvider>
                 <ToastProvider>
                   <SessionFromUrl />
+                  <DisplayNameModal />
                   <main className="max-w-lg mx-auto px-4 pt-6 pb-28">
                     <PageTransition>
                       {children}
