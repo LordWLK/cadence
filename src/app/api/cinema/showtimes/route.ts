@@ -156,12 +156,16 @@ function parseShowtimesHtml(html: string): CinemaMovie[] {
     });
 
     // Parse showtimes from .component--screening-cards li
+    // UGC mise à jour: .screening-start → .screening-time-start, format "HH:MM"
     const showtimes: CinemaShowtime[] = [];
-    // Each screening card is an <li> inside .component--screening-cards
     $film.find('.component--screening-cards li, .component--screening-cards > a').each((_, stEl) => {
       const $st = $(stEl);
 
-      const time = $st.find('.screening-start').text().trim();
+      // Support des deux structures (nouvelle + ancienne au cas où)
+      const time = (
+        $st.find('.screening-time-start').text().trim() ||
+        $st.find('.screening-start').text().trim()
+      );
       if (!time) return;
 
       const room = $st.find('.screening-detail').text().trim();
