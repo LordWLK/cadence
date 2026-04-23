@@ -280,6 +280,33 @@ export type Database = {
         };
         Relationships: [];
       };
+      backlog_shares: {
+        Row: {
+          id: string;
+          backlog_id: string;
+          shared_by_user_id: string;
+          shared_with_user_id: string;
+          can_edit: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          backlog_id: string;
+          shared_by_user_id?: string;
+          shared_with_user_id: string;
+          can_edit?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          backlog_id?: string;
+          shared_by_user_id?: string;
+          shared_with_user_id?: string;
+          can_edit?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -305,6 +332,8 @@ export type UserContact = Database['public']['Tables']['user_contacts']['Row'];
 export type UserContactInsert = Database['public']['Tables']['user_contacts']['Insert'];
 export type ActivityShare = Database['public']['Tables']['activity_shares']['Row'];
 export type ActivityShareInsert = Database['public']['Tables']['activity_shares']['Insert'];
+export type BacklogShare = Database['public']['Tables']['backlog_shares']['Row'];
+export type BacklogShareInsert = Database['public']['Tables']['backlog_shares']['Insert'];
 
 // Types composés utilisés par les hooks
 export type ContactWithProfile = UserContact & {

@@ -5,7 +5,7 @@ import { useSupabase } from '@/providers/SupabaseProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { getWeekDays, formatDateISO } from '@/lib/utils/dates';
 import { getDay } from 'date-fns';
-import type { BacklogActivity, BacklogActivityInsert } from '@/lib/supabase/types';
+import type { BacklogActivity, BacklogActivityInsert, BacklogShare } from '@/lib/supabase/types';
 
 // Map day names to date-fns getDay() values (0=sunday, 1=monday, ...)
 const DAY_NAME_TO_INDEX: Record<string, number> = {
@@ -66,6 +66,32 @@ export function useBacklog() {
       .eq('user_id', user.id);
   }, [supabase, user]);
 
+  /**
+   * Copie les partages par défaut d'un backlog vers les activity_shares d'une activité créée.
+   * Aucun effet si le backlog n'a pas de partages configurés.
+   */
+  const copyBacklogSharesToActivity = useCallback(
+    async (backlogId: string, activityId: string) => {
+      if (!supabase || !user) return;
+      const { data: shareRows } = await supabase
+        .from('backlog_shares')
+        .select('*')
+        .eq('backlog_id', backlogId);
+      const shares = (shareRows ?? []) as BacklogShare[];
+      if (shares.length === 0) return;
+      await supabase.from('activity_shares').insert(
+        shares.map((s) => ({
+          activity_id: activityId,
+          shared_by_user_id: user.id,
+          shared_with_user_id: s.shared_with_user_id,
+          can_edit: s.can_edit,
+          hidden: false,
+        }))
+      );
+    },
+    [supabase, user]
+  );
+
   // Pull a backlog item to a specific day — item stays in backlog (always reusable)
   const pullToWeek = useCallback(async (
     backlog: BacklogActivity,
@@ -86,8 +112,12 @@ export function useBacklog() {
       .select()
       .single();
     if (error) return null;
+    // Propager les partages par défaut du backlog vers la nouvelle activité
+    if (activity?.id) {
+      await copyBacklogSharesToActivity(backlog.id, activity.id);
+    }
     return activity;
-  }, [supabase, user]);
+  }, [supabase, user, copyBacklogSharesToActivity]);
 
   const getAlreadyPulled = useCallback(async (weekStart: string): Promise<Set<string>> => {
     if (!supabase || !user) return new Set();
@@ -166,7 +196,46 @@ export function useBacklog() {
 
     if (toInsert.length === 0) return false;
 
-    await supabase.from('weekly_activities').insert(toInsert);
+    // Insert en récupérant les ids pour pouvoir propager les partages
+    const { data: inserted } = await supabase
+      .from('weekly_activities')
+      .insert(toInsert)
+      .select('id, backlog_id');
+
+    // Copier les partages backlog → activity pour chaque item inséré qui a un backlog partagé
+    if (inserted && inserted.length > 0) {
+      const backlogIds = inserted.map((r) => r.backlog_id).filter(Boolean) as string[];
+      const { data: shareRows } = await supabase
+        .from('backlog_shares')
+        .select('*')
+        .in('backlog_id', backlogIds);
+      const shares = (shareRows ?? []) as BacklogShare[];
+
+      if (shares.length > 0) {
+        const sharesByBacklog = new Map<string, BacklogShare[]>();
+        for (const s of shares) {
+          const arr = sharesByBacklog.get(s.backlog_id) ?? [];
+          arr.push(s);
+          sharesByBacklog.set(s.backlog_id, arr);
+        }
+
+        const activityShares = inserted.flatMap((row) => {
+          if (!row.backlog_id) return [];
+          const rowShares = sharesByBacklog.get(row.backlog_id) ?? [];
+          return rowShares.map((s) => ({
+            activity_id: row.id,
+            shared_by_user_id: user.id,
+            shared_with_user_id: s.shared_with_user_id,
+            can_edit: s.can_edit,
+            hidden: false,
+          }));
+        });
+
+        if (activityShares.length > 0) {
+          await supabase.from('activity_shares').insert(activityShares);
+        }
+      }
+    }
     return true; // Activities were added
   }, [supabase, user]);
 

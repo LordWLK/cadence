@@ -2,11 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useBacklog } from '@/lib/hooks/useBacklog';
+import { useBacklogShares, type BacklogShareInfo } from '@/lib/hooks/useBacklogShares';
 import { useAuth } from '@/providers/AuthProvider';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { formatDate, formatDateISO } from '@/lib/utils/dates';
 import { DayScroller } from './DayScroller';
 import { RecurrenceSection, DAY_LABELS, FREQ_LABELS } from './RecurrenceSection';
+import { ShareSelector, type ShareTarget } from './ShareSelector';
+import { Avatar } from '@/components/ui/Avatar';
 import { ChevronDown, Plus, Repeat, Pencil, Trash2, Check, X, Archive, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -31,8 +34,10 @@ interface BacklogDrawerProps {
 export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: BacklogDrawerProps) {
   const { user } = useAuth();
   const { getAll, create, update, remove, pullToWeek, getAlreadyPulled, autoPopulateRecurring } = useBacklog();
+  const { getForBacklog, setSharesForBacklog, getShareInfoForBacklogs } = useBacklogShares();
   const [isOpen, setIsOpen] = useState(false);
   const [items, setItems] = useState<BacklogActivity[]>([]);
+  const [shareMap, setShareMap] = useState<Map<string, BacklogShareInfo>>(new Map());
   const [pulledIds, setPulledIds] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -46,6 +51,7 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
   const [editRecEnabled, setEditRecEnabled] = useState(false);
   const [editRecDay, setEditRecDay] = useState('lundi');
   const [editRecFreq, setEditRecFreq] = useState('weekly');
+  const [editShares, setEditShares] = useState<ShareTarget[]>([]);
   const [saving, setSaving] = useState(false);
 
   // "Keep in backlog?" dialog
@@ -57,13 +63,20 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
   const [newRecEnabled, setNewRecEnabled] = useState(false);
   const [newRecDay, setNewRecDay] = useState('lundi');
   const [newRecFreq, setNewRecFreq] = useState('weekly');
+  const [newShares, setNewShares] = useState<ShareTarget[]>([]);
 
   const load = useCallback(async () => {
     if (!user) return;
     const [all, pulled] = await Promise.all([getAll(), getAlreadyPulled(weekStartISO)]);
     setItems(all);
     setPulledIds(pulled);
-  }, [user, getAll, getAlreadyPulled, weekStartISO]);
+    if (all.length > 0) {
+      const map = await getShareInfoForBacklogs(all.map((a) => a.id));
+      setShareMap(map);
+    } else {
+      setShareMap(new Map());
+    }
+  }, [user, getAll, getAlreadyPulled, getShareInfoForBacklogs, weekStartISO]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -79,21 +92,25 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
-    await create({
+    const created = await create({
       title: newTitle.trim(),
       category: newCategory,
       recurrence: newRecEnabled ? newRecDay : 'none',
       recurrence_freq: newRecEnabled ? newRecFreq : 'weekly',
     });
+    if (created && newShares.length > 0) {
+      await setSharesForBacklog(created.id, newShares);
+    }
     setNewTitle(''); setNewCategory(ACTIVITY_CATEGORIES[0].id);
     setNewRecEnabled(false); setNewRecDay('lundi'); setNewRecFreq('weekly');
+    setNewShares([]);
     setShowForm(false);
     load();
   };
 
   // ─── Edit ────────────────────────────────────────────────────────────────
 
-  const startEdit = (item: BacklogActivity) => {
+  const startEdit = async (item: BacklogActivity) => {
     setEditingId(item.id);
     setEditTitle(item.title);
     setEditCategory(item.category);
@@ -101,11 +118,15 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
     setEditRecEnabled(item.recurrence !== 'none');
     setEditRecDay(item.recurrence !== 'none' ? item.recurrence : 'lundi');
     setEditRecFreq(item.recurrence_freq || 'weekly');
+    // Charge les partages actuels
+    const currentShares = await getForBacklog(item.id);
+    setEditShares(currentShares.map((s) => ({ userId: s.shared_with_user_id, canEdit: s.can_edit })));
   };
 
   const cancelEdit = () => {
     setEditingId(null); setEditTitle(''); setEditCategory(''); setEditDay('');
     setEditRecEnabled(false);
+    setEditShares([]);
   };
 
   const saveEdit = async () => {
@@ -122,18 +143,21 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
         recurrence: editRecEnabled ? editRecDay : 'none',
         recurrence_freq: editRecEnabled ? editRecFreq : 'weekly',
       };
+      // Appliquer les partages AVANT pullToWeek pour qu'ils soient propagés
+      await setSharesForBacklog(editingId, editShares);
       setKeepDialog({ item: updatedItem, day: editDay });
       setSaving(false);
       return;
     }
 
-    // Just update the backlog item
+    // Just update the backlog item + sync shares
     await update(editingId, {
       title: editTitle.trim(),
       category: editCategory,
       recurrence: editRecEnabled ? editRecDay : 'none',
       recurrence_freq: editRecEnabled ? editRecFreq : 'weekly',
     });
+    await setSharesForBacklog(editingId, editShares);
     setSaving(false);
     cancelEdit();
     load();
@@ -222,9 +246,10 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
                 </div>
                 <RecurrenceSection enabled={newRecEnabled} day={newRecDay} freq={newRecFreq}
                   onToggle={() => setNewRecEnabled(!newRecEnabled)} onDayChange={setNewRecDay} onFreqChange={setNewRecFreq} />
+                <ShareSelector value={newShares} onChange={setNewShares} compact />
                 <div className="flex gap-2">
                   <Button size="sm" className="flex-1" onClick={handleCreate} disabled={!newTitle.trim()}>Ajouter</Button>
-                  <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setNewTitle(''); setNewRecEnabled(false); }}><X size={14} /> Annuler</Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setNewTitle(''); setNewRecEnabled(false); setNewShares([]); }}><X size={14} /> Annuler</Button>
                 </div>
               </div>
             )}
@@ -234,8 +259,8 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
               <div className="space-y-1.5">
                 <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide flex items-center gap-1"><Repeat size={10} /> Récurrents</p>
                 {recurringItems.map((item) => editingId === item.id
-                  ? <EditForm key={item.id} {...{ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, saveEdit, cancelEdit }} />
-                  : <ItemRow key={item.id} item={item} isPulled={pulledIds.has(item.id)} onEdit={() => startEdit(item)} onDelete={() => setDeleteTarget(item.id)} />
+                  ? <EditForm key={item.id} {...{ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, editShares, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, setEditShares, saveEdit, cancelEdit }} />
+                  : <ItemRow key={item.id} item={item} isPulled={pulledIds.has(item.id)} shareInfo={shareMap.get(item.id)} onEdit={() => startEdit(item)} onDelete={() => setDeleteTarget(item.id)} />
                 )}
               </div>
             )}
@@ -245,8 +270,8 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
               <div className="space-y-1.5">
                 {recurringItems.length > 0 && <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide mt-2">Pour plus tard</p>}
                 {normalItems.map((item) => editingId === item.id
-                  ? <EditForm key={item.id} {...{ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, saveEdit, cancelEdit }} />
-                  : <ItemRow key={item.id} item={item} isPulled={pulledIds.has(item.id)} onEdit={() => startEdit(item)} onDelete={() => setDeleteTarget(item.id)} />
+                  ? <EditForm key={item.id} {...{ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, editShares, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, setEditShares, saveEdit, cancelEdit }} />
+                  : <ItemRow key={item.id} item={item} isPulled={pulledIds.has(item.id)} shareInfo={shareMap.get(item.id)} onEdit={() => startEdit(item)} onDelete={() => setDeleteTarget(item.id)} />
                 )}
               </div>
             )}
@@ -281,12 +306,13 @@ function CategoryChips({ selected, onChange }: { selected: string; onChange: (v:
   );
 }
 
-function ItemRow({ item, isPulled, onEdit, onDelete }: {
-  item: BacklogActivity; isPulled: boolean; onEdit: () => void; onDelete: () => void;
+function ItemRow({ item, isPulled, shareInfo, onEdit, onDelete }: {
+  item: BacklogActivity; isPulled: boolean; shareInfo?: BacklogShareInfo; onEdit: () => void; onDelete: () => void;
 }) {
   const cat = ACTIVITY_CATEGORIES.find(c => c.id === item.category);
   const Icon = cat ? (ICON_MAP[cat.icon] || Sparkles) : Sparkles;
   const isRecurring = item.recurrence !== 'none';
+  const sharedWith = shareInfo?.sharedWith ?? [];
 
   return (
     <div className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-colors ${
@@ -299,6 +325,25 @@ function ItemRow({ item, isPulled, onEdit, onDelete }: {
           <Repeat size={9} /> {DAY_LABELS[item.recurrence]}{FREQ_LABELS[item.recurrence_freq] || ''}
         </span>
       )}
+      {sharedWith.length > 0 && (
+        <div className="flex -space-x-1.5 shrink-0" title={`Partagé par défaut avec ${sharedWith.length}`}>
+          {sharedWith.slice(0, 3).map(({ profile, share }) => (
+            <Avatar
+              key={share.id}
+              profile={profile}
+              size={18}
+              className="ring-1"
+              title={`${profile.display_name || profile.email}${share.can_edit ? ' (peut modifier)' : ' (lecture seule)'}`}
+            />
+          ))}
+          {sharedWith.length > 3 && (
+            <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center text-[8px] font-bold ring-1"
+                 style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-muted)' }}>
+              +{sharedWith.length - 3}
+            </div>
+          )}
+        </div>
+      )}
       {isPulled && <span className="shrink-0 text-[10px] text-[var(--color-success)]">Planifié</span>}
       <button onClick={onEdit} aria-label="Modifier" className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-primary)] active:scale-90 p-1 rounded-lg transition-all"><Pencil size={13} /></button>
       <button onClick={onDelete} aria-label="Supprimer" className="shrink-0 text-[var(--color-text-dim)] hover:text-[var(--color-error)] active:scale-90 p-1 rounded-lg transition-all"><Trash2 size={13} /></button>
@@ -306,11 +351,13 @@ function ItemRow({ item, isPulled, onEdit, onDelete }: {
   );
 }
 
-function EditForm({ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, saveEdit, cancelEdit }: {
+function EditForm({ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, editShares, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, setEditShares, saveEdit, cancelEdit }: {
   editTitle: string; editCategory: string; editDay: string; editRecEnabled: boolean; editRecDay: string; editRecFreq: string;
+  editShares: ShareTarget[];
   weekDays: Date[]; saving: boolean;
   setEditTitle: (v: string) => void; setEditCategory: (v: string) => void; setEditDay: (v: string) => void;
   setEditRecEnabled: (v: boolean) => void; setEditRecDay: (v: string) => void; setEditRecFreq: (v: string) => void;
+  setEditShares: (v: ShareTarget[]) => void;
   saveEdit: () => void; cancelEdit: () => void;
 }) {
   return (
@@ -330,6 +377,7 @@ function EditForm({ editTitle, editCategory, editDay, editRecEnabled, editRecDay
       </div>
       <RecurrenceSection enabled={editRecEnabled} day={editRecDay} freq={editRecFreq}
         onToggle={() => setEditRecEnabled(!editRecEnabled)} onDayChange={setEditRecDay} onFreqChange={setEditRecFreq} />
+      <ShareSelector value={editShares} onChange={setEditShares} compact />
       <div className="flex gap-2">
         <Button size="sm" className="flex-1" onClick={saveEdit} disabled={saving || !editTitle.trim()}>
           <Check size={14} /> {saving ? '...' : 'Enregistrer'}
