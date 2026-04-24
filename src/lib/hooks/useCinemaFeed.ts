@@ -14,17 +14,25 @@ export function useCinemaFeed() {
     setError(null);
     setMovies([]);
 
-    // Check sessionStorage cache
+    // Check sessionStorage cache — mais seulement si les données semblent valides
+    // (au moins une séance dans au moins un film). Sinon on considère le cache stale.
     const cacheKey = `cinema-${cinemaId}-${date}`;
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       try {
         const data: CinemaFeedResponse = JSON.parse(cached);
-        setMovies(data.movies);
-        setCinemaName(data.cinemaName);
-        setLoading(false);
-        return;
-      } catch { /* ignore parse errors */ }
+        const hasAnyShowtime = data.movies.some((m) => m.showtimes && m.showtimes.length > 0);
+        // On accepte le cache si : il y a au moins une séance, OU si la liste de films est vide
+        // (cas légitime : cinéma fermé ce jour-là)
+        if (hasAnyShowtime || data.movies.length === 0) {
+          setMovies(data.movies);
+          setCinemaName(data.cinemaName);
+          setLoading(false);
+          return;
+        }
+        // Sinon (films sans séances) → cache suspect, on supprime et re-fetch
+        sessionStorage.removeItem(cacheKey);
+      } catch { sessionStorage.removeItem(cacheKey); /* cache corrompu */ }
     }
 
     try {
@@ -34,8 +42,11 @@ export function useCinemaFeed() {
       setMovies(data.movies);
       setCinemaName(data.cinemaName);
 
-      // Cache for this session
-      sessionStorage.setItem(cacheKey, JSON.stringify(data));
+      // Cache uniquement si les données sont valides (évite de mémoriser du broken)
+      const hasAnyShowtime = data.movies.some((m) => m.showtimes && m.showtimes.length > 0);
+      if (hasAnyShowtime || data.movies.length === 0) {
+        sessionStorage.setItem(cacheKey, JSON.stringify(data));
+      }
     } catch (err) {
       console.error('Cinema feed error:', err);
       setError('Impossible de charger les séances');
