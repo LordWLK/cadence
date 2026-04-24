@@ -86,9 +86,34 @@ export function useActivities() {
   }, [supabase, user]);
 
   const remove = useCallback(async (id: string) => {
-    if (!supabase) return;
-    await supabase.from('weekly_activities').delete().eq('id', id);
-  }, [supabase]);
+    if (!supabase || !user) return;
+    // On récupère d'abord l'activité pour savoir si elle vient d'un backlog récurrent.
+    // Dans ce cas on enregistre un "skip" pour que l'auto-populate ne la ressuscite pas.
+    const { data: toDelete } = await supabase
+      .from('weekly_activities')
+      .select('backlog_id, planned_date, user_id')
+      .eq('id', id)
+      .maybeSingle();
+
+    const { error } = await supabase.from('weekly_activities').delete().eq('id', id);
+    if (error) return;
+
+    // Skip uniquement si je suis propriétaire et que l'activité venait d'un backlog
+    if (
+      toDelete?.backlog_id &&
+      toDelete?.planned_date &&
+      toDelete?.user_id === user.id
+    ) {
+      await supabase.from('backlog_skip_dates').upsert(
+        {
+          user_id: user.id,
+          backlog_id: toDelete.backlog_id,
+          skipped_date: toDelete.planned_date,
+        },
+        { onConflict: 'user_id,backlog_id,skipped_date' }
+      );
+    }
+  }, [supabase, user]);
 
   return { create, update, getByWeek, getByDateRange, remove, loading };
 }

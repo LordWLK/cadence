@@ -149,7 +149,7 @@ export function useBacklog() {
     const days = getWeekDays(weekStart);
     const dayDates = days.map(d => formatDateISO(d));
 
-    // 3. Get already pulled items for any of these dates (not just by week_start)
+    // 3a. Already pulled items for these dates (any backlog)
     const { data: existing } = await supabase
       .from('weekly_activities')
       .select('backlog_id, planned_date')
@@ -157,12 +157,22 @@ export function useBacklog() {
       .in('planned_date', dayDates)
       .not('backlog_id', 'is', null);
 
-    // Track which backlog_id + planned_date combos already exist
     const alreadyPulledKeys = new Set(
       (existing ?? []).map(e => `${e.backlog_id}__${e.planned_date}`)
     );
 
-    // 4. For each recurring item, check if it needs to be added
+    // 3b. Dates volontairement skippées par l'utilisateur (suppression manuelle)
+    const { data: skips } = await supabase
+      .from('backlog_skip_dates')
+      .select('backlog_id, skipped_date')
+      .eq('user_id', user.id)
+      .in('skipped_date', dayDates);
+
+    const skippedKeys = new Set(
+      (skips ?? []).map(s => `${s.backlog_id}__${s.skipped_date}`)
+    );
+
+    // 4. Pour chaque item récurrent, décider s'il faut l'ajouter
     const toInsert: Array<{
       user_id: string;
       title: string;
@@ -172,17 +182,24 @@ export function useBacklog() {
       backlog_id: string;
     }> = [];
 
+    // On dédoublonne côté client aussi (au cas où deux appels concurrents se croisent,
+    // la contrainte unique partielle en DB garantit la protection finale)
+    const plannedKeys = new Set<string>();
+
     for (const item of recurring as BacklogActivity[]) {
       const dayIndex = DAY_NAME_TO_INDEX[item.recurrence];
       if (dayIndex === undefined) continue;
 
-      // Find the matching day in the week
       const matchingDay = days.find(d => getDay(d) === dayIndex);
       if (!matchingDay) continue;
 
       const plannedDate = formatDateISO(matchingDay);
       const key = `${item.id}__${plannedDate}`;
-      if (alreadyPulledKeys.has(key)) continue;
+
+      if (alreadyPulledKeys.has(key)) continue;  // déjà en base
+      if (skippedKeys.has(key)) continue;         // l'utilisateur a volontairement supprimé
+      if (plannedKeys.has(key)) continue;         // déjà dans ce batch
+      plannedKeys.add(key);
 
       toInsert.push({
         user_id: user.id,
@@ -196,11 +213,20 @@ export function useBacklog() {
 
     if (toInsert.length === 0) return false;
 
-    // Insert en récupérant les ids pour pouvoir propager les partages
-    const { data: inserted } = await supabase
+    // Insert en récupérant les ids pour pouvoir propager les partages.
+    // L'index unique partiel en DB empêche les doublons même en cas d'appel concurrent.
+    // Si on tombe sur un conflit, on l'ignore silencieusement (un autre onglet a gagné la course).
+    const { data: inserted, error: insertError } = await supabase
       .from('weekly_activities')
       .insert(toInsert)
       .select('id, backlog_id');
+
+    if (insertError) {
+      // 23505 = unique_violation (PostgreSQL)
+      if (insertError.code === '23505') return false;
+      console.error('autoPopulateRecurring insert error:', insertError);
+      return false;
+    }
 
     // Copier les partages backlog → activity pour chaque item inséré qui a un backlog partagé
     if (inserted && inserted.length > 0) {
