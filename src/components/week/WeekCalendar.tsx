@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { DayColumn } from './DayColumn';
 import { DayDetail } from './DayDetail';
 import { Button } from '@/components/ui/Button';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useActivities } from '@/lib/hooks/useActivities';
 import { useActivityShares, type ActivityShareInfo } from '@/lib/hooks/useActivityShares';
+import { useBacklog } from '@/lib/hooks/useBacklog';
 import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { useAuth } from '@/providers/AuthProvider';
 import { getWeekStart, getWeekEnd, getWeekDays, formatDate, formatDateISO, isToday } from '@/lib/utils/dates';
@@ -19,6 +20,7 @@ export function WeekCalendar() {
   const { getByDateRange: getCheckins } = useCheckins();
   const { getByDateRange: getActivities } = useActivities();
   const { getShareInfo } = useActivityShares();
+  const { autoPopulateRecurring } = useBacklog();
   const { getByWeek: getEvents }       = useSelectedEvents();
 
   const [weekOffset, setWeekOffset]   = useState(0);
@@ -28,6 +30,10 @@ export function WeekCalendar() {
   const [shareMap, setShareMap]       = useState<Map<string, ActivityShareInfo>>(new Map());
   const [loading, setLoading]         = useState(false); // false par défaut → colonnes visibles immédiatement
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  // Mémorise les semaines déjà auto-populées dans cette session pour éviter
+  // d'appeler autoPopulateRecurring à chaque changement d'onglet
+  const populatedWeeksRef = useRef<Set<string>>(new Set());
 
   // Memoize dates pour éviter les re-runs infinis de useEffect
   const currentWeekStart = useMemo(
@@ -49,6 +55,13 @@ export function WeekCalendar() {
   const loadData = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+
+    // Auto-populer les récurrences pour la semaine visitée (une seule fois par session)
+    if (!populatedWeeksRef.current.has(wsISO)) {
+      populatedWeeksRef.current.add(wsISO);
+      await autoPopulateRecurring(currentWeekStart, wsISO, 1);
+    }
+
     const [c, a, e] = await Promise.all([
       getCheckins(wsISO, weISO),
       getActivities(wsISO, weISO),
@@ -64,7 +77,7 @@ export function WeekCalendar() {
       setShareMap(new Map());
     }
     setLoading(false);
-  }, [user, wsISO, weISO, getCheckins, getActivities, getEvents, getShareInfo]);
+  }, [user, wsISO, weISO, currentWeekStart, getCheckins, getActivities, getEvents, getShareInfo, autoPopulateRecurring]);
 
   useEffect(() => {
     loadData();

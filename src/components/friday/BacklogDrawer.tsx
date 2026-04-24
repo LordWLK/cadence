@@ -82,7 +82,9 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
 
   useEffect(() => {
     if (!user || autoPopDone) return;
-    autoPopulateRecurring(weekStart, weekStartISO).then((added) => {
+    // Pré-populer 4 semaines d'avance pour que la vue semaine affiche les
+    // récurrences même quand on navigue en avant dans le temps.
+    autoPopulateRecurring(weekStart, weekStartISO, 4).then((added) => {
       setAutoPopDone(true);
       if (added) { load(); onPulled(); }
     });

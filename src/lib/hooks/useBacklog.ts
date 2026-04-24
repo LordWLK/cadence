@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { getWeekDays, formatDateISO } from '@/lib/utils/dates';
-import { getDay } from 'date-fns';
+import { addWeeks, getDay } from 'date-fns';
 import type { BacklogActivity, BacklogActivityInsert, BacklogShare } from '@/lib/supabase/types';
 
 // Map day names to date-fns getDay() values (0=sunday, 1=monday, ...)
@@ -131,8 +131,14 @@ export function useBacklog() {
     return new Set(ids);
   }, [supabase, user]);
 
-  // Auto-populate recurring backlog items into the week
-  const autoPopulateRecurring = useCallback(async (weekStart: Date, weekStartISO: string) => {
+  // Auto-populate recurring backlog items into one or several weeks.
+  // `numberOfWeeks` = 1 → seulement la semaine de `weekStart`.
+  // `numberOfWeeks` = 4 → semaine courante + 3 semaines suivantes.
+  const autoPopulateRecurring = useCallback(async (
+    weekStart: Date,
+    weekStartISO: string,
+    numberOfWeeks: number = 1,
+  ) => {
     if (!supabase || !user) return false;
 
     // 1. Get all active backlog items with a recurring day
@@ -145,34 +151,39 @@ export function useBacklog() {
 
     if (!recurring || recurring.length === 0) return false;
 
-    // 2. Get the week days
-    const days = getWeekDays(weekStart);
-    const dayDates = days.map(d => formatDateISO(d));
+    // 2. Construire la liste des semaines + jours à considérer
+    const weeks: Array<{ startISO: string; days: Date[] }> = [];
+    for (let i = 0; i < numberOfWeeks; i++) {
+      const start = i === 0 ? weekStart : addWeeks(weekStart, i);
+      const startISO = i === 0 ? weekStartISO : formatDateISO(start);
+      weeks.push({ startISO, days: getWeekDays(start) });
+    }
+    const allDayDates = weeks.flatMap(w => w.days.map(d => formatDateISO(d)));
 
-    // 3a. Already pulled items for these dates (any backlog)
+    // 3a. Already pulled items sur toute la plage
     const { data: existing } = await supabase
       .from('weekly_activities')
       .select('backlog_id, planned_date')
       .eq('user_id', user.id)
-      .in('planned_date', dayDates)
+      .in('planned_date', allDayDates)
       .not('backlog_id', 'is', null);
 
     const alreadyPulledKeys = new Set(
       (existing ?? []).map(e => `${e.backlog_id}__${e.planned_date}`)
     );
 
-    // 3b. Dates volontairement skippées par l'utilisateur (suppression manuelle)
+    // 3b. Dates volontairement skippées par l'utilisateur
     const { data: skips } = await supabase
       .from('backlog_skip_dates')
       .select('backlog_id, skipped_date')
       .eq('user_id', user.id)
-      .in('skipped_date', dayDates);
+      .in('skipped_date', allDayDates);
 
     const skippedKeys = new Set(
       (skips ?? []).map(s => `${s.backlog_id}__${s.skipped_date}`)
     );
 
-    // 4. Pour chaque item récurrent, décider s'il faut l'ajouter
+    // 4. Pour chaque semaine × chaque item récurrent, décider s'il faut l'ajouter
     const toInsert: Array<{
       user_id: string;
       title: string;
@@ -182,33 +193,33 @@ export function useBacklog() {
       backlog_id: string;
     }> = [];
 
-    // On dédoublonne côté client aussi (au cas où deux appels concurrents se croisent,
-    // la contrainte unique partielle en DB garantit la protection finale)
     const plannedKeys = new Set<string>();
 
-    for (const item of recurring as BacklogActivity[]) {
-      const dayIndex = DAY_NAME_TO_INDEX[item.recurrence];
-      if (dayIndex === undefined) continue;
+    for (const week of weeks) {
+      for (const item of recurring as BacklogActivity[]) {
+        const dayIndex = DAY_NAME_TO_INDEX[item.recurrence];
+        if (dayIndex === undefined) continue;
 
-      const matchingDay = days.find(d => getDay(d) === dayIndex);
-      if (!matchingDay) continue;
+        const matchingDay = week.days.find(d => getDay(d) === dayIndex);
+        if (!matchingDay) continue;
 
-      const plannedDate = formatDateISO(matchingDay);
-      const key = `${item.id}__${plannedDate}`;
+        const plannedDate = formatDateISO(matchingDay);
+        const key = `${item.id}__${plannedDate}`;
 
-      if (alreadyPulledKeys.has(key)) continue;  // déjà en base
-      if (skippedKeys.has(key)) continue;         // l'utilisateur a volontairement supprimé
-      if (plannedKeys.has(key)) continue;         // déjà dans ce batch
-      plannedKeys.add(key);
+        if (alreadyPulledKeys.has(key)) continue;  // déjà en base
+        if (skippedKeys.has(key)) continue;         // l'utilisateur a volontairement supprimé
+        if (plannedKeys.has(key)) continue;         // déjà dans ce batch
+        plannedKeys.add(key);
 
-      toInsert.push({
-        user_id: user.id,
-        title: item.title,
-        category: item.category,
-        planned_date: plannedDate,
-        week_start: weekStartISO,
-        backlog_id: item.id,
-      });
+        toInsert.push({
+          user_id: user.id,
+          title: item.title,
+          category: item.category,
+          planned_date: plannedDate,
+          week_start: week.startISO,
+          backlog_id: item.id,
+        });
+      }
     }
 
     if (toInsert.length === 0) return false;
