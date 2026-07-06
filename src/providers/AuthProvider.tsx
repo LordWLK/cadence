@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!supabase) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- init synchrone au montage (pas de client Supabase)
       setIsLoading(false);
       return;
     }

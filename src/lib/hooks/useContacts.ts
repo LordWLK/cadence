@@ -70,6 +70,7 @@ export function useContacts() {
   }, [supabase, user]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- chargement des contacts au montage
     load();
   }, [load]);
 

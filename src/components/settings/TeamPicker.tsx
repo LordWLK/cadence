@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Search, Plus, X, Loader2 } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
 import type { SportPreference } from '@/lib/supabase/types';
 
 interface SearchResult {
@@ -22,7 +21,7 @@ interface TeamPickerProps {
   placeholder?: string;
 }
 
-export function TeamPicker({ sport, entityType, saved, onSearch, onAdd, onRemove, placeholder }: TeamPickerProps) {
+export function TeamPicker({ saved, onSearch, onAdd, onRemove, placeholder }: TeamPickerProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
@@ -30,6 +29,7 @@ export function TeamPicker({ sport, entityType, saved, onSearch, onAdd, onRemove
 
   useEffect(() => {
     if (!query.trim()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- reset des résultats quand la recherche est vidée
       setResults([]);
       return;
     }
@@ -69,6 +69,7 @@ export function TeamPicker({ sport, entityType, saved, onSearch, onAdd, onRemove
               className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-surface-elevated hover:bg-border transition-colors text-left"
             >
               {item.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- badge externe (TheSportsDB), hôte dynamique non configuré pour next/image
                 <img src={item.imageUrl} alt="" loading="lazy" className="w-6 h-6 rounded object-contain bg-white/5" />
               )}
               <div className="flex-1 min-w-0">

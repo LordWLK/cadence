@@ -62,6 +62,7 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
   }, [getByWeek, selectedCinemaId, selectedDate]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- chargement des séances déjà sélectionnées
     loadSelected();
   }, [loadSelected]);
 

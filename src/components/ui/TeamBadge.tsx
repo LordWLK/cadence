@@ -29,6 +29,7 @@ export function TeamBadge({ src, alt = '', size = 24, className = '' }: TeamBadg
   }
 
   return (
+    // eslint-disable-next-line @next/next/no-img-element -- badge externe (TheSportsDB), hôte dynamique non configuré pour next/image
     <img
       src={src}
       alt={alt}

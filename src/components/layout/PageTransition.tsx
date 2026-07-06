@@ -32,11 +32,14 @@ export function PageTransition({ children }: PageTransitionProps) {
     const prevIndex = getNavIndex(prevPath.current);
     const currIndex = getNavIndex(pathname);
 
+    // Déclenche l'animation de transition selon le sens de navigation.
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (prevIndex !== -1 && currIndex !== -1 && prevIndex !== currIndex) {
       setAnimClass(currIndex > prevIndex ? 'page-slide-left' : 'page-slide-right');
     } else {
       setAnimClass('page-fade');
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     prevPath.current = pathname;
 

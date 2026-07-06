@@ -1,4 +1,5 @@
 import type { Checkin } from '@/lib/supabase/types';
+import { getTodayISO } from '@/lib/utils/dates';
 
 /**
  * Calculate the current streak of consecutive days with at least one check-in.
@@ -14,12 +15,12 @@ export function calculateStreak(checkins: Checkin[]): {
   // Get unique dates sorted descending
   const uniqueDates = [...new Set(checkins.map((c) => c.date))].sort((a, b) => b.localeCompare(a));
 
-  const today = new Date().toISOString().split('T')[0];
+  // Date du jour en HEURE LOCALE (les check-ins sont keyés en local, pas en UTC).
+  const today = getTodayISO();
   const todayDone = uniqueDates[0] === today;
 
   // Calculate current streak (starting from today or yesterday)
   let current = 0;
-  const startDate = new Date(todayDone ? today : uniqueDates[0] <= today ? uniqueDates[0] : today);
 
   // Start from today and go backwards
   const checkDate = new Date(today);

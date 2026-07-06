@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Camera, X, Loader2, RotateCcw, Check, Image } from 'lucide-react';
+import { Camera, X, Loader2, RotateCcw, Check, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 interface PhotoOCRProps {
@@ -169,6 +169,7 @@ export function PhotoOCR({ onTextExtracted, onPhotoReady, disabled }: PhotoOCRPr
       {/* Image preview */}
       {preview && (
         <div className="flex gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element -- aperçu local en data URL (ObjectURL), pas optimisable par next/image */}
           <img
             src={preview}
             alt="Photo capturee"
@@ -236,7 +237,7 @@ export function PhotoOCR({ onTextExtracted, onPhotoReady, disabled }: PhotoOCRPr
         {/* Save photo button (always available when we have a photo) */}
         {(status === 'done' || status === 'error') && !photoSaved && (
           <Button type="button" size="sm" variant="secondary" onClick={handleSavePhoto}>
-            <Image size={14} />
+            <ImageIcon size={14} />
             Enregistrer la photo
           </Button>
         )}

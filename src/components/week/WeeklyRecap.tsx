@@ -28,6 +28,7 @@ export function WeeklyRecap() {
   const weISO = useMemo(() => formatDateISO(weekEnd), [weekEnd]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- init synchrone quand non connecté
     if (!user) { setLoading(false); return; }
     const load = async () => {
       const prevStart = formatDateISO(subDays(weekStart, 7));

@@ -16,7 +16,7 @@ const CHIP_OFF = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-mute
 export function DayScroller({ days, selected, onChange }: DayScrollerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Scroll to selected or today on mount
+  // Scroll to selected or today on mount uniquement (pas à chaque changement de sélection)
   useEffect(() => {
     if (!scrollRef.current) return;
     const targetIso = selected || formatDateISO(new Date());
@@ -24,10 +24,8 @@ export function DayScroller({ days, selected, onChange }: DayScrollerProps) {
     if (el) {
       el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'instant' });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- centrage au montage uniquement
   }, []);
-
-  // Group days by week for visual separation
-  let currentWeekLabel = '';
 
   return (
     <div className="space-y-1.5">
@@ -36,13 +34,13 @@ export function DayScroller({ days, selected, onChange }: DayScrollerProps) {
         className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1"
         style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}
       >
-        {days.map((day) => {
+        {days.map((day, i) => {
           const iso = formatDateISO(day);
           const isSelected = selected === iso;
           const today = isToday(day);
           const weekLabel = formatDate(day, "'S'II");
-          const showSep = weekLabel !== currentWeekLabel && currentWeekLabel !== '';
-          currentWeekLabel = weekLabel;
+          // Séparateur entre semaines : comparer au jour précédent (sans variable mutée).
+          const showSep = i > 0 && weekLabel !== formatDate(days[i - 1], "'S'II");
 
           return (
             <div key={iso} className="flex items-center">

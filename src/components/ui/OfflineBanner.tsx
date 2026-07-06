@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { WifiOff, RefreshCw, Wifi } from 'lucide-react';
+import { WifiOff, RefreshCw } from 'lucide-react';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useToast } from '@/components/ui/Toast';
 

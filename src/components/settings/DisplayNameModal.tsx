@@ -55,7 +55,7 @@ export function DisplayNameModal() {
       >
         <div className="flex items-center gap-2">
           <User size={20} style={{ color: 'var(--color-primary)' }} />
-          <h2 id="display-name-title" className="font-semibold">Comment tu t'appelles ?</h2>
+          <h2 id="display-name-title" className="font-semibold">Comment tu t&apos;appelles ?</h2>
         </div>
         <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
           Ce nom sera visible par tes proches quand tu partages des activités.

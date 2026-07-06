@@ -6,7 +6,6 @@ import { useCheckins } from '@/lib/hooks/useCheckins';
 import { getDateRangeISO, groupByDate, formatDateISO } from '@/lib/utils/dates';
 import { subDays, format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { Checkin } from '@/lib/supabase/types';
 
 interface ChartData {
   date: string;

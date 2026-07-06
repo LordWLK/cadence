@@ -7,7 +7,7 @@ import { useActivities } from '@/lib/hooks/useActivities';
 import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { useAuth } from '@/providers/AuthProvider';
 import { MOOD_EMOJIS } from '@/lib/config/constants';
-import { Sun, Moon, Heart, CalendarPlus, Tv, CheckCircle } from 'lucide-react';
+import { Sun, Moon, CalendarPlus, Tv, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';

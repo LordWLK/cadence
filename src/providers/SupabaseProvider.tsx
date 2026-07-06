@@ -9,6 +9,10 @@ const SupabaseContext = createContext<SupabaseClient<Database> | null>(null);
 
 export function SupabaseProvider({ children }: { children: ReactNode }) {
   const { config } = useConfig();
+  // On extrait les valeurs lues par le useMemo pour que ses dépendances correspondent
+  // exactement (sinon le React Compiler ne peut pas préserver la mémoïsation).
+  const configUrl = config?.supabaseUrl;
+  const configKey = config?.supabaseAnonKey;
 
   const client = useMemo(() => {
     // Try env vars first
@@ -26,15 +30,15 @@ export function SupabaseProvider({ children }: { children: ReactNode }) {
     }
 
     // Fallback to config from localStorage
-    if (!config) return null;
-    return createClient<Database>(config.supabaseUrl, config.supabaseAnonKey, {
+    if (!configUrl || !configKey) return null;
+    return createClient<Database>(configUrl, configKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
       },
     });
-  }, [config?.supabaseUrl, config?.supabaseAnonKey]);
+  }, [configUrl, configKey]);
 
   return (
     <SupabaseContext.Provider value={client}>

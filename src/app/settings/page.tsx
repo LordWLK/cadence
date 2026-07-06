@@ -16,7 +16,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 export default function SettingsPage() {
-  const { config, sportConfig, updateConfig, updateSportConfig, resetConfig, isConfigured, hasEnvVars } = useConfig();
+  const { config, updateConfig, updateSportConfig, resetConfig, isConfigured, hasEnvVars } = useConfig();
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { profile, update: updateProfile } = useProfile();
@@ -34,14 +34,18 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && isNotificationSupported()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- lecture de la permission au montage
       setNotifPermission(getNotificationPermission());
     }
   }, []);
 
   useEffect(() => {
     if (config && !hasEnvVars) {
+      // Pré-remplir les champs depuis la config stockée (client-only).
+      /* eslint-disable react-hooks/set-state-in-effect */
       setSupabaseUrl(config.supabaseUrl);
       setSupabaseAnonKey(config.supabaseAnonKey);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [config, hasEnvVars]);
 

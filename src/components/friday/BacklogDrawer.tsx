@@ -5,7 +5,6 @@ import { useBacklog } from '@/lib/hooks/useBacklog';
 import { useBacklogShares, type BacklogShareInfo } from '@/lib/hooks/useBacklogShares';
 import { useAuth } from '@/providers/AuthProvider';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
-import { formatDate, formatDateISO } from '@/lib/utils/dates';
 import { DayScroller } from './DayScroller';
 import { RecurrenceSection, DAY_LABELS, FREQ_LABELS } from './RecurrenceSection';
 import { ShareSelector, type ShareTarget } from './ShareSelector';

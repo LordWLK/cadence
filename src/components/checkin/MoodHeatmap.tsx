@@ -16,6 +16,7 @@ export function MoodHeatmap() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- init synchrone quand non connecté
     if (!user) { setLoading(false); return; }
     const load = async () => {
       const { startISO, endISO } = getDateRangeISO(90);

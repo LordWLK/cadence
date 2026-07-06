@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useAuth } from '@/providers/AuthProvider';
@@ -17,6 +17,7 @@ export function MoodByDay() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- init synchrone quand non connecté
     if (!user) { setLoading(false); return; }
     const load = async () => {
       const { startISO, endISO } = getDateRangeISO(90);

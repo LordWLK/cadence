@@ -110,7 +110,7 @@ function LandingPage() {
               <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
                 Ce site doit être ouvert dans{' '}
                 <span className="font-medium text-[var(--color-text)]">Safari</span>{' '}
-                sur ton iPhone — pas dans Chrome ni l'app Instagram.
+                sur ton iPhone — pas dans Chrome ni l&apos;app Instagram.
               </p>
               <div className="flex items-center gap-2 mt-2 p-2 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)]">
                 <span className="text-lg">🧭</span>
@@ -156,17 +156,17 @@ function LandingPage() {
               <span className="text-xs font-bold text-[var(--color-primary)] bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)] rounded-full w-5 h-5 flex items-center justify-center">3</span>
             </div>
             <div className="space-y-2 pr-6">
-              <p className="font-semibold text-sm">"Sur l'écran d'accueil"</p>
+              <p className="font-semibold text-sm">&quot;Sur l&apos;écran d&apos;accueil&quot;</p>
               <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
                 Sélectionne{' '}
-                <span className="font-medium text-[var(--color-text)]">"Sur l'écran d'accueil"</span>
+                <span className="font-medium text-[var(--color-text)]">&quot;Sur l&apos;écran d&apos;accueil&quot;</span>
                 {' '}puis <span className="font-medium text-[var(--color-text)]">Ajouter</span>.
               </p>
               <div className="flex items-center gap-2 mt-2 p-2.5 bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)]">
                 <CadenceIcon className="w-8 h-8" />
                 <div>
                   <p className="text-xs font-semibold">Cadence</p>
-                  <p className="text-[10px] text-[var(--color-text-dim)]">Écran d'accueil</p>
+                  <p className="text-[10px] text-[var(--color-text-dim)]">Écran d&apos;accueil</p>
                 </div>
                 <div className="ml-auto flex items-center gap-1 text-xs text-[var(--color-success)] font-medium">
                   <Check size={12} /> Installé

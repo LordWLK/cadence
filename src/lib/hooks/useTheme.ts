@@ -9,11 +9,14 @@ export function useTheme() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // Init client au montage (localStorage indisponible côté serveur → doit être un effet).
+    /* eslint-disable react-hooks/set-state-in-effect */
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
     const initial = stored || 'light';
     setThemeState(initial);
     document.documentElement.setAttribute('data-theme', initial);
     setMounted(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const setTheme = useCallback((t: Theme) => {

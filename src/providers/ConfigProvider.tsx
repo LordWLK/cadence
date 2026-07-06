@@ -31,9 +31,12 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
   const hasEnvVars = hasEnvSupabase();
 
   useEffect(() => {
+    // Init client au montage (config en localStorage → doit être un effet, pas d'accès SSR).
+    /* eslint-disable react-hooks/set-state-in-effect */
     setConfigState(getConfig());
     setSportConfigState(getSportConfig());
     setMounted(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const updateConfig = useCallback((newConfig: AppConfig) => {

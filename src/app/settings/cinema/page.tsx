@@ -25,6 +25,7 @@ export default function CinemaSettingsPage() {
   }, [user, getAll]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- chargement des préférences au montage
     loadPrefs();
   }, [loadPrefs]);
 
@@ -33,7 +34,7 @@ export default function CinemaSettingsPage() {
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Cinémas favoris</h1>
         <Card className="text-center py-8 space-y-4">
-          <p className="text-text-muted">Connecte-toi d'abord</p>
+          <p className="text-text-muted">Connecte-toi d&apos;abord</p>
           <Link href="/login"><Button><LogIn size={16} /> Se connecter</Button></Link>
         </Card>
       </div>
@@ -54,9 +55,6 @@ export default function CinemaSettingsPage() {
       loadPrefs();
     }
   };
-
-  // Group cinemas by city
-  const cities = [...new Set(UGC_CINEMAS.map(c => c.city))];
 
   const filtered = search.trim()
     ? UGC_CINEMAS.filter(c =>

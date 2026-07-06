@@ -36,6 +36,7 @@ export function Onboarding({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const done = localStorage.getItem(STORAGE_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- affichage de l'onboarding au 1er lancement (localStorage)
       if (!done) setShow(true);
     }
   }, []);

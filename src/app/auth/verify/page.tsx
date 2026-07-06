@@ -6,6 +6,11 @@ import { Button } from '@/components/ui/Button';
 import { CadenceLogoStacked } from '@/components/ui/CadenceLogo';
 import { Check, ExternalLink, Loader2 } from 'lucide-react';
 
+function isPwa(): boolean {
+  return window.matchMedia('(display-mode: standalone)').matches
+    || (navigator as unknown as { standalone?: boolean }).standalone === true;
+}
+
 export default function AuthVerifyPage() {
   const supabase = useSupabase();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -13,8 +18,11 @@ export default function AuthVerifyPage() {
 
   useEffect(() => {
     if (!supabase) {
+      // Init synchrone au montage quand Supabase n'est pas configuré.
+      /* eslint-disable react-hooks/set-state-in-effect */
       setStatus('error');
       setErrorMsg('Supabase non configuré');
+      /* eslint-enable react-hooks/set-state-in-effect */
       return;
     }
 
@@ -58,11 +66,6 @@ export default function AuthVerifyPage() {
       });
     }
   }, [supabase]);
-
-  const isPwa = () => {
-    return window.matchMedia('(display-mode: standalone)').matches
-      || (navigator as unknown as { standalone?: boolean }).standalone === true;
-  };
 
   // Build URL with tokens so the PWA standalone context can pick them up
   const [pwaUrl, setPwaUrl] = useState('/');

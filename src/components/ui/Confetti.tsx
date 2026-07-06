@@ -17,6 +17,8 @@ export function Confetti({ active }: { active: boolean }) {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
+    // Génère les particules quand l'animation s'active (effet de bord visuel).
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (!active) { setParticles([]); return; }
 
     const newParticles: Particle[] = Array.from({ length: 24 }, (_, i) => ({
@@ -30,6 +32,7 @@ export function Confetti({ active }: { active: boolean }) {
     setParticles(newParticles);
 
     const timer = setTimeout(() => setParticles([]), 1200);
+    /* eslint-enable react-hooks/set-state-in-effect */
     return () => clearTimeout(timer);
   }, [active]);
 

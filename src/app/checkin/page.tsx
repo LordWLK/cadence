@@ -67,7 +67,7 @@ export default function CheckinPage() {
 
       {todayCheckins.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-text-dim uppercase tracking-wide">Aujourd'hui</p>
+          <p className="text-xs text-text-dim uppercase tracking-wide">Aujourd&apos;hui</p>
           <div className="flex gap-2">
             {todayCheckins.map((c) => (
               <Card key={c.id} className="flex-1">

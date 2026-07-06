@@ -31,6 +31,7 @@ export default function SportsSettingsPage() {
     setLoading(false);
   }, [user, getAll]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- chargement des préférences au montage
   useEffect(() => { loadPrefs(); }, [loadPrefs]);
 
   if (!user) {
@@ -38,7 +39,7 @@ export default function SportsSettingsPage() {
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Preferences sport</h1>
         <Card className="text-center py-8 space-y-4">
-          <p className="text-text-muted">Connecte-toi d'abord</p>
+          <p className="text-text-muted">Connecte-toi d&apos;abord</p>
           <Link href="/login"><Button><LogIn size={16} /> Se connecter</Button></Link>
         </Card>
       </div>

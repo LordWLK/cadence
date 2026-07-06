@@ -2,7 +2,6 @@
 
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
-import { EventBadge } from './EventBadge';
 import { ACTIVITY_CATEGORIES, MOOD_EMOJIS, MOOD_LABELS, SPORT_HEX } from '@/lib/config/constants';
 import { formatDate, getDayName } from '@/lib/utils/dates';
 import { X, Sun, Moon, Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles, Zap, Eye, Pencil } from 'lucide-react';

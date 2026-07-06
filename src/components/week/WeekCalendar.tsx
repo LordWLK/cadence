@@ -10,7 +10,7 @@ import { useActivityShares, type ActivityShareInfo } from '@/lib/hooks/useActivi
 import { useBacklog } from '@/lib/hooks/useBacklog';
 import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { useAuth } from '@/providers/AuthProvider';
-import { getWeekStart, getWeekEnd, getWeekDays, formatDate, formatDateISO, isToday } from '@/lib/utils/dates';
+import { getWeekStart, getWeekEnd, getWeekDays, formatDateISO, isToday } from '@/lib/utils/dates';
 import { ChevronLeft, ChevronRight, CalendarCheck } from 'lucide-react';
 import { addWeeks, format } from 'date-fns';
 import type { Checkin, WeeklyActivity, SelectedEvent } from '@/lib/supabase/types';
@@ -87,6 +87,7 @@ export function WeekCalendar() {
   }, [user, wsISO, weISO, currentWeekStart, getCheckins, getActivities, getEvents, getShareInfo, autoPopulateRecurring]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- chargement des données de la semaine
     loadData();
   }, [loadData]);
 

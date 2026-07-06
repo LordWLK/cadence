@@ -25,6 +25,7 @@ export const MovieCard = memo(function MovieCard({ movie, onToggle, addedShowtim
         <div className="flex gap-3">
           {/* Poster */}
           {movie.posterUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- affiche UGC (hôte externe), non configuré pour next/image
             <img
               src={movie.posterUrl}
               alt={movie.title}

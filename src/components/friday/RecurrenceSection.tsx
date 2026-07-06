@@ -1,6 +1,6 @@
 'use client';
 
-import { Repeat, CalendarClock } from 'lucide-react';
+import { Repeat } from 'lucide-react';
 
 const DAYS_OF_WEEK = [
   { id: 'lundi', label: 'Lun' },

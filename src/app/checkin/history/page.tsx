@@ -33,6 +33,7 @@ export default function HistoryPage() {
   const [editNote, setEditNote] = useState('');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- init synchrone quand non connecté
     if (!user) { setLoading(false); return; }
     const load = async () => {
       const end = new Date();

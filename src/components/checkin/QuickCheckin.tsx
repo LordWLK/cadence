@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MOOD_EMOJIS, MOOD_HEX } from '@/lib/config/constants';
+import { MOOD_EMOJIS } from '@/lib/config/constants';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { hapticSelect, hapticSuccess, hapticError } from '@/lib/utils/haptics';
 import { getTimeOfDay, getTodayISO } from '@/lib/utils/dates';
