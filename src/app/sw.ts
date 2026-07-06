@@ -27,6 +27,19 @@ const serwist = new Serwist({
         ],
       }),
     },
+    // Sport team badges / images — cache first (long-lived)
+    // ⚠ Doit être déclaré AVANT le matcher générique thesportsdb.com : Serwist retient
+    // la PREMIÈRE règle qui matche. Placé après, le matcher générique interceptait tout
+    // et cette règle CacheFirst n'était jamais atteinte.
+    {
+      matcher: ({ url }) => url.hostname === 'www.thesportsdb.com' && url.pathname.startsWith('/images/'),
+      handler: new CacheFirst({
+        cacheName: "sport-images",
+        plugins: [
+          new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 }),
+        ],
+      }),
+    },
     // TheSportsDB API — stale while revalidate
     {
       matcher: ({ url }) => url.hostname === 'www.thesportsdb.com',
@@ -34,16 +47,6 @@ const serwist = new Serwist({
         cacheName: "sportsdb-api",
         plugins: [
           new ExpirationPlugin({ maxEntries: 128, maxAgeSeconds: 60 * 60 * 6 }),
-        ],
-      }),
-    },
-    // Sport team badges / images — cache first (long-lived)
-    {
-      matcher: ({ url }) => url.hostname === 'www.thesportsdb.com' && url.pathname.startsWith('/images/'),
-      handler: new CacheFirst({
-        cacheName: "sport-images",
-        plugins: [
-          new ExpirationPlugin({ maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 }),
         ],
       }),
     },

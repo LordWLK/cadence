@@ -31,21 +31,25 @@ export interface PendingCheckin {
   created_at: string;
 }
 
-export async function addToQueue(checkin: Omit<PendingCheckin, 'id' | 'created_at'>): Promise<void> {
+export async function addToQueue(
+  checkin: Omit<PendingCheckin, 'id' | 'created_at'> & { created_at?: string }
+): Promise<void> {
+  // Ne PAS avaler l'erreur : l'appelant doit savoir si la mise en file a échoué,
+  // sinon un check-in hors-ligne peut être silencieusement perdu.
+  const db = await openDB();
   try {
-    const db = await openDB();
     const tx = db.transaction(STORE_NAME, 'readwrite');
     tx.objectStore(STORE_NAME).add({
       ...checkin,
-      created_at: new Date().toISOString(),
+      // Conserve le created_at d'origine s'il est fourni (pour rejouer à la bonne heure).
+      created_at: checkin.created_at ?? new Date().toISOString(),
     });
     await new Promise<void>((resolve, reject) => {
       tx.oncomplete = () => resolve();
       tx.onerror = () => reject(tx.error);
     });
+  } finally {
     db.close();
-  } catch (e) {
-    console.error('[OfflineQueue] Failed to add:', e);
   }
 }
 

@@ -60,46 +60,81 @@ export function scheduleNotification(
 }
 
 // ─── Daily reminders ─────────────────────────────────────────────────────────
-export function scheduleDailyReminders(): Array<ReturnType<typeof setTimeout>> {
-  const timers: Array<ReturnType<typeof setTimeout>> = [];
-  const today = new Date();
+// Les rappels reposent sur setTimeout : ils ne se déclenchent que pendant que l'app
+// est ouverte. La version précédente ne les programmait qu'une fois (au clic « Activer »)
+// et jamais pour les jours suivants. On planifie désormais la PROCHAINE occurrence et on
+// réarme automatiquement après chaque déclenchement. La fonction est idempotente : un
+// nouvel appel (ex. au démarrage de l'app) annule les timers précédents.
 
-  // Morning 8:00
-  const morning = new Date(today);
-  morning.setHours(8, 0, 0, 0);
-  const m = scheduleNotification(
+let dailyTimers: Array<ReturnType<typeof setTimeout>> = [];
+
+/** Prochaine occurrence à `hour:minute`, aujourd'hui si encore à venir, sinon demain. */
+function nextDailyOccurrence(hour: number, minute: number, from: Date): Date {
+  const next = new Date(from);
+  next.setHours(hour, minute, 0, 0);
+  if (next.getTime() <= from.getTime()) next.setDate(next.getDate() + 1);
+  return next;
+}
+
+/** Prochain jour donné (0=dim..6=sam) à `hour:minute`. */
+function nextWeekdayOccurrence(weekday: number, hour: number, minute: number, from: Date): Date {
+  const next = new Date(from);
+  next.setHours(hour, minute, 0, 0);
+  let addDays = (weekday - next.getDay() + 7) % 7;
+  if (addDays === 0 && next.getTime() <= from.getTime()) addDays = 7;
+  next.setDate(next.getDate() + addDays);
+  return next;
+}
+
+function scheduleRecurring(
+  computeNext: (from: Date) => Date,
+  title: string,
+  body: string,
+  url: string
+) {
+  const arm = () => {
+    const now = new Date();
+    const target = computeNext(now);
+    const delay = target.getTime() - now.getTime();
+    const timer = setTimeout(() => {
+      showNotification(title, { body, data: { url } });
+      arm(); // réarme pour la prochaine occurrence
+    }, delay);
+    dailyTimers.push(timer);
+  };
+  arm();
+}
+
+export function cancelDailyReminders(): void {
+  for (const t of dailyTimers) clearTimeout(t);
+  dailyTimers = [];
+}
+
+export function scheduleDailyReminders(): void {
+  if (typeof window === 'undefined') return;
+  cancelDailyReminders(); // idempotent : pas de doublons de timers
+
+  scheduleRecurring(
+    (from) => nextDailyOccurrence(8, 0, from),
     'Cadence — Check-in matin',
     'Comment tu te sens ce matin ?',
-    morning,
     '/checkin'
   );
-  if (m) timers.push(m);
 
-  // Evening 21:00
-  const evening = new Date(today);
-  evening.setHours(21, 0, 0, 0);
-  const e = scheduleNotification(
+  scheduleRecurring(
+    (from) => nextDailyOccurrence(21, 0, from),
     'Cadence — Check-in soir',
     "Qu'est-ce que t'as compris aujourd'hui ?",
-    evening,
     '/checkin'
   );
-  if (e) timers.push(e);
 
-  // Friday 18:00
-  if (today.getDay() === 5) {
-    const friday = new Date(today);
-    friday.setHours(18, 0, 0, 0);
-    const f = scheduleNotification(
-      'Cadence — Planification',
-      'Planifie tes trucs cool pour la semaine prochaine !',
-      friday,
-      '/friday'
-    );
-    if (f) timers.push(f);
-  }
-
-  return timers;
+  // Vendredi 18h
+  scheduleRecurring(
+    (from) => nextWeekdayOccurrence(5, 18, 0, from),
+    'Cadence — Planification',
+    'Planifie tes trucs cool pour la semaine prochaine !',
+    '/friday'
+  );
 }
 
 // ─── Match reminder (1h before) ─────────────────────────────────────────────

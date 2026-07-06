@@ -5,7 +5,7 @@ import { Search, X, Sun, Moon } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { MOOD_EMOJIS } from '@/lib/config/constants';
 import { useCheckins } from '@/lib/hooks/useCheckins';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { Checkin } from '@/lib/supabase/types';
 
@@ -105,7 +105,7 @@ export function SearchNotes() {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-lg">{MOOD_EMOJIS[c.mood - 1]}</span>
                     <span className="text-xs text-[var(--color-text-muted)]">
-                      {format(new Date(c.date), 'EEEE dd MMM yyyy', { locale: fr })}
+                      {format(parseISO(c.date), 'EEEE dd MMM yyyy', { locale: fr })}
                     </span>
                   </div>
                   {c.note && (

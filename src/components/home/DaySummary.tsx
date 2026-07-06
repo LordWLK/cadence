@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/Card';
 import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useActivities } from '@/lib/hooks/useActivities';
@@ -23,7 +23,19 @@ export function DaySummary() {
   const [activities, setActivities] = useState<WeeklyActivity[]>([]);
   const [events, setEvents] = useState<SelectedEvent[]>([]);
 
-  const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+  const [today, setToday] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+
+  // Si la PWA reste ouverte au passage de minuit, « aujourd'hui » resterait figé sur
+  // la veille. On réévalue la date quand l'app repasse au premier plan.
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        setToday(format(new Date(), 'yyyy-MM-dd'));
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, []);
 
   useEffect(() => {
     if (!user) return;

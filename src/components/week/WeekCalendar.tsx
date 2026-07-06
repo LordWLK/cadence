@@ -34,6 +34,9 @@ export function WeekCalendar() {
   // Mémorise les semaines déjà auto-populées dans cette session pour éviter
   // d'appeler autoPopulateRecurring à chaque changement d'onglet
   const populatedWeeksRef = useRef<Set<string>>(new Set());
+  // Jeton de chargement : une réponse en retard (navigation rapide entre semaines)
+  // ne doit pas écraser les données de la semaine actuellement affichée.
+  const loadTokenRef = useRef(0);
 
   // Memoize dates pour éviter les re-runs infinis de useEffect
   const currentWeekStart = useMemo(
@@ -54,6 +57,8 @@ export function WeekCalendar() {
 
   const loadData = useCallback(async () => {
     if (!user) return;
+    const token = ++loadTokenRef.current;
+    const isStale = () => token !== loadTokenRef.current;
     setLoading(true);
 
     // Auto-populer les récurrences pour la semaine visitée (une seule fois par session)
@@ -67,11 +72,13 @@ export function WeekCalendar() {
       getActivities(wsISO, weISO),
       getEvents(wsISO, weISO),
     ]);
+    if (isStale()) return; // une navigation plus récente a pris la main
     setCheckins(c);
     setActivities(a);
     setEvents(e);
     if (a.length > 0) {
       const info = await getShareInfo(a.map((x) => x.id));
+      if (isStale()) return;
       setShareMap(info);
     } else {
       setShareMap(new Map());
@@ -92,7 +99,7 @@ export function WeekCalendar() {
     <div className="space-y-3">
       {/* Navigation semaine */}
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => setWeekOffset(o => o - 1)}>
+        <Button variant="ghost" size="sm" aria-label="Semaine précédente" onClick={() => setWeekOffset(o => o - 1)}>
           <ChevronLeft size={16} />
         </Button>
         <div className="text-center">
@@ -116,7 +123,7 @@ export function WeekCalendar() {
             </button>
           )}
         </div>
-        <Button variant="ghost" size="sm" onClick={() => setWeekOffset(o => o + 1)}>
+        <Button variant="ghost" size="sm" aria-label="Semaine suivante" onClick={() => setWeekOffset(o => o + 1)}>
           <ChevronRight size={16} />
         </Button>
       </div>

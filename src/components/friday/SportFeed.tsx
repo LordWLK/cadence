@@ -8,18 +8,21 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Star, Flame, RefreshCw, Wifi, AlertCircle } from 'lucide-react';
 import { addDays } from 'date-fns';
+import { formatDateISO } from '@/lib/utils/dates';
 
 export function SportFeed() {
   const { fetchFeed, clearCache, yourMatches, bigMatches, loading, error } = useSportFeed();
   const { create, getByWeek, remove } = useSelectedEvents();
   // Map: event sourceApiId -> selected_events row id (for removal)
   const [selectedMap, setSelectedMap] = useState<Map<string, string>>(new Map());
+  // Événements en cours d'ajout/retrait — empêche le double-tap de dupliquer.
+  const [pending, setPending] = useState<Set<string>>(new Set());
 
   const today = useMemo(() => new Date(), []);
   const weekEnd = useMemo(() => addDays(today, 7), [today]);
 
-  const todayISO = useMemo(() => today.toISOString().split('T')[0], [today]);
-  const weekEndISO = useMemo(() => weekEnd.toISOString().split('T')[0], [weekEnd]);
+  const todayISO = useMemo(() => formatDateISO(today), [today]);
+  const weekEndISO = useMemo(() => formatDateISO(weekEnd), [weekEnd]);
 
   // Load already-selected events from DB
   const loadSelected = useCallback(async () => {
@@ -42,29 +45,42 @@ export function SportFeed() {
   }, [fetchFeed, today, weekEnd]);
 
   const handleToggle = async (event: SportFeedEvent) => {
-    const existingId = selectedMap.get(event.sourceApiId);
+    const key = event.sourceApiId;
+    if (pending.has(key)) return; // évite le double-tap
+    setPending(prev => new Set(prev).add(key));
+    try {
+      const existingId = selectedMap.get(key);
 
-    if (existingId) {
-      // Already selected → remove
-      await remove(existingId);
-      setSelectedMap(prev => {
-        const next = new Map(prev);
-        next.delete(event.sourceApiId);
+      if (existingId) {
+        // Already selected → remove
+        const ok = await remove(existingId);
+        if (ok) {
+          setSelectedMap(prev => {
+            const next = new Map(prev);
+            next.delete(key);
+            return next;
+          });
+        }
+      } else {
+        // Not selected → add
+        const result = await create({
+          sport: event.sport,
+          event_title: event.title,
+          event_date: event.date,
+          competition: event.competition,
+          is_big_match: event.isBigMatch,
+          source_api_id: event.sourceApiId,
+        });
+        if (result) {
+          setSelectedMap(prev => new Map(prev).set(key, result.id));
+        }
+      }
+    } finally {
+      setPending(prev => {
+        const next = new Set(prev);
+        next.delete(key);
         return next;
       });
-    } else {
-      // Not selected → add
-      const result = await create({
-        sport: event.sport,
-        event_title: event.title,
-        event_date: event.date,
-        competition: event.competition,
-        is_big_match: event.isBigMatch,
-        source_api_id: event.sourceApiId,
-      });
-      if (result) {
-        setSelectedMap(prev => new Map(prev).set(event.sourceApiId, result.id));
-      }
     }
   };
 
@@ -122,7 +138,7 @@ export function SportFeed() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-xs text-text-dim uppercase tracking-wide">Feed sportif</p>
-        <Button variant="ghost" size="sm" onClick={handleRefresh}>
+        <Button variant="ghost" size="sm" aria-label="Rafraîchir les matchs" onClick={handleRefresh}>
           <RefreshCw size={14} />
         </Button>
       </div>

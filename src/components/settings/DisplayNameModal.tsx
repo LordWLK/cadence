@@ -15,6 +15,7 @@ export function DisplayNameModal() {
   const { profile, update } = useProfile();
   const [name, setName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const shouldShow = Boolean(user) && profile !== null && !profile?.display_name;
@@ -28,10 +29,15 @@ export function DisplayNameModal() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed || saving) return;
     setSaving(true);
-    await update({ display_name: trimmed });
+    setError(null);
+    const result = await update({ display_name: trimmed });
     setSaving(false);
+    if (!result) {
+      // Sans ce message, un échec laissait l'utilisateur bloqué dans la modale sans explication.
+      setError("Impossible d'enregistrer ton prénom. Vérifie ta connexion et réessaie.");
+    }
   };
 
   return (
@@ -69,6 +75,9 @@ export function DisplayNameModal() {
           }}
           required
         />
+        {error && (
+          <p role="alert" className="text-sm" style={{ color: 'var(--color-error)' }}>{error}</p>
+        )}
         <Button type="submit" className="w-full" disabled={!name.trim() || saving}>
           {saving ? 'Enregistrement…' : 'Continuer'}
         </Button>

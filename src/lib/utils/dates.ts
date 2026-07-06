@@ -14,9 +14,7 @@ export function getNextWeekStart(date: Date = new Date()): Date {
 }
 
 export function getWeekDays(weekStart: Date): Date[] {
-  return eachDayOfInterval({ start: weekStart, end: addWeeks(weekStart, 0) }).length === 1
-    ? eachDayOfInterval({ start: weekStart, end: endOfWeek(weekStart, { weekStartsOn: 1 }) })
-    : eachDayOfInterval({ start: weekStart, end: endOfWeek(weekStart, { weekStartsOn: 1 }) });
+  return eachDayOfInterval({ start: weekStart, end: endOfWeek(weekStart, { weekStartsOn: 1 }) });
 }
 
 export function formatDate(date: Date | string, pattern: string = 'dd MMM'): string {
@@ -26,6 +24,16 @@ export function formatDate(date: Date | string, pattern: string = 'dd MMM'): str
 
 export function formatDateISO(date: Date): string {
   return format(date, 'yyyy-MM-dd');
+}
+
+/**
+ * Date du jour au format 'yyyy-MM-dd' en HEURE LOCALE.
+ * À utiliser partout au lieu de `new Date().toISOString().split('T')[0]`,
+ * qui renvoie la date UTC (fausse le soir/la nuit dans les fuseaux à offset positif
+ * et tôt le matin dans les fuseaux à offset négatif).
+ */
+export function getTodayISO(): string {
+  return format(new Date(), 'yyyy-MM-dd');
 }
 
 export function getDayName(date: Date): string {

@@ -15,7 +15,7 @@ import { PullToRefresh } from '@/components/ui/PullToRefresh';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { exportCheckinsCSV, exportCheckinsJSON } from '@/lib/utils/export';
 import { Sun, Moon, LogIn, Download, FileJson, Heart, Trash2, Edit3, Check, X } from 'lucide-react';
-import { subDays, format } from 'date-fns';
+import { subDays, format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Link from 'next/link';
 import type { Checkin } from '@/lib/supabase/types';
@@ -184,7 +184,7 @@ export default function HistoryPage() {
           Object.entries(grouped).map(([date, dayCheckins]) => (
             <Card key={date}>
               <p className="text-xs text-text-dim mb-2">
-                {format(new Date(date), 'EEEE dd MMMM', { locale: fr })}
+                {format(parseISO(date), 'EEEE dd MMMM', { locale: fr })}
               </p>
               <div className="space-y-2">
                 {dayCheckins.map((c) => (
@@ -251,7 +251,7 @@ export default function HistoryPage() {
                         <div className="flex items-center gap-2">
                           <span className="text-lg">{MOOD_EMOJIS[c.mood - 1]}</span>
                           <span className="text-xs text-text-muted">Energie: {c.energy}/10</span>
-                          <div className="ml-auto flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                          <div className="ml-auto flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 transition-opacity">
                             <button
                               onClick={() => {
                                 setEditTarget(c.id);

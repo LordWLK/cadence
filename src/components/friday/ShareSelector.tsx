@@ -120,7 +120,8 @@ export function ShareSelector({ value, onChange, compact = false }: ShareSelecto
                   <button
                     type="button"
                     onClick={() => toggleCanEdit(c.profile.user_id)}
-                    className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full shrink-0"
+                    aria-label={selected!.canEdit ? 'Autorisation : peut modifier (cliquer pour lecture seule)' : 'Autorisation : lecture seule (cliquer pour permettre la modification)'}
+                    className="flex items-center gap-1 text-[11px] px-2.5 py-1.5 rounded-full shrink-0"
                     style={{
                       backgroundColor: selected!.canEdit
                         ? 'color-mix(in srgb, var(--color-warning) 15%, transparent)'

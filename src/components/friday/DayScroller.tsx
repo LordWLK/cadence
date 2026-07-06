@@ -52,7 +52,8 @@ export function DayScroller({ days, selected, onChange }: DayScrollerProps) {
               <button
                 type="button"
                 data-day={iso}
-                onClick={() => onChange(isSelected ? '' : iso)}
+                aria-pressed={isSelected}
+                onClick={() => onChange(iso)}
                 className={`flex flex-col items-center min-w-[3rem] py-2 px-1.5 text-xs ${CHIP} ${isSelected ? CHIP_ON : CHIP_OFF} ${today && !isSelected ? 'ring-1 ring-[var(--color-border)]' : ''}`}
               >
                 <span className="font-medium capitalize">{formatDate(day, 'EEE')}</span>

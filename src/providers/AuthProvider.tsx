@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { useSupabase } from './SupabaseProvider';
 
@@ -68,13 +68,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) return;
     await supabase.auth.signOut();
     setSession(null);
+    // Purge le cache d'API Supabase du service worker : sinon les données personnelles
+    // du compte précédent restent servies hors-ligne après un changement de compte.
+    if (typeof caches !== 'undefined') {
+      try {
+        await caches.delete('supabase-api');
+      } catch { /* pas de service worker / cache absent */ }
+    }
   }, [supabase]);
 
-  return (
-    <AuthContext.Provider value={{ session, user: session?.user ?? null, isLoading, signIn, verifyOtp, signOut }}>
-      {children}
-    </AuthContext.Provider>
+  // Supabase émet un nouvel objet Session (donc un nouveau `session.user`) à chaque
+  // TOKEN_REFRESHED (~toutes les heures). Sans stabilisation, tous les hooks de données
+  // dépendant de `user` se relanceraient (refetch storm + flash de skeletons).
+  // On mémoïse `user` sur son id : tant que l'identité ne change pas, la référence reste
+  // stable même si l'objet Session est remplacé.
+  const userId = session?.user?.id ?? null;
+  const user = useMemo<User | null>(() => session?.user ?? null, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const value = useMemo(
+    () => ({ session, user, isLoading, signIn, verifyOtp, signOut }),
+    [session, user, isLoading, signIn, verifyOtp, signOut]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

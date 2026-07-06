@@ -37,8 +37,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // On autorise le zoom (accessibilité) : bloquer userScalable/maximumScale empêche
+  // les personnes malvoyantes d'agrandir le contenu.
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#f7f4ef",
   viewportFit: "cover",
 };

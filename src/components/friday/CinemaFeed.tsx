@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useCinemaFeed } from '@/lib/hooks/useCinemaFeed';
 import { useSelectedEvents } from '@/lib/hooks/useSelectedEvents';
 import { MovieCard } from './MovieCard';
@@ -16,6 +16,13 @@ import type { CinemaMovie } from '@/lib/types/cinema';
 interface CinemaFeedProps {
   preferredCinemaIds: string[];
 }
+
+// Clé locale (dans la vue courante = 1 cinéma + 1 date) utilisée par MovieCard.
+const localKey = (movieId: string, time: string) => `${movieId}-${time}`;
+// Identifiant global stocké en base : inclut cinéma + date pour éviter que la même
+// séance (même film/heure) d'un autre jour ou cinéma partage le même source_api_id.
+const globalId = (cinemaId: string, date: string, movieId: string, time: string) =>
+  `${cinemaId}__${date}__${movieId}__${time}`;
 
 export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
   const { movies, loading, error, cinemaName, fetchShowtimes } = useCinemaFeed();
@@ -35,35 +42,42 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
     }
   }, [selectedCinemaId, selectedDate, fetchShowtimes]);
 
-  // Load already-selected cinema events
+  // Load already-selected cinema events for the CURRENT cinema + date only.
   const loadSelected = useCallback(async () => {
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     const endStr = format(addDays(new Date(), 14), 'yyyy-MM-dd');
     const events = await getByWeek(todayStr, endStr);
     const map = new Map<string, string>();
     for (const ev of events) {
-      if (ev.sport === 'cinema' && ev.source_api_id) {
-        map.set(ev.source_api_id, ev.id);
+      if (ev.sport !== 'cinema' || !ev.source_api_id) continue;
+      // Nouveau format : cinemaId__date__movieId__time
+      const parts = ev.source_api_id.split('__');
+      if (parts.length < 4) continue; // ancien format → ignoré
+      const [cinemaId, date, movieId, time] = parts;
+      if (cinemaId === selectedCinemaId && date === selectedDate) {
+        map.set(localKey(movieId, time), ev.id);
       }
     }
     setAddedKeys(map);
-  }, [getByWeek]);
+  }, [getByWeek, selectedCinemaId, selectedDate]);
 
   useEffect(() => {
     loadSelected();
   }, [loadSelected]);
 
-  const handleToggle = async (movie: CinemaMovie, time: string) => {
-    const key = `${movie.id}-${time}`;
+  const handleToggle = useCallback(async (movie: CinemaMovie, time: string) => {
+    const key = localKey(movie.id, time);
     const existingId = addedKeys.get(key);
 
     if (existingId) {
-      await remove(existingId);
-      setAddedKeys(prev => {
-        const next = new Map(prev);
-        next.delete(key);
-        return next;
-      });
+      const ok = await remove(existingId);
+      if (ok) {
+        setAddedKeys(prev => {
+          const next = new Map(prev);
+          next.delete(key);
+          return next;
+        });
+      }
     } else {
       // Create event with date + time
       const eventDate = `${selectedDate}T${time.replace('h', ':')}:00`;
@@ -73,13 +87,15 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
         event_date: eventDate,
         competition: cinemaName || 'UGC',
         is_big_match: false,
-        source_api_id: key,
+        source_api_id: globalId(selectedCinemaId, selectedDate, movie.id, time),
       });
       if (result) {
         setAddedKeys(prev => new Map(prev).set(key, result.id));
       }
     }
-  };
+  }, [addedKeys, selectedCinemaId, selectedDate, cinemaName, create, remove]);
+
+  const addedShowtimeKeys = useMemo(() => new Set(addedKeys.keys()), [addedKeys]);
 
   if (preferredCinemaIds.length === 0) {
     return (
@@ -168,7 +184,7 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
               key={movie.id}
               movie={movie}
               onToggle={handleToggle}
-              addedShowtimes={new Set([...addedKeys.keys()])}
+              addedShowtimes={addedShowtimeKeys}
             />
           ))}
         </div>

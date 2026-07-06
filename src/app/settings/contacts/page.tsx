@@ -126,8 +126,8 @@ export default function ContactsSettingsPage() {
                 <>
                   <button
                     onClick={async () => {
-                      await accept(c.id);
-                      showToast('Demande acceptée', 'success');
+                      const ok = await accept(c.id);
+                      showToast(ok ? 'Demande acceptée' : "Échec de l'acceptation", ok ? 'success' : 'error');
                     }}
                     className="p-2 rounded-lg"
                     style={{
@@ -140,8 +140,8 @@ export default function ContactsSettingsPage() {
                   </button>
                   <button
                     onClick={async () => {
-                      await remove(c.id);
-                      showToast('Demande refusée', 'info');
+                      const ok = await remove(c.id);
+                      showToast(ok ? 'Demande refusée' : "Échec du refus", ok ? 'info' : 'error');
                     }}
                     className="p-2 rounded-lg"
                     style={{
@@ -170,8 +170,8 @@ export default function ContactsSettingsPage() {
               actions={
                 <button
                   onClick={async () => {
-                    await remove(c.id);
-                    showToast('Demande annulée', 'info');
+                    const ok = await remove(c.id);
+                    showToast(ok ? 'Demande annulée' : "Échec de l'annulation", ok ? 'info' : 'error');
                   }}
                   className="p-2 rounded-lg"
                   style={{ color: 'var(--color-text-muted)' }}
@@ -208,8 +208,8 @@ export default function ContactsSettingsPage() {
                 <button
                   onClick={async () => {
                     if (confirm(`Retirer ${c.profile.display_name || c.profile.email} de tes contacts ?`)) {
-                      await remove(c.id);
-                      showToast('Contact retiré', 'info');
+                      const ok = await remove(c.id);
+                      showToast(ok ? 'Contact retiré' : 'Échec du retrait', ok ? 'info' : 'error');
                     }
                   }}
                   className="p-2 rounded-lg"

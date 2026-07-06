@@ -28,6 +28,10 @@ export const MovieCard = memo(function MovieCard({ movie, onToggle, addedShowtim
             <img
               src={movie.posterUrl}
               alt={movie.title}
+              loading="lazy"
+              decoding="async"
+              width={56}
+              height={80}
               className="w-14 h-20 rounded-lg object-cover shrink-0"
               style={{ border: '1px solid var(--color-border)' }}
             />

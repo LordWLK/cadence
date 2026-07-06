@@ -17,16 +17,19 @@ export function EnergySlider({ value, onChange }: EnergySliderProps) {
   return (
     <div className="space-y-2">
       <div className="flex justify-between items-center">
-        <label className="text-sm text-text-muted">Niveau d&apos;energie</label>
+        <label htmlFor="energy-slider" className="text-sm text-text-muted">Niveau d&apos;energie</label>
         <span className={`text-lg font-bold ${getColor(value)}`}>{value}/10</span>
       </div>
       <div className="relative py-2">
         <input
+          id="energy-slider"
           type="range"
           min={1}
           max={10}
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
+          aria-label="Niveau d'énergie sur 10"
+          aria-valuetext={`${value} sur 10`}
           className="energy-slider w-full"
           style={{ '--slider-percent': `${percent}%` } as React.CSSProperties}
         />

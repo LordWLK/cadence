@@ -12,6 +12,12 @@ interface ConfirmDialogProps {
   variant?: 'danger' | 'default';
   onConfirm: () => void;
   onCancel: () => void;
+  /**
+   * Fermeture sans choix (Échap / clic sur le fond). Par défaut = onCancel.
+   * À fournir quand le bouton "Annuler" déclenche une action non neutre
+   * (ex. "Non, retirer") : la fermeture ne doit alors RIEN faire.
+   */
+  onDismiss?: () => void;
 }
 
 export function ConfirmDialog({
@@ -23,7 +29,9 @@ export function ConfirmDialog({
   variant = 'default',
   onConfirm,
   onCancel,
+  onDismiss,
 }: ConfirmDialogProps) {
+  const dismiss = onDismiss ?? onCancel;
   const overlayRef = useRef<HTMLDivElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -43,7 +51,7 @@ export function ConfirmDialog({
     if (!open) return;
     if (e.key === 'Escape') {
       e.preventDefault();
-      onCancel();
+      dismiss();
       return;
     }
     if (e.key === 'Tab' && dialogRef.current) {
@@ -59,7 +67,7 @@ export function ConfirmDialog({
         if (document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     }
-  }, [open, onCancel]);
+  }, [open, dismiss]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
@@ -82,7 +90,7 @@ export function ConfirmDialog({
       ref={overlayRef}
       className="fixed inset-0 z-[90] flex items-center justify-center px-6"
       style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}
-      onClick={(e) => { if (e.target === overlayRef.current) onCancel(); }}
+      onClick={(e) => { if (e.target === overlayRef.current) dismiss(); }}
     >
       <div
         ref={dialogRef}

@@ -27,11 +27,22 @@ export const DayColumn = memo(function DayColumn({ date, checkins, activities, e
 
   const dayLabel = getDayShort(date).replace('.', '').slice(0, 2).toUpperCase();
   const dayNumber = formatDate(date, 'dd');
+  const fullLabel = formatDate(date, 'EEEE d MMMM');
 
   return (
     <div
       onClick={onClick}
-      className="flex flex-col rounded-xl p-1 min-h-[120px] transition-all cursor-pointer active:scale-[0.97]"
+      role="button"
+      tabIndex={0}
+      aria-label={`Détail du ${fullLabel}`}
+      aria-pressed={isSelected}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+      className="flex flex-col rounded-xl p-1 min-h-[120px] transition-all cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
       style={{
         backgroundColor: isSelected
           ? 'color-mix(in srgb, var(--color-primary) 18%, var(--color-surface))'

@@ -2,12 +2,23 @@ import type { Checkin } from '@/lib/supabase/types';
 import { MOOD_LABELS } from '@/lib/config/constants';
 
 // ─── CSV export ──────────────────────────────────────────────────────────────
+/**
+ * Neutralise l'injection de formules (CSV injection) : un tableur interprète une
+ * cellule commençant par = + - @ (ou tab/CR) comme une formule. On préfixe alors
+ * d'une apostrophe, et on échappe les guillemets.
+ */
+function csvCell(value: string): string {
+  const needsFormulaGuard = /^[=+\-@\t\r]/.test(value);
+  const safe = needsFormulaGuard ? `'${value}` : value;
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
 export function checkinsToCSV(checkins: Checkin[]): string {
   const header = 'Date,Type,Humeur (1-5),Label humeur,Energie (1-10),Note';
   const rows = checkins.map((c) => {
     const moodLabel = MOOD_LABELS[c.mood - 1] || '';
-    const note = c.note ? `"${c.note.replace(/"/g, '""')}"` : '';
-    return `${c.date},${c.type === 'morning' ? 'Matin' : 'Soir'},${c.mood},${moodLabel},${c.energy},${note}`;
+    const note = c.note ? csvCell(c.note) : '';
+    return `${c.date},${c.type === 'morning' ? 'Matin' : 'Soir'},${c.mood},${csvCell(moodLabel)},${c.energy},${note}`;
   });
   return [header, ...rows].join('\n');
 }

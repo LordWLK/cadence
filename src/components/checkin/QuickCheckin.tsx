@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { MOOD_EMOJIS, MOOD_HEX } from '@/lib/config/constants';
 import { useCheckins } from '@/lib/hooks/useCheckins';
-import { hapticSelect, hapticSuccess } from '@/lib/utils/haptics';
-import { getTimeOfDay } from '@/lib/utils/dates';
-import { Check } from 'lucide-react';
+import { hapticSelect, hapticSuccess, hapticError } from '@/lib/utils/haptics';
+import { getTimeOfDay, getTodayISO } from '@/lib/utils/dates';
+import { Check, AlertCircle } from 'lucide-react';
 
 interface QuickCheckinProps {
   onDone?: () => void;
@@ -15,23 +15,29 @@ export function QuickCheckin({ onDone }: QuickCheckinProps) {
   const { create } = useCheckins();
   const [saving, setSaving] = useState(false);
   const [done, setDone] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const handleQuick = async (mood: number) => {
+    if (saving) return;
     hapticSelect();
     setSaving(true);
+    setFailed(false);
     const type = getTimeOfDay();
     const result = await create({
       type,
       mood,
       energy: 5,
       note: null,
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayISO(),
     });
     setSaving(false);
     if (result) {
       hapticSuccess();
       setDone(true);
       setTimeout(() => { setDone(false); onDone?.(); }, 1500);
+    } else {
+      hapticError();
+      setFailed(true);
     }
   };
 
@@ -48,6 +54,12 @@ export function QuickCheckin({ onDone }: QuickCheckinProps) {
   return (
     <div className="space-y-1.5">
       <p className="text-xs text-text-dim">Check-in express</p>
+      {failed && (
+        <div role="alert" className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-error)' }}>
+          <AlertCircle size={13} />
+          <span>Échec de l&apos;enregistrement. Réessaie.</span>
+        </div>
+      )}
       <div className="flex justify-between gap-1">
         {MOOD_EMOJIS.map((emoji, i) => {
           const mood = i + 1;

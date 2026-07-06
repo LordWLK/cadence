@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useConfig } from '@/providers/ConfigProvider';
 import { Card } from '@/components/ui/Card';
@@ -196,14 +197,16 @@ function LandingPage() {
 
 // ─── App home ─────────────────────────────────────────────────────────────────
 function AppHome() {
+  // Remonter le sous-arbre relance les effets de chargement de chaque section
+  // (refetch réel) sans rechargement complet du document ni splash screen.
+  const [refreshKey, setRefreshKey] = useState(0);
   const handleRefresh = async () => {
-    // Force re-mount children by toggling a key
-    window.location.reload();
+    setRefreshKey((k) => k + 1);
   };
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-      <div className="space-y-5 animate-stagger">
+      <div key={refreshKey} className="space-y-5 animate-stagger">
         <OfflineBanner />
         <div className="flex items-center justify-between">
           <CadenceLogoStacked className="w-28" />

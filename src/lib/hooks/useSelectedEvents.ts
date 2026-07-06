@@ -35,10 +35,15 @@ export function useSelectedEvents() {
     return (data ?? []) as SelectedEvent[];
   }, [supabase, user]);
 
-  const remove = useCallback(async (id: string) => {
-    if (!supabase) return;
-    await supabase.from('selected_events').delete().eq('id', id);
-  }, [supabase]);
+  const remove = useCallback(async (id: string): Promise<boolean> => {
+    if (!supabase || !user) return false;
+    const { error } = await supabase
+      .from('selected_events')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+    return !error;
+  }, [supabase, user]);
 
   return { create, getByWeek, remove, loading };
 }

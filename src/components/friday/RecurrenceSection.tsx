@@ -40,6 +40,9 @@ export function RecurrenceSection({ enabled, day, freq, onToggle, onDayChange, o
       <button
         type="button"
         onClick={onToggle}
+        role="switch"
+        aria-checked={enabled}
+        aria-label="Activer la récurrence"
         className="flex items-center gap-1.5 text-xs font-medium transition-colors active:scale-95"
         style={{ color: enabled ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
       >

@@ -33,8 +33,9 @@ export function MoodChart() {
 
       const end = new Date();
       const chartData: ChartData[] = [];
-      for (let i = 0; i <= range; i++) {
-        const d = subDays(end, range - i);
+      // Exactement `range` points (7 ou 30), du plus ancien à aujourd'hui inclus.
+      for (let i = 0; i < range; i++) {
+        const d = subDays(end, range - 1 - i);
         const dateStr = formatDateISO(d);
         const dayCheckins = grouped[dateStr] || [];
         const morning = dayCheckins.find(c => c.type === 'morning');

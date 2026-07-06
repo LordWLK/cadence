@@ -58,6 +58,14 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
     }
   }, [pullDistance, refreshing, onRefresh]);
 
+  const handleTouchCancel = useCallback(() => {
+    // Geste interrompu (touchcancel, ou doigt relevé sans franchir le seuil) :
+    // on annule proprement le tirage.
+    if (!pulling.current) return;
+    pulling.current = false;
+    if (!refreshing) setPullDistance(0);
+  }, [refreshing]);
+
   const progress = Math.min(pullDistance / THRESHOLD, 1);
   const isReady = pullDistance >= THRESHOLD;
 
@@ -66,6 +74,7 @@ export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
+      onTouchCancel={handleTouchCancel}
     >
       {/* Pull indicator */}
       <div

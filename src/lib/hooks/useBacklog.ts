@@ -3,8 +3,8 @@
 import { useCallback } from 'react';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useAuth } from '@/providers/AuthProvider';
-import { getWeekDays, formatDateISO } from '@/lib/utils/dates';
-import { addWeeks, getDay } from 'date-fns';
+import { getWeekDays, formatDateISO, getWeekStart, getTodayISO } from '@/lib/utils/dates';
+import { addWeeks, getDay, parseISO, differenceInCalendarWeeks, getDate } from 'date-fns';
 import type { BacklogActivity, BacklogActivityInsert, BacklogShare } from '@/lib/supabase/types';
 
 // Map day names to date-fns getDay() values (0=sunday, 1=monday, ...)
@@ -152,11 +152,11 @@ export function useBacklog() {
     if (!recurring || recurring.length === 0) return false;
 
     // 2. Construire la liste des semaines + jours à considérer
-    const weeks: Array<{ startISO: string; days: Date[] }> = [];
+    const weeks: Array<{ start: Date; startISO: string; days: Date[] }> = [];
     for (let i = 0; i < numberOfWeeks; i++) {
       const start = i === 0 ? weekStart : addWeeks(weekStart, i);
       const startISO = i === 0 ? weekStartISO : formatDateISO(start);
-      weeks.push({ startISO, days: getWeekDays(start) });
+      weeks.push({ start, startISO, days: getWeekDays(start) });
     }
     const allDayDates = weeks.flatMap(w => w.days.map(d => formatDateISO(d)));
 
@@ -194,6 +194,7 @@ export function useBacklog() {
     }> = [];
 
     const plannedKeys = new Set<string>();
+    const todayISO = getTodayISO();
 
     for (const week of weeks) {
       for (const item of recurring as BacklogActivity[]) {
@@ -203,7 +204,25 @@ export function useBacklog() {
         const matchingDay = week.days.find(d => getDay(d) === dayIndex);
         if (!matchingDay) continue;
 
+        // Respecter la fréquence de récurrence (weekly par défaut).
+        // - biweekly : une semaine sur deux, ancrée sur la semaine de création de l'item.
+        // - monthly  : uniquement la 1re occurrence de ce jour dans le mois (jour du mois <= 7).
+        const freq = item.recurrence_freq || 'weekly';
+        if (freq === 'biweekly') {
+          const anchorWeek = getWeekStart(parseISO(item.created_at));
+          if (Math.abs(differenceInCalendarWeeks(week.start, anchorWeek, { weekStartsOn: 1 })) % 2 !== 0) {
+            continue;
+          }
+        } else if (freq === 'monthly') {
+          if (getDate(matchingDay) > 7) continue;
+        }
+
         const plannedDate = formatDateISO(matchingDay);
+
+        // Ne pas créer d'occurrence récurrente dans le passé (jours déjà écoulés
+        // de la semaine courante).
+        if (plannedDate < todayISO) continue;
+
         const key = `${item.id}__${plannedDate}`;
 
         if (alreadyPulledKeys.has(key)) continue;  // déjà en base

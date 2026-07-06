@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<'email' | 'code'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
   const codeInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -56,6 +57,23 @@ export default function LoginPage() {
       setTimeout(() => codeInputRef.current?.focus(), 100);
     }
     // Success is handled by useAuth → user state change → redirect
+  };
+
+  // ─── Renvoyer réellement un nouveau code ─────────────────────────────────
+  const handleResend = async () => {
+    if (loading || !email) return;
+    setLoading(true);
+    setError(null);
+    setResendMsg(null);
+    const { error } = await signIn(email);
+    setLoading(false);
+    if (error) {
+      setError(error);
+    } else {
+      setResendMsg('Nouveau code envoyé ✓');
+      setCode('');
+      setTimeout(() => codeInputRef.current?.focus(), 100);
+    }
   };
 
   // ─── Code entry screen ───────────────────────────────────────────────────
@@ -100,6 +118,9 @@ export default function LoginPage() {
                 {error}
               </p>
             )}
+            {resendMsg && !error && (
+              <p className="text-[var(--color-success)] text-xs text-center">{resendMsg}</p>
+            )}
 
             <Button type="submit" className="w-full" size="lg" disabled={loading || code.length < 6}>
               {loading ? 'Vérification...' : 'Valider'}
@@ -107,8 +128,9 @@ export default function LoginPage() {
 
             <button
               type="button"
-              onClick={() => { setStep('email'); setError(null); setCode(''); }}
-              className="w-full text-center text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors"
+              onClick={handleResend}
+              disabled={loading}
+              className="w-full text-center text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text)] transition-colors disabled:opacity-50"
             >
               Pas reçu ? Renvoyer un code
             </button>

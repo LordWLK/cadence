@@ -5,7 +5,14 @@ import { useSupabase } from '@/providers/SupabaseProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { addToQueue, getPendingItems, removeFromQueue, isOnline, onOnline } from '@/lib/utils/offlineQueue';
 import { setBadge, clearBadge } from '@/lib/utils/pwaBadge';
+import { getTodayISO } from '@/lib/utils/dates';
 import type { Checkin, CheckinInsert } from '@/lib/supabase/types';
+
+// Verrou de synchronisation partagé entre toutes les instances de useCheckins.
+// useCheckins est monté simultanément par plusieurs composants (home, page check-in,
+// rappel) ; sans ce verrou, chaque instance rejoue la file offline en parallèle et
+// insère les mêmes check-ins en double (aucune contrainte UNIQUE côté DB).
+let syncInFlight = false;
 
 export function useCheckins() {
   const supabase = useSupabase();
@@ -17,40 +24,73 @@ export function useCheckins() {
   // Sync offline queue when back online
   const syncQueue = useCallback(async () => {
     if (!supabase || !user) return;
-    const pending = await getPendingItems();
-    if (pending.length === 0) return;
+    // Empêche deux instances (ou deux déclenchements online/mount) de rejouer
+    // la file en parallèle et de créer des doublons.
+    if (syncInFlight) return;
+    syncInFlight = true;
+    try {
+      const pending = await getPendingItems();
+      if (pending.length === 0) return;
 
-    let synced = 0;
-    for (const item of pending) {
-      const { error: err } = await supabase
-        .from('checkins')
-        .insert({
-          user_id: user.id,
-          type: item.type,
-          mood: item.mood,
-          energy: item.energy,
-          note: item.note,
-          date: item.date,
-        });
-      if (!err && item.id) {
-        await removeFromQueue(item.id);
-        synced++;
+      let synced = 0;
+      for (const item of pending) {
+        // On retire l'item de la file AVANT l'insert : si une autre passe de sync
+        // démarre malgré tout, elle ne verra plus cet item.
+        if (item.id) await removeFromQueue(item.id);
+        const { error: err } = await supabase
+          .from('checkins')
+          .insert({
+            user_id: user.id,
+            type: item.type,
+            mood: item.mood,
+            energy: item.energy,
+            note: item.note,
+            date: item.date,
+          });
+        if (err) {
+          // Échec de l'insert → on remet l'item en file pour ne pas le perdre
+          // (en conservant son created_at d'origine).
+          try {
+            await addToQueue({
+              type: item.type,
+              mood: item.mood,
+              energy: item.energy,
+              note: item.note,
+              date: item.date,
+              created_at: item.created_at,
+            });
+          } catch (e) {
+            console.error('[useCheckins] re-queue failed:', e);
+          }
+        } else {
+          synced++;
+        }
       }
+      if (synced > 0) {
+        console.log(`[OfflineQueue] Synced ${synced} check-in(s)`);
+      }
+      const remaining = await getPendingItems();
+      setPendingCount(remaining.length);
+      if (remaining.length === 0) clearBadge();
+    } finally {
+      syncInFlight = false;
     }
-    if (synced > 0) {
-      console.log(`[OfflineQueue] Synced ${synced} check-in(s)`);
-    }
-    const remaining = await getPendingItems();
-    setPendingCount(remaining.length);
-    if (remaining.length === 0) clearBadge();
   }, [supabase, user]);
 
   // Listen for online events
   useEffect(() => {
+    let active = true;
+    // Initialise le compteur depuis IndexedDB (sinon bannière/badge à 0 après
+    // relance de l'app hors-ligne avec des check-ins en attente).
+    getPendingItems().then((items) => {
+      if (!active) return;
+      setPendingCount(items.length);
+      if (items.length > 0) setBadge(items.length);
+    });
     const cleanup = onOnline(() => { syncQueue(); });
     // Also try to sync on mount
     if (isOnline()) syncQueue();
-    return cleanup;
+    return () => { active = false; cleanup(); };
   }, [syncQueue]);
 
   const create = useCallback(async (data: Omit<CheckinInsert, 'user_id'>) => {
@@ -58,13 +98,23 @@ export function useCheckins() {
 
     // Offline fallback
     if (!supabase || !isOnline()) {
-      await addToQueue({
-        type: data.type ?? 'morning',
-        mood: data.mood,
-        energy: data.energy,
-        note: data.note ?? null,
-        date: data.date ?? new Date().toISOString().split('T')[0],
-      });
+      const offlineDate = data.date ?? getTodayISO();
+      const createdAt = new Date().toISOString();
+      try {
+        await addToQueue({
+          type: data.type ?? 'morning',
+          mood: data.mood,
+          energy: data.energy,
+          note: data.note ?? null,
+          date: offlineDate,
+          created_at: createdAt,
+        });
+      } catch (e) {
+        // La mise en file a échoué → on ne prétend PAS que c'est enregistré.
+        console.error('[useCheckins] addToQueue failed:', e);
+        setError("Impossible d'enregistrer le check-in hors-ligne.");
+        return null;
+      }
       const count = (await getPendingItems()).length;
       setPendingCount(count);
       setBadge(count);
@@ -76,8 +126,8 @@ export function useCheckins() {
         mood: data.mood,
         energy: data.energy,
         note: data.note ?? null,
-        date: data.date ?? new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
+        date: offlineDate,
+        created_at: createdAt,
       } as Checkin;
     }
 
@@ -95,7 +145,7 @@ export function useCheckins() {
 
   const getToday = useCallback(async () => {
     if (!supabase || !user) return [];
-    const today = new Date().toISOString().split('T')[0];
+    const today = getTodayISO();
     const { data } = await supabase
       .from('checkins')
       .select('*')

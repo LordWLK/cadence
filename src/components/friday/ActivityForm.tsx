@@ -33,6 +33,7 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
   const [open, setOpen] = useState(false);
   const [savingBacklog, setSavingBacklog] = useState(false);
   const [shares, setShares] = useState<ShareTarget[]>([]);
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Recurrence
   const [recEnabled, setRecEnabled] = useState(false);
@@ -49,37 +50,53 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
     setRecDay('lundi');
     setRecFreq('weekly');
     setShares([]);
+    setFormError(null);
     setOpen(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !plannedDate) return;
+    setFormError(null);
 
     // Compute week_start from the selected date
     const weekStart = getWeekStart(parseISO(plannedDate));
+    const weekStartISO = formatDateISO(weekStart);
 
-    const created = await create({
-      title: title.trim(),
-      category,
-      planned_date: plannedDate,
-      week_start: formatDateISO(weekStart),
-    });
-
-    // Partages éventuels (appliqués après création pour avoir l'id)
-    if (created && shares.length > 0) {
-      await setSharesForActivity(created.id, shares);
-    }
-
-    // If recurrence is on, also create a backlog item
+    let created;
     if (recEnabled) {
-      await backlog.create({
+      // Récurrence activée : on crée d'abord l'item backlog, puis on rattache
+      // l'occurrence du jour à ce backlog (backlog_id renseigné). Sinon l'auto-populate
+      // recréerait une occurrence le même jour → doublon (activité manuelle + auto).
+      const backlogItem = await backlog.create({
         title: title.trim(),
         category,
         recurrence: recDay,
         recurrence_freq: recFreq,
       });
+      if (!backlogItem) {
+        setFormError("Échec de l'enregistrement. Réessaie.");
+        return;
+      }
+      created = await backlog.pullToWeek(backlogItem, plannedDate, weekStartISO);
       onBacklogCreated?.();
+    } else {
+      created = await create({
+        title: title.trim(),
+        category,
+        planned_date: plannedDate,
+        week_start: weekStartISO,
+      });
+    }
+
+    if (!created) {
+      setFormError("Échec de l'ajout de l'activité. Vérifie ta connexion et réessaie.");
+      return;
+    }
+
+    // Partages éventuels (appliqués après création pour avoir l'id)
+    if (shares.length > 0) {
+      await setSharesForActivity(created.id, shares);
     }
 
     resetForm();
@@ -88,14 +105,19 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
 
   const handleBacklog = async () => {
     if (!title.trim()) return;
+    setFormError(null);
     setSavingBacklog(true);
-    await backlog.create({
+    const item = await backlog.create({
       title: title.trim(),
       category,
       recurrence: recEnabled ? recDay : 'none',
       recurrence_freq: recEnabled ? recFreq : 'weekly',
     });
     setSavingBacklog(false);
+    if (!item) {
+      setFormError("Échec de l'enregistrement dans le backlog. Réessaie.");
+      return;
+    }
     resetForm();
     onBacklogCreated?.();
   };
@@ -165,6 +187,12 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
         />
 
         <ShareSelector value={shares} onChange={setShares} compact />
+
+        {formError && (
+          <p role="alert" className="text-sm" style={{ color: 'var(--color-error)' }}>
+            {formError}
+          </p>
+        )}
 
         <div className="flex gap-2">
           <Button type="submit" className="flex-1" disabled={loading || !title.trim() || !plannedDate}>

@@ -55,10 +55,27 @@ export function useProfile() {
       if (!supabase || !user) return null;
       const trimmed = email.trim().toLowerCase();
       if (!trimmed) return null;
+
+      // Chemin privilégié : RPC SECURITY DEFINER (permet de restreindre la lecture
+      // directe des profils sans casser la recherche). Absente ? on retombe sur la
+      // requête directe ci-dessous. La RPC n'étant pas dans les types générés, on cast
+      // l'appel localement.
+      const rpcFn = supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>
+      ) => Promise<{ data: Profile[] | null; error: unknown }>;
+      const rpc = await rpcFn('search_profile_by_email', { p_email: trimmed });
+      if (!rpc.error) {
+        return (rpc.data ?? [])[0] ?? null;
+      }
+
+      // Repli : lecture directe. On échappe les jokers ilike (% et _) et
+      // l'échappement lui-même, sinon une saisie comme "%" matcherait n'importe quel email.
+      const escaped = trimmed.replace(/[\\%_]/g, '\\$&');
       const { data } = await supabase
         .from('profiles')
         .select('*')
-        .ilike('email', trimmed)
+        .ilike('email', escaped)
         .maybeSingle();
       return (data as Profile | null) ?? null;
     },

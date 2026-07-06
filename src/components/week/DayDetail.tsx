@@ -37,6 +37,7 @@ export function DayDetail({ date, checkins, activities, events, getShareInfo, on
         </div>
         <button
           onClick={onClose}
+          aria-label="Fermer le détail du jour"
           className="p-1 rounded-lg transition-colors"
           style={{ color: 'var(--color-text-dim)' }}
         >

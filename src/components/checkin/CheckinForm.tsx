@@ -10,7 +10,7 @@ import { useCheckins } from '@/lib/hooks/useCheckins';
 import { useSupabase } from '@/providers/SupabaseProvider';
 import { useAuth } from '@/providers/AuthProvider';
 import { Sun, Moon, Send, AlertCircle } from 'lucide-react';
-import { getTimeOfDay } from '@/lib/utils/dates';
+import { getTimeOfDay, getTodayISO } from '@/lib/utils/dates';
 import { hapticSuccess, hapticError } from '@/lib/utils/haptics';
 import { Confetti } from '@/components/ui/Confetti';
 
@@ -31,6 +31,7 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
   const [showConfetti, setShowConfetti] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setType(getTimeOfDay());
@@ -64,35 +65,46 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting || loading) return; // garde anti double-submit (l'upload photo peut durer)
     setSubmitError(null);
+    setSubmitting(true);
+    try {
+      // Upload photo if present
+      let photoUrl: string | null = null;
+      if (photoFile) {
+        photoUrl = await uploadPhoto(photoFile);
+        if (!photoUrl) {
+          // L'UI affichait « Photo attachée » : ne pas enregistrer en silence sans la photo.
+          hapticError();
+          setSubmitError("Échec de l'envoi de la photo. Réessaie ou retire la photo.");
+          return;
+        }
+      }
 
-    // Upload photo if present
-    let photoUrl: string | null = null;
-    if (photoFile) {
-      photoUrl = await uploadPhoto(photoFile);
-    }
-
-    const result = await create({
-      type,
-      mood,
-      energy,
-      note: note.trim() || null,
-      photo_url: photoUrl,
-      date: new Date().toISOString().split('T')[0],
-    });
-    if (result) {
-      hapticSuccess();
-      setShowConfetti(true);
-      setSuccess(true);
-      setPhotoFile(null);
-      setTimeout(() => {
-        setSuccess(false);
-        setShowConfetti(false);
-        onSuccess?.();
-      }, 1500);
-    } else {
-      hapticError();
-      setSubmitError(hookError ?? "Impossible d'enregistrer. Verifie ta connexion et ta configuration Supabase.");
+      const result = await create({
+        type,
+        mood,
+        energy,
+        note: note.trim() || null,
+        photo_url: photoUrl,
+        date: getTodayISO(),
+      });
+      if (result) {
+        hapticSuccess();
+        setShowConfetti(true);
+        setSuccess(true);
+        setPhotoFile(null);
+        setTimeout(() => {
+          setSuccess(false);
+          setShowConfetti(false);
+          onSuccess?.();
+        }, 1500);
+      } else {
+        hapticError();
+        setSubmitError(hookError ?? "Impossible d'enregistrer. Verifie ta connexion et ta configuration Supabase.");
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -204,9 +216,9 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
         </div>
       )}
 
-      <Button type="submit" className="w-full" size="lg" disabled={loading}>
+      <Button type="submit" className="w-full" size="lg" disabled={loading || submitting}>
         <Send size={16} />
-        {loading ? 'Enregistrement...' : 'Enregistrer mon check-in'}
+        {loading || submitting ? 'Enregistrement...' : 'Enregistrer mon check-in'}
       </Button>
     </form>
   );

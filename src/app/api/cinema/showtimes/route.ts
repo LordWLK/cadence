@@ -12,6 +12,20 @@ const rateLimits = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX = 20; // 20 requests per minute
 
+// Purge des entrées expirées pour éviter une croissance mémoire non bornée
+// (les clés sont pilotables par le client : IP falsifiable, cinemaId/date variés).
+function purgeExpired(now: number) {
+  for (const [key, v] of rateLimits) {
+    if (now >= v.resetTime) rateLimits.delete(key);
+  }
+  for (const [key, v] of cache) {
+    if (now - v.ts >= CACHE_TTL) cache.delete(key);
+  }
+}
+
+// Ids de cinémas autorisés (on ne relaie que vers des cinémas connus)
+const VALID_CINEMA_IDS = new Set(UGC_CINEMAS.map((c) => c.id));
+
 export async function GET(req: NextRequest) {
   const cinemaId = req.nextUrl.searchParams.get('cinemaId');
   const date = req.nextUrl.searchParams.get('date'); // YYYY-MM-DD
@@ -24,9 +38,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
   }
 
+  if (!VALID_CINEMA_IDS.has(cinemaId)) {
+    return NextResponse.json({ error: 'Unknown cinemaId' }, { status: 400 });
+  }
+
   // Rate limiting
   const clientIp = req.headers.get('x-forwarded-for') || 'unknown';
   const now = Date.now();
+  purgeExpired(now);
   const rateData = rateLimits.get(clientIp);
   if (rateData && now < rateData.resetTime) {
     if (rateData.count >= RATE_LIMIT_MAX) {
@@ -50,14 +69,24 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const url = `https://www.ugc.fr/showingsCinemaAjaxAction!getShowingsForCinemaPage.action?cinemaId=${cinemaId}&date=${date}`;
-    const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-        'Accept': 'text/html',
-        'Accept-Language': 'fr-FR,fr;q=0.9',
-      },
-    });
+    const url = `https://www.ugc.fr/showingsCinemaAjaxAction!getShowingsForCinemaPage.action?cinemaId=${encodeURIComponent(cinemaId)}&date=${encodeURIComponent(date)}`;
+    // Timeout : sans lui, une réponse UGC qui traîne bloque la fonction serverless
+    // (et le spinner client) jusqu'au timeout plateforme.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12_000);
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+          'Accept': 'text/html',
+          'Accept-Language': 'fr-FR,fr;q=0.9',
+        },
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     if (!res.ok) {
       return NextResponse.json({ error: 'UGC request failed' }, { status: 502 });
@@ -66,7 +95,19 @@ export async function GET(req: NextRequest) {
     const html = await res.text();
     const movies = parseShowtimesHtml(html);
 
-    cache.set(cacheKey, { data: movies, ts: Date.now() });
+    // Si on n'a extrait AUCUN film alors que la page contient manifestement du contenu,
+    // c'est probablement un changement de structure UGC ou une page anti-bot/consentement
+    // renvoyée en 200. On ne met alors PAS en cache (sinon un feed vide serait figé 1h) et
+    // on signale une erreur pour que le client puisse réessayer.
+    if (movies.length === 0 && html.length > 2000) {
+      return NextResponse.json({ error: 'Aucune séance (structure UGC inattendue)' }, { status: 502 });
+    }
+
+    // On ne met en cache que des résultats non vides (un jour réellement sans séance
+    // sera re-tenté à la prochaine requête, ce qui est peu coûteux).
+    if (movies.length > 0) {
+      cache.set(cacheKey, { data: movies, ts: Date.now() });
+    }
 
     const cinema = UGC_CINEMAS.find(c => c.id === cinemaId);
     return NextResponse.json({

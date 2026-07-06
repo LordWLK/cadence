@@ -92,22 +92,29 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
 
   // ─── Create ──────────────────────────────────────────────────────────────
 
+  const [creating, setCreating] = useState(false);
   const handleCreate = async () => {
-    if (!newTitle.trim()) return;
-    const created = await create({
-      title: newTitle.trim(),
-      category: newCategory,
-      recurrence: newRecEnabled ? newRecDay : 'none',
-      recurrence_freq: newRecEnabled ? newRecFreq : 'weekly',
-    });
-    if (created && newShares.length > 0) {
-      await setSharesForBacklog(created.id, newShares);
+    if (!newTitle.trim() || creating) return; // garde anti double-tap
+    setCreating(true);
+    try {
+      const created = await create({
+        title: newTitle.trim(),
+        category: newCategory,
+        recurrence: newRecEnabled ? newRecDay : 'none',
+        recurrence_freq: newRecEnabled ? newRecFreq : 'weekly',
+      });
+      if (!created) return; // échec : on garde le formulaire ouvert
+      if (newShares.length > 0) {
+        await setSharesForBacklog(created.id, newShares);
+      }
+      setNewTitle(''); setNewCategory(ACTIVITY_CATEGORIES[0].id);
+      setNewRecEnabled(false); setNewRecDay('lundi'); setNewRecFreq('weekly');
+      setNewShares([]);
+      setShowForm(false);
+      load();
+    } finally {
+      setCreating(false);
     }
-    setNewTitle(''); setNewCategory(ACTIVITY_CATEGORIES[0].id);
-    setNewRecEnabled(false); setNewRecDay('lundi'); setNewRecFreq('weekly');
-    setNewShares([]);
-    setShowForm(false);
-    load();
   };
 
   // ─── Edit ────────────────────────────────────────────────────────────────
@@ -206,7 +213,8 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
       <ConfirmDialog open={keepDialog !== null} title="Garder dans le backlog ?"
         message={`"${keepDialog?.item.title}" sera ajoutée au planning. Veux-tu aussi la garder dans le backlog pour la réutiliser ?`}
         confirmLabel="Garder" cancelLabel="Non, retirer"
-        onConfirm={() => handleKeepInBacklog(true)} onCancel={() => handleKeepInBacklog(false)} />
+        onConfirm={() => handleKeepInBacklog(true)} onCancel={() => handleKeepInBacklog(false)}
+        onDismiss={() => { setKeepDialog(null); cancelEdit(); }} />
 
       <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
         {/* Header */}
@@ -250,7 +258,7 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
                   onToggle={() => setNewRecEnabled(!newRecEnabled)} onDayChange={setNewRecDay} onFreqChange={setNewRecFreq} />
                 <ShareSelector value={newShares} onChange={setNewShares} compact />
                 <div className="flex gap-2">
-                  <Button size="sm" className="flex-1" onClick={handleCreate} disabled={!newTitle.trim()}>Ajouter</Button>
+                  <Button size="sm" className="flex-1" onClick={handleCreate} disabled={!newTitle.trim() || creating}>{creating ? '...' : 'Ajouter'}</Button>
                   <Button size="sm" variant="ghost" onClick={() => { setShowForm(false); setNewTitle(''); setNewRecEnabled(false); setNewShares([]); }}><X size={14} /> Annuler</Button>
                 </div>
               </div>

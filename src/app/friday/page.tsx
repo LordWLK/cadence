@@ -12,6 +12,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/components/ui/Toast';
 import { getRollingDays, getWeekStart, formatDate, formatDateISO, getDayName } from '@/lib/utils/dates';
+import { parseISO } from 'date-fns';
 import { ACTIVITY_CATEGORIES } from '@/lib/config/constants';
 import { SportFeed } from '@/components/friday/SportFeed';
 import { CinemaFeed } from '@/components/friday/CinemaFeed';
@@ -203,7 +204,7 @@ export default function FridayPage() {
             .map(([date, dayActivities]) => (
             <div key={date} className="space-y-2">
               <p className="text-sm font-medium text-text-muted capitalize">
-                {getDayName(new Date(date))} {formatDate(date, 'dd MMM')}
+                {getDayName(parseISO(date))} {formatDate(date, 'dd MMM')}
               </p>
               {dayActivities.map((activity) => {
                 const isEditing = editingId === activity.id;
@@ -329,7 +330,7 @@ export default function FridayPage() {
                     {canEditActivity && (
                       <button
                         onClick={() => startEdit(activity)}
-                        className="text-text-dim hover:text-primary transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
+                        className="text-text-dim hover:text-primary transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus-visible:opacity-100"
                         aria-label="Modifier"
                       >
                         <Pencil size={14} />
@@ -338,7 +339,7 @@ export default function FridayPage() {
                     {isOwner ? (
                       <button
                         onClick={() => setDeleteTarget(activity.id)}
-                        className="text-text-dim hover:text-error transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
+                        className="text-text-dim hover:text-error transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus-visible:opacity-100"
                         aria-label="Supprimer"
                       >
                         <Trash2 size={14} />
@@ -347,7 +348,7 @@ export default function FridayPage() {
                       info?.receivedShare && (
                         <button
                           onClick={() => hideReceived(info.receivedShare!.id)}
-                          className="text-text-dim hover:text-text transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100"
+                          className="text-text-dim hover:text-text transition-colors p-1 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 focus-visible:opacity-100"
                           aria-label="Masquer"
                           title="Masquer cette activité partagée"
                         >

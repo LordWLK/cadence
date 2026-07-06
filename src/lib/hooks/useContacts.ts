@@ -110,24 +110,56 @@ export function useContacts() {
 
   /** Accepter une demande reçue (je suis `contact_user_id`). */
   const accept = useCallback(
-    async (contactRowId: string) => {
-      if (!supabase || !user) return;
-      await supabase
+    async (contactRowId: string): Promise<boolean> => {
+      if (!supabase || !user) return false;
+      const { error } = await supabase
         .from('user_contacts')
         .update({ status: 'accepted', updated_at: new Date().toISOString() })
         .eq('id', contactRowId)
         .eq('contact_user_id', user.id);
       await load();
+      return !error;
     },
     [supabase, user, load]
   );
 
-  /** Refuser / annuler une demande — supprime la ligne. */
+  /**
+   * Refuser / annuler / retirer un contact — supprime la ligne ET les partages
+   * associés dans les deux sens, pour que l'ex-contact ne voie plus mes activités
+   * (et que je cesse de propager mes récurrences vers lui).
+   */
   const remove = useCallback(
-    async (contactRowId: string) => {
-      if (!supabase || !user) return;
-      await supabase.from('user_contacts').delete().eq('id', contactRowId);
+    async (contactRowId: string): Promise<boolean> => {
+      if (!supabase || !user) return false;
+
+      // Retrouver l'autre utilisateur concerné par cette ligne de contact.
+      const { data: row } = await supabase
+        .from('user_contacts')
+        .select('user_id, contact_user_id')
+        .eq('id', contactRowId)
+        .maybeSingle();
+
+      const { error } = await supabase.from('user_contacts').delete().eq('id', contactRowId);
+      if (error) { await load(); return false; }
+
+      if (row) {
+        const otherId = row.user_id === user.id ? row.contact_user_id : row.user_id;
+        // Supprimer les partages que J'AI créés vers cet utilisateur (mes activités/backlogs
+        // partagés). L'autre sens est nettoyé symétriquement quand l'autre retire le contact.
+        await supabase
+          .from('activity_shares')
+          .delete()
+          .eq('shared_by_user_id', user.id)
+          .eq('shared_with_user_id', otherId);
+        await supabase
+          .from('backlog_shares')
+          .delete()
+          .eq('shared_by_user_id', user.id)
+          .eq('shared_with_user_id', otherId);
+      }
+
       await load();
+      return true;
     },
     [supabase, user, load]
   );

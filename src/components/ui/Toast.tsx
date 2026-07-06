@@ -77,6 +77,9 @@ function ToastItem({ toast, onRemove }: { toast: ToastData; onRemove: (id: numbe
 
   return (
     <div
+      role={toast.type === 'error' ? 'alert' : 'status'}
+      aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
+      aria-atomic="true"
       className="pointer-events-auto w-full max-w-sm flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm"
       style={{
         backgroundColor: 'color-mix(in srgb, var(--color-surface-elevated) 92%, transparent)',

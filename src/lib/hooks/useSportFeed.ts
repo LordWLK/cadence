@@ -29,23 +29,43 @@ export function useSportFeed() {
   const [bigMatches, setBigMatches] = useState<SportFeedEvent[]>([]);
 
   const fetchFeed = useCallback(async (weekStart: Date, weekEnd: Date) => {
-    // Check cache
-    const cacheKey = CACHE_KEY_PREFIX + format(weekStart, 'yyyy-MM-dd');
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached) {
-      try {
-        const { yourMatches: ym, bigMatches: bm } = JSON.parse(cached);
-        setYourMatches(ym);
-        setBigMatches(bm);
-        return;
-      } catch { /* ignore cache errors */ }
-    }
-
+    // On charge d'abord les préférences pour que la clé de cache en dépende :
+    // sinon, ajouter/retirer une équipe favorite laissait le feen figé (cache
+    // uniquement keyé sur la semaine) pour toute la session.
     setLoading(true);
     setError(null);
 
+    let prefs;
     try {
-      const prefs = await getAll();
+      prefs = await getAll();
+    } catch {
+      setError('Impossible de charger les matchs');
+      setLoading(false);
+      return;
+    }
+
+    const prefsSignature = prefs
+      .map((p) => `${p.sport}:${p.entity_type}:${p.entity_id}`)
+      .sort()
+      .join('|');
+    const cacheKey = `${CACHE_KEY_PREFIX}${format(weekStart, 'yyyy-MM-dd')}__${prefsSignature}`;
+
+    // Cache (validation de forme : un ancien format ne doit pas faire planter le rendu)
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed?.yourMatches) && Array.isArray(parsed?.bigMatches)) {
+          setYourMatches(parsed.yourMatches);
+          setBigMatches(parsed.bigMatches);
+          setLoading(false);
+          return;
+        }
+      } catch { /* cache corrompu → on refetch */ }
+      sessionStorage.removeItem(cacheKey);
+    }
+
+    try {
       const weekStartStr = format(weekStart, 'yyyy-MM-dd');
       const weekEndStr = format(weekEnd, 'yyyy-MM-dd');
 
@@ -130,10 +150,28 @@ export function useSportFeed() {
   }, [getAll]);
 
   const clearCache = useCallback((weekStart: Date) => {
-    sessionStorage.removeItem(CACHE_KEY_PREFIX + format(weekStart, 'yyyy-MM-dd'));
+    // La clé inclut désormais la signature des préférences : on purge toutes les
+    // entrées de cache de cette semaine, quelle que soit la signature.
+    const weekPrefix = `${CACHE_KEY_PREFIX}${format(weekStart, 'yyyy-MM-dd')}`;
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith(weekPrefix)) sessionStorage.removeItem(key);
+    }
   }, []);
 
   return { fetchFeed, clearCache, yourMatches, bigMatches, loading, error };
+}
+
+/**
+ * TheSportsDB renvoie des horaires en UTC. Le timestamp (ou la date+heure reconstruite)
+ * n'a pas toujours de marqueur de fuseau ; sans lui, parseISO l'interprète en heure locale
+ * et l'heure affichée est décalée (-1h/-2h en France). On rend donc l'UTC explicite.
+ */
+function toUtcIso(event: SportsDbEvent): string {
+  const base = event.strTimestamp || `${event.dateEvent}T${event.strTime || '00:00:00'}`;
+  // Déjà un fuseau explicite (Z ou ±hh:mm) ?
+  if (/(?:z|[+-]\d{2}:?\d{2})$/i.test(base)) return base;
+  return `${base}Z`;
 }
 
 function eventFromSportsDb(
@@ -155,7 +193,7 @@ function eventFromSportsDb(
     homeTeam: event.strHomeTeam,
     awayTeam: event.strAwayTeam,
     competition: event.strLeague,
-    date: event.strTimestamp || `${event.dateEvent}T${event.strTime || '00:00:00'}`,
+    date: toUtcIso(event),
     isBigMatch: isBig,
     isFavorite: isFavorite,
     sourceApiId: event.idEvent,

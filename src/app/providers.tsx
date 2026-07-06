@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { ConfigProvider } from '@/providers/ConfigProvider';
 import { SupabaseProvider } from '@/providers/SupabaseProvider';
 import { AuthProvider } from '@/providers/AuthProvider';
@@ -12,6 +13,18 @@ import { SplashScreen } from '@/components/layout/SplashScreen';
 import { SessionFromUrl } from '@/components/auth/SessionFromUrl';
 import { ToastProvider } from '@/components/ui/Toast';
 import { DisplayNameModal } from '@/components/settings/DisplayNameModal';
+import { getNotificationPermission, scheduleDailyReminders, cancelDailyReminders } from '@/lib/utils/notifications';
+
+/** Réarme les rappels quotidiens à chaque démarrage si la permission est accordée. */
+function NotificationScheduler() {
+  useEffect(() => {
+    if (getNotificationPermission() === 'granted') {
+      scheduleDailyReminders();
+      return () => cancelDailyReminders();
+    }
+  }, []);
+  return null;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -24,6 +37,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               <AuthProvider>
                 <ToastProvider>
                   <SessionFromUrl />
+                  <NotificationScheduler />
                   <DisplayNameModal />
                   <main className="max-w-lg mx-auto px-4 pt-6 pb-28">
                     <PageTransition>
