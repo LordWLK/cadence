@@ -18,12 +18,14 @@ export function Card({
   children,
   ...props
 }: CardProps) {
-  const base = 'rounded-2xl p-4 transition-all';
+  // Éditorial : une carte se lit, elle ne se touche pas → filet fin, pas d'ombre,
+  // coins quasi carrés. Le Brut est réservé aux contrôles À L'INTÉRIEUR des cartes.
+  const base = 'rounded-[4px] p-4 transition-all';
 
   const variants = {
     default:  'bg-[var(--color-surface-elevated)] border border-[var(--color-border)]',
-    elevated: 'bg-[var(--color-surface-elevated)] border border-[var(--color-border)] shadow-sm shadow-black/5',
-    sport:    `bg-[var(--color-surface-elevated)] border border-[var(--color-border)] border-l-4 shadow-sm`,
+    elevated: 'bg-[var(--color-surface-elevated)] border border-[var(--color-border)] border-t-2 border-t-[var(--color-ink)]',
+    sport:    `bg-[var(--color-surface-elevated)] border border-[var(--color-border)] border-l-4`,
   };
 
   const sportBorder = sportColor ? SPORT_BORDERS[sportColor] : '';

@@ -13,9 +13,9 @@ export function CadenceIcon({ className = 'w-12 h-12' }: LogoProps) {
       className={className}
       aria-label="Cadence"
     >
-      <rect x="10" y="20" width="60" height="60" rx="7" fill="#7c3aed" opacity="0.12" />
-      <rect x="25" y="35" width="60" height="60" rx="7" fill="#7c3aed" opacity="0.25" />
-      <rect x="40" y="20" width="60" height="60" rx="7" fill="#7c3aed" />
+      <rect x="10" y="20" width="60" height="60" rx="2" fill="#D33A24" opacity="0.12" />
+      <rect x="25" y="35" width="60" height="60" rx="2" fill="#D33A24" opacity="0.25" />
+      <rect x="40" y="20" width="60" height="60" rx="2" fill="#D33A24" />
       <text
         x="70" y="60"
         textAnchor="middle"
@@ -40,9 +40,9 @@ export function CadenceLogoHorizontal({ className = 'h-10' }: LogoProps) {
       className={className}
       aria-label="Cadence — Plan · Feel · Live"
     >
-      <rect x="30" y="15" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.12" />
-      <rect x="50" y="35" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.25" />
-      <rect x="70" y="15" width="60" height="60" rx="6" fill="#7c3aed" />
+      <rect x="30" y="15" width="60" height="60" rx="2" fill="#D33A24" opacity="0.12" />
+      <rect x="50" y="35" width="60" height="60" rx="2" fill="#D33A24" opacity="0.25" />
+      <rect x="70" y="15" width="60" height="60" rx="2" fill="#D33A24" />
       <text
         x="100" y="47"
         textAnchor="middle"
@@ -53,17 +53,17 @@ export function CadenceLogoHorizontal({ className = 'h-10' }: LogoProps) {
       >
         C
       </text>
-      {/* wordmark — couleur sombre pour fond clair */}
+      {/* wordmark — masthead serif façon gazette */}
       <text
         x="155" y="58"
         textAnchor="start"
-        fontFamily="Inter, Helvetica Neue, Arial, sans-serif"
+        fontFamily="Fraunces, Georgia, 'Iowan Old Style', serif"
         fontSize="40"
-        fontWeight="500"
-        letterSpacing="4"
-        fill="#1a1612"
+        fontWeight="700"
+        letterSpacing="1"
+        fill="#16150F"
       >
-        cadence
+        Cadence
       </text>
       <text
         x="155" y="82"
@@ -89,9 +89,9 @@ export function CadenceLogoStacked({ className = 'w-40' }: LogoProps) {
       className={className}
       aria-label="Cadence — Plan · Feel · Live"
     >
-      <rect x="65" y="20" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.12" />
-      <rect x="82" y="37" width="60" height="60" rx="6" fill="#7c3aed" opacity="0.25" />
-      <rect x="99" y="20" width="60" height="60" rx="6" fill="#7c3aed" />
+      <rect x="65" y="20" width="60" height="60" rx="2" fill="#D33A24" opacity="0.12" />
+      <rect x="82" y="37" width="60" height="60" rx="2" fill="#D33A24" opacity="0.25" />
+      <rect x="99" y="20" width="60" height="60" rx="2" fill="#D33A24" />
       <text
         x="129" y="52"
         textAnchor="middle"
@@ -102,17 +102,17 @@ export function CadenceLogoStacked({ className = 'w-40' }: LogoProps) {
       >
         C
       </text>
-      {/* wordmark — #1a1612 pour être visible sur fond crème */}
+      {/* wordmark — masthead serif façon gazette */}
       <text
         x="120" y="125"
         textAnchor="middle"
-        fontFamily="Inter, Helvetica Neue, Arial, sans-serif"
+        fontFamily="Fraunces, Georgia, 'Iowan Old Style', serif"
         fontSize="36"
-        fontWeight="500"
-        letterSpacing="6"
-        fill="#1a1612"
+        fontWeight="700"
+        letterSpacing="1"
+        fill="#16150F"
       >
-        cadence
+        Cadence
       </text>
       <text
         x="120" y="150"

@@ -5,20 +5,27 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'sm' | 'md' | 'lg';
 }
 
+/**
+ * Thème Gazette × Brut : un bouton EST interactif, donc il est Brut —
+ * bordure encre, ombre dure, il s'enfonce au tap. Seul `ghost` reste
+ * éditorial (action discrète, soulignement au survol).
+ */
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = 'primary', size = 'md', className = '', children, disabled, ...props }, ref) => {
     const base =
-      'inline-flex items-center justify-center rounded-xl font-medium transition-all active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none';
+      'inline-flex items-center justify-center rounded-[3px] font-bold disabled:opacity-40 disabled:pointer-events-none';
+
+    const brut = 'border-2 border-[var(--color-ink)] shadow-[3px_3px_0_var(--color-ink)] brut-press';
 
     const variants = {
       primary:
-        'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-light)] shadow-md shadow-[color-mix(in_srgb,var(--color-primary)_25%,transparent)]',
+        `${brut} bg-[var(--color-action)] text-[#16150F]`,
       secondary:
-        'bg-[var(--color-surface-elevated)] text-[var(--color-text)] border border-[var(--color-border)] hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-alt)]',
+        `${brut} bg-[var(--color-surface-elevated)] text-[var(--color-text)]`,
       ghost:
-        'text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-alt)]',
+        'text-[var(--color-text-muted)] hover:text-[var(--color-text)] underline-offset-4 hover:underline decoration-[var(--color-action)] decoration-2 transition-colors',
       danger:
-        'bg-[color-mix(in_srgb,var(--color-error)_10%,transparent)] text-[var(--color-error)] hover:bg-[color-mix(in_srgb,var(--color-error)_18%,transparent)]',
+        `${brut} bg-[var(--color-primary)] text-[#FBFAF5]`,
     };
 
     const sizes = {

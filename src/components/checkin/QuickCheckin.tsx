@@ -68,7 +68,7 @@ export function QuickCheckin({ onDone }: QuickCheckinProps) {
               key={mood}
               onClick={() => handleQuick(mood)}
               disabled={saving}
-              className="flex-1 py-2.5 rounded-xl text-xl transition-all active:scale-95 hover:scale-105"
+              className="flex-1 py-2.5 rounded-[3px] text-xl brut-press border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)]"
               style={{ backgroundColor: 'var(--color-surface-elevated)' }}
               aria-label={`Check-in rapide humeur ${mood}/5`}
             >

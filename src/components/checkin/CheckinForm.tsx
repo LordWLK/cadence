@@ -131,15 +131,11 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
         <button
           type="button"
           onClick={() => setType('morning')}
-          style={isMorning ? {
-            backgroundColor: 'color-mix(in srgb, var(--color-primary) 12%, transparent)',
-            color: 'var(--color-primary)',
-            outline: '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)',
-          } : {
-            backgroundColor: 'var(--color-surface-elevated)',
-            color: 'var(--color-text-muted)',
-          }}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all flex-1"
+          className={`flex items-center gap-2 px-4 py-2 rounded-[3px] brut-press flex-1 ${
+            isMorning
+              ? 'bg-[var(--color-action)] text-[#16150F] border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)] font-bold'
+              : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] border border-[var(--color-border)]'
+          }`}
         >
           <Sun size={16} />
           <span className="text-sm font-medium">Matin</span>
@@ -147,15 +143,11 @@ export function CheckinForm({ onSuccess }: CheckinFormProps) {
         <button
           type="button"
           onClick={() => setType('evening')}
-          style={!isMorning ? {
-            backgroundColor: 'color-mix(in srgb, #4f46e5 12%, transparent)',
-            color: '#4f46e5',
-            outline: '1px solid color-mix(in srgb, #4f46e5 30%, transparent)',
-          } : {
-            backgroundColor: 'var(--color-surface-elevated)',
-            color: 'var(--color-text-muted)',
-          }}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl transition-all flex-1"
+          className={`flex items-center gap-2 px-4 py-2 rounded-[3px] brut-press flex-1 ${
+            !isMorning
+              ? 'bg-[var(--color-accent)] text-[#FBFAF5] border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)] font-bold'
+              : 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] border border-[var(--color-border)]'
+          }`}
         >
           <Moon size={16} />
           <span className="text-sm font-medium">Soir</span>

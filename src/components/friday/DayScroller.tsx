@@ -9,9 +9,10 @@ interface DayScrollerProps {
   onChange: (iso: string) => void;
 }
 
-const CHIP = 'rounded-xl transition-all active:scale-95';
-const CHIP_ON = 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)] ring-1 ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]';
-const CHIP_OFF = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]';
+// Chips interactifs → Brut : sélection = aplat jaune, bordure encre, ombre dure.
+const CHIP = 'rounded-[3px] brut-press';
+const CHIP_ON = 'bg-[var(--color-action)] text-[#16150F] border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)] font-bold';
+const CHIP_OFF = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] border border-[var(--color-border)]';
 
 export function DayScroller({ days, selected, onChange }: DayScrollerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -52,7 +53,7 @@ export function DayScroller({ days, selected, onChange }: DayScrollerProps) {
                 data-day={iso}
                 aria-pressed={isSelected}
                 onClick={() => onChange(iso)}
-                className={`flex flex-col items-center min-w-[3rem] py-2 px-1.5 text-xs ${CHIP} ${isSelected ? CHIP_ON : CHIP_OFF} ${today && !isSelected ? 'ring-1 ring-[var(--color-border)]' : ''}`}
+                className={`flex flex-col items-center min-w-[3rem] py-2 px-1.5 text-xs ${CHIP} ${isSelected ? CHIP_ON : CHIP_OFF} ${today && !isSelected ? 'border-[var(--color-border-strong)]' : ''}`}
               >
                 <span className="font-medium capitalize">{formatDate(day, 'EEE')}</span>
                 <span className="text-[10px]">{formatDate(day, 'dd')}</span>

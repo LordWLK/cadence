@@ -131,9 +131,9 @@ export function ActivityForm({ onCreated, onBacklogCreated }: ActivityFormProps)
     );
   }
 
-  const chipBase = 'rounded-xl transition-all active:scale-95';
-  const chipActive = 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)] ring-1 ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]';
-  const chipInactive = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]';
+  const chipBase = 'rounded-[3px] brut-press';
+  const chipActive = 'bg-[var(--color-action)] text-[#16150F] border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)] font-bold';
+  const chipInactive = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] border border-[var(--color-border)]';
 
   return (
     <Card variant="elevated">

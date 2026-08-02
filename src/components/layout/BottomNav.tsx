@@ -32,11 +32,15 @@ export function BottomNav() {
               href={href}
               aria-label={label}
               aria-current={isActive ? 'page' : undefined}
-              className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-colors min-w-[56px]"
-              style={{ color: isActive ? 'var(--color-primary)' : 'var(--color-text-dim)' }}
+              className="flex flex-col items-center gap-0.5 px-3 py-2 transition-colors min-w-[56px]"
+              style={{
+                color: isActive ? 'var(--color-text)' : 'var(--color-text-dim)',
+                // Actif = barre jaune Brut sous l'item (l'onglet courant est « touchable »)
+                boxShadow: isActive ? 'inset 0 -3px 0 var(--color-action)' : 'none',
+              }}
             >
               <Icon size={20} strokeWidth={isActive ? 2.5 : 1.5} color="currentColor" fill="none" />
-              <span className="text-[10px] font-medium tracking-wide">
+              <span className={`text-[10px] tracking-wide ${isActive ? 'font-bold' : 'font-medium'}`}>
                 {label}
               </span>
             </Link>

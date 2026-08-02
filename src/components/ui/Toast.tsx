@@ -80,10 +80,12 @@ function ToastItem({ toast, onRemove }: { toast: ToastData; onRemove: (id: numbe
       role={toast.type === 'error' ? 'alert' : 'status'}
       aria-live={toast.type === 'error' ? 'assertive' : 'polite'}
       aria-atomic="true"
-      className="pointer-events-auto w-full max-w-sm flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-lg backdrop-blur-sm"
+      className="pointer-events-auto w-full max-w-sm flex items-center gap-2.5 px-4 py-3 rounded-[3px]"
       style={{
-        backgroundColor: 'color-mix(in srgb, var(--color-surface-elevated) 92%, transparent)',
-        border: `1px solid color-mix(in srgb, ${color} 25%, var(--color-border))`,
+        backgroundColor: 'var(--color-surface-elevated)',
+        border: '2px solid var(--color-ink)',
+        boxShadow: '3px 3px 0 var(--color-ink)',
+        borderLeft: `6px solid ${color}`,
         animation: exiting ? 'toast-out 0.3s ease-in forwards' : 'toast-in 0.3s ease-out forwards',
       }}
     >

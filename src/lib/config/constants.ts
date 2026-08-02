@@ -1,8 +1,8 @@
 export const ACTIVITY_CATEGORIES = [
   { id: 'sport_play',       label: 'Sport (jouer)',   icon: 'Dumbbell',  color: 'text-sport-football',   hex: '#16a34a' },
   { id: 'work',             label: 'Travail',         icon: 'Briefcase',  color: 'text-sport-basketball', hex: '#ea580c' },
-  { id: 'social',           label: 'Social',          icon: 'Users',      color: 'text-primary',          hex: '#7c3aed' },
-  { id: 'personal_project', label: 'Projet perso',    icon: 'Lightbulb',  color: 'text-accent',           hex: '#4f46e5' },
+  { id: 'social',           label: 'Social',          icon: 'Users',      color: 'text-primary',          hex: '#D33A24' },
+  { id: 'personal_project', label: 'Projet perso',    icon: 'Lightbulb',  color: 'text-accent',           hex: '#274690' },
   { id: 'relax',            label: 'Détente',         icon: 'Coffee',     color: 'text-warning',          hex: '#d97706' },
   { id: 'other',            label: 'Autre',           icon: 'Sparkles',   color: 'text-text-muted',       hex: '#6b6355' },
 ] as const;

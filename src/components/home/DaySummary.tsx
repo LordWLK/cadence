@@ -60,7 +60,7 @@ export function DaySummary() {
     <Card>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--color-text-dim)' }}>
+          <p className="rubrique">
             {format(new Date(), 'EEEE dd MMMM', { locale: fr })}
           </p>
           {allDone && (

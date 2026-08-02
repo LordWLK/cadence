@@ -81,16 +81,20 @@ export function MoodChart() {
       <div className="flex gap-2">
         <button
           onClick={() => setRange(7)}
-          className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-            range === 7 ? 'bg-primary/15 text-primary' : 'text-text-muted hover:text-text'
+          className={`px-3 py-1 rounded-[3px] text-sm brut-press ${
+            range === 7
+              ? 'bg-[var(--color-action)] text-[#16150F] border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)] font-bold'
+              : 'text-text-muted hover:text-text border border-[var(--color-border)]'
           }`}
         >
           7 jours
         </button>
         <button
           onClick={() => setRange(30)}
-          className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-            range === 30 ? 'bg-primary/15 text-primary' : 'text-text-muted hover:text-text'
+          className={`px-3 py-1 rounded-[3px] text-sm brut-press ${
+            range === 30
+              ? 'bg-[var(--color-action)] text-[#16150F] border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)] font-bold'
+              : 'text-text-muted hover:text-text border border-[var(--color-border)]'
           }`}
         >
           30 jours
@@ -102,12 +106,12 @@ export function MoodChart() {
           <AreaChart data={data} margin={{ top: 5, right: 5, bottom: 5, left: -20 }}>
             <defs>
               <linearGradient id="moodGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
+                <stop offset="0%" stopColor="#D33A24" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="#D33A24" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="energyGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                <stop offset="0%" stopColor="#274690" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="#274690" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
@@ -150,21 +154,21 @@ export function MoodChart() {
               yAxisId="mood"
               type="monotone"
               dataKey="mood"
-              stroke="#8b5cf6"
+              stroke="#D33A24"
               fill="url(#moodGrad)"
               strokeWidth={2}
               connectNulls
-              dot={{ r: 3, fill: '#8b5cf6' }}
+              dot={{ r: 3, fill: '#D33A24' }}
             />
             <Area
               yAxisId="energy"
               type="monotone"
               dataKey="energy"
-              stroke="#22c55e"
+              stroke="#274690"
               fill="url(#energyGrad)"
               strokeWidth={2}
               connectNulls
-              dot={{ r: 3, fill: '#22c55e' }}
+              dot={{ r: 3, fill: '#274690' }}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -172,11 +176,11 @@ export function MoodChart() {
 
       <div className="flex gap-4 justify-center text-xs">
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#8b5cf6]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#D33A24]" />
           <span className="text-text-muted">Humeur (1-5)</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
+          <div className="w-2.5 h-2.5 rounded-full bg-[#274690]" />
           <span className="text-text-muted">Energie (1-10)</span>
         </div>
       </div>

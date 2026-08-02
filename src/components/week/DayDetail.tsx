@@ -47,7 +47,7 @@ export function DayDetail({ date, checkins, activities, events, getShareInfo, on
       {/* Check-ins */}
       {(morning || evening) && (
         <div className="space-y-2">
-          <p className="text-[11px] uppercase tracking-wide font-medium" style={{ color: 'var(--color-text-dim)' }}>
+          <p className="rubrique">
             Check-ins
           </p>
           {morning && (
@@ -78,11 +78,11 @@ export function DayDetail({ date, checkins, activities, events, getShareInfo, on
           {evening && (
             <div
               className="flex items-center gap-2 px-3 py-2 rounded-xl"
-              style={{ backgroundColor: 'color-mix(in srgb, #4f46e5 8%, transparent)' }}
+              style={{ backgroundColor: 'color-mix(in srgb, var(--color-accent) 8%, transparent)' }}
             >
-              <Moon size={14} style={{ color: '#4f46e5' }} />
+              <Moon size={14} style={{ color: 'var(--color-accent)' }} />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium" style={{ color: '#4f46e5' }}>Soir</p>
+                <p className="text-xs font-medium" style={{ color: 'var(--color-accent)' }}>Soir</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-sm">{MOOD_EMOJIS[evening.mood - 1]}</span>
                   <span className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
@@ -106,7 +106,7 @@ export function DayDetail({ date, checkins, activities, events, getShareInfo, on
       {/* Activités */}
       {activities.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-[11px] uppercase tracking-wide font-medium" style={{ color: 'var(--color-text-dim)' }}>
+          <p className="rubrique">
             Activités ({activities.length})
           </p>
           {activities.map(a => {
@@ -171,7 +171,7 @@ export function DayDetail({ date, checkins, activities, events, getShareInfo, on
       {/* Événements */}
       {events.length > 0 && (
         <div className="space-y-1.5">
-          <p className="text-[11px] uppercase tracking-wide font-medium" style={{ color: 'var(--color-text-dim)' }}>
+          <p className="rubrique">
             Événements ({events.length})
           </p>
           {events.map(e => {

@@ -115,7 +115,7 @@ export function CinemaFeed({ preferredCinemaIds }: CinemaFeedProps) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-text-dim uppercase tracking-wide">Séances cinéma</p>
+        <p className="rubrique">Séances cinéma</p>
       </div>
 
       {/* Cinema picker */}

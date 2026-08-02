@@ -83,7 +83,7 @@ export function MoodHeatmap() {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-text-dim uppercase tracking-wide">90 derniers jours</p>
+        <p className="rubrique">90 derniers jours</p>
         <div className="flex items-center gap-1">
           <span className="text-[9px] text-text-dim">Triste</span>
           {MOOD_HEX.map((hex, i) => (

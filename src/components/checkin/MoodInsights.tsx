@@ -139,7 +139,7 @@ export function MoodInsights() {
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-text-dim uppercase tracking-wide">Insights</p>
+      <p className="rubrique">Insights</p>
       {insights.map((insight, i) => {
         const Icon = insight.icon;
         const color = insight.type === 'positive' ? 'var(--color-success)'

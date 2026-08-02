@@ -18,10 +18,10 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Dumbbell, Briefcase, Users, Lightbulb, Coffee, Sparkles,
 };
 
-// Shared chip classes
-const CHIP = 'rounded-lg transition-all active:scale-95';
-const CHIP_ON = 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)] ring-1 ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]';
-const CHIP_OFF = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]';
+// Shared chip classes — interactif → Brut (jaune, bordure encre, ombre dure)
+const CHIP = 'rounded-[3px] brut-press';
+const CHIP_ON = 'bg-[var(--color-action)] text-[#16150F] border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)] font-bold';
+const CHIP_OFF = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] border border-[var(--color-border)]';
 
 interface BacklogDrawerProps {
   weekStart: Date;
@@ -266,7 +266,7 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
             {/* Recurring */}
             {recurringItems.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide flex items-center gap-1"><Repeat size={10} /> Récurrents</p>
+                <p className="rubrique flex items-center gap-1"><Repeat size={10} /> Récurrents</p>
                 {recurringItems.map((item) => editingId === item.id
                   ? <EditForm key={item.id} {...{ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, editShares, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, setEditShares, saveEdit, cancelEdit }} />
                   : <ItemRow key={item.id} item={item} isPulled={pulledIds.has(item.id)} shareInfo={shareMap.get(item.id)} onEdit={() => startEdit(item)} onDelete={() => setDeleteTarget(item.id)} />
@@ -277,7 +277,7 @@ export function BacklogDrawer({ weekStart, weekDays, weekStartISO, onPulled }: B
             {/* Normal */}
             {normalItems.length > 0 && (
               <div className="space-y-1.5">
-                {recurringItems.length > 0 && <p className="text-[11px] text-[var(--color-text-dim)] uppercase tracking-wide mt-2">Pour plus tard</p>}
+                {recurringItems.length > 0 && <p className="rubrique mt-2">Pour plus tard</p>}
                 {normalItems.map((item) => editingId === item.id
                   ? <EditForm key={item.id} {...{ editTitle, editCategory, editDay, editRecEnabled, editRecDay, editRecFreq, editShares, weekDays, saving, setEditTitle, setEditCategory, setEditDay, setEditRecEnabled, setEditRecDay, setEditRecFreq, setEditShares, saveEdit, cancelEdit }} />
                   : <ItemRow key={item.id} item={item} isPulled={pulledIds.has(item.id)} shareInfo={shareMap.get(item.id)} onEdit={() => startEdit(item)} onDelete={() => setDeleteTarget(item.id)} />

@@ -42,31 +42,33 @@ export const DayColumn = memo(function DayColumn({ date, checkins, activities, e
           onClick?.();
         }
       }}
-      className="flex flex-col rounded-xl p-1 min-h-[120px] transition-all cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
+      className="flex flex-col rounded-[3px] p-1 min-h-[120px] transition-all cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]"
       style={{
+        // Aujourd'hui / sélection = marque jaune (le jour est « touchable »)
         backgroundColor: isSelected
-          ? 'color-mix(in srgb, var(--color-primary) 18%, var(--color-surface))'
+          ? 'color-mix(in srgb, var(--color-action) 35%, var(--color-surface))'
           : isToday
-            ? 'color-mix(in srgb, var(--color-primary) 12%, var(--color-surface))'
+            ? 'color-mix(in srgb, var(--color-action) 20%, var(--color-surface))'
             : 'var(--color-surface-alt)',
         outline: isSelected
-          ? '2px solid var(--color-primary)'
+          ? '2px solid var(--color-ink)'
           : isToday
-            ? '1.5px solid color-mix(in srgb, var(--color-primary) 35%, transparent)'
+            ? '1.5px solid color-mix(in srgb, var(--color-ink) 45%, transparent)'
             : 'none',
+        boxShadow: isSelected ? '2px 2px 0 var(--color-ink)' : 'none',
       }}
     >
       {/* Header */}
       <div className="text-center py-1">
         <p
           className="text-[11px] font-bold leading-none"
-          style={{ color: isToday ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
+          style={{ color: isToday ? 'var(--color-text)' : 'var(--color-text-muted)' }}
         >
           {dayLabel}
         </p>
         <p
-          className="text-base font-bold leading-tight mt-0.5"
-          style={{ color: isToday ? 'var(--color-primary)' : 'var(--color-text)' }}
+          className="font-display text-base font-bold leading-tight mt-0.5"
+          style={{ color: 'var(--color-text)' }}
         >
           {dayNumber}
         </p>
@@ -82,7 +84,7 @@ export const DayColumn = memo(function DayColumn({ date, checkins, activities, e
         />
         <div
           className="w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: hasEvening ? '#4f46e5' : 'var(--color-border)' }}
+          style={{ backgroundColor: hasEvening ? 'var(--color-accent)' : 'var(--color-border)' }}
           title={hasEvening ? 'Check-in soir fait' : 'Pas de check-in soir'}
           aria-label={hasEvening ? 'Check-in soir fait' : 'Pas de check-in soir'}
         />

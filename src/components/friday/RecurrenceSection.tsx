@@ -30,9 +30,9 @@ interface RecurrenceSectionProps {
 }
 
 export function RecurrenceSection({ enabled, day, freq, onToggle, onDayChange, onFreqChange, compact = false }: RecurrenceSectionProps) {
-  const chipBase = 'rounded-lg transition-all active:scale-95';
-  const chipActive = 'bg-[color-mix(in_srgb,var(--color-primary)_15%,transparent)] text-[var(--color-primary)] ring-1 ring-[color-mix(in_srgb,var(--color-primary)_30%,transparent)]';
-  const chipInactive = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)]';
+  const chipBase = 'rounded-[3px] brut-press';
+  const chipActive = 'bg-[var(--color-action)] text-[#16150F] border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)] font-bold';
+  const chipInactive = 'bg-[var(--color-surface-elevated)] text-[var(--color-text-muted)] border border-[var(--color-border)]';
   const chipSize = compact ? 'px-1.5 py-1 text-[11px]' : 'px-2 py-1.5 text-xs';
 
   return (
@@ -47,12 +47,16 @@ export function RecurrenceSection({ enabled, day, freq, onToggle, onDayChange, o
         style={{ color: enabled ? 'var(--color-primary)' : 'var(--color-text-muted)' }}
       >
         <Repeat size={13} />
-        Recurrence
+        Récurrence
         <span
-          className="w-8 h-4 rounded-full relative transition-colors"
-          style={{ backgroundColor: enabled ? 'var(--color-primary)' : 'var(--color-border)' }}
+          className="w-8 h-4 rounded-full relative transition-colors border"
+          style={{
+            backgroundColor: enabled ? 'var(--color-action)' : 'var(--color-border)',
+            borderColor: 'var(--color-ink)',
+          }}
         >
-          <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${enabled ? 'left-4' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 w-3 h-3 rounded-full transition-all ${enabled ? 'left-4' : 'left-0.5'}`}
+            style={{ backgroundColor: 'var(--color-ink)' }} />
         </span>
       </button>
 

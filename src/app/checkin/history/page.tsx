@@ -165,7 +165,7 @@ export default function HistoryPage() {
       />
 
       <div className="space-y-3">
-        <p className="text-xs text-text-dim uppercase tracking-wide">Detail par jour</p>
+        <p className="rubrique">Detail par jour</p>
         {loading ? (
           <div className="space-y-2">
             {[1,2,3].map(i => <div key={i} className="h-20 bg-surface-alt rounded-2xl animate-pulse" />)}

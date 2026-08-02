@@ -137,7 +137,7 @@ export function SportFeed() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-text-dim uppercase tracking-wide">Feed sportif</p>
+        <p className="rubrique">Feed sportif</p>
         <Button variant="ghost" size="sm" aria-label="Rafraîchir les matchs" onClick={handleRefresh}>
           <RefreshCw size={14} />
         </Button>

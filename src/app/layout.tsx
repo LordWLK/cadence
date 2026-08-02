@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
@@ -7,6 +7,14 @@ const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
   display: "swap",
+});
+
+// Display serif du thème « Gazette × Brut » : titres, gros chiffres, masthead.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  display: "swap",
+  axes: ["opsz", "SOFT", "WONK"],
 });
 
 export const metadata: Metadata = {
@@ -41,7 +49,7 @@ export const viewport: Viewport = {
   // les personnes malvoyantes d'agrandir le contenu.
   maximumScale: 5,
   userScalable: true,
-  themeColor: "#f7f4ef",
+  themeColor: "#FBFAF5",
   viewportFit: "cover",
 };
 
@@ -49,7 +57,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={inter.variable}>
+    <html lang="fr" className={`${inter.variable} ${fraunces.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-touch-fullscreen" content="yes" />

@@ -6,6 +6,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { calculateStreak } from '@/lib/utils/streak';
 import { Flame, TrendingUp } from 'lucide-react';
 import { getDateRangeISO } from '@/lib/utils/dates';
+import Link from 'next/link';
 
 export function StreakBadge() {
   const { user } = useAuth();
@@ -26,46 +27,35 @@ export function StreakBadge() {
     return null; // Don't show if no streak
   }
 
+  // Bloc « héros » du thème : jaune Brut (il est cliquable → mène à l'historique),
+  // gros chiffre en serif display façon gazette.
   return (
-    <div
-      className="flex items-center gap-3 px-4 py-3 rounded-2xl"
-      style={{ backgroundColor: 'var(--color-surface-elevated)' }}
+    <Link
+      href="/checkin/history"
+      className="flex items-center gap-3 px-4 py-3 rounded-[3px] brut-press border-2 border-[var(--color-ink)] shadow-[4px_4px_0_var(--color-ink)]"
+      style={{ backgroundColor: 'var(--color-action)', color: '#16150F' }}
     >
-      <div
-        className="w-10 h-10 rounded-xl flex items-center justify-center"
-        style={{
-          backgroundColor: streak.current >= 7
-            ? 'color-mix(in srgb, #ef4444 15%, transparent)'
-            : 'color-mix(in srgb, var(--color-warning) 15%, transparent)',
-        }}
-      >
-        <Flame
-          size={20}
-          style={{
-            color: streak.current >= 7 ? '#ef4444' : 'var(--color-warning)',
-          }}
-        />
-      </div>
+      <Flame size={22} strokeWidth={2.25} />
       <div className="flex-1">
         <div className="flex items-baseline gap-1.5">
-          <span className="text-lg font-bold">{streak.current}</span>
-          <span className="text-xs text-text-muted">
-            {streak.current === 1 ? 'jour' : 'jours'}
+          <span className="font-display text-2xl font-bold leading-none">{streak.current}</span>
+          <span className="text-xs font-bold uppercase tracking-wide">
+            {streak.current === 1 ? 'jour de série' : 'jours de série'}
           </span>
         </div>
-        <p className="text-[10px] text-text-dim">
-          {streak.todayDone ? 'Continue demain !' : "Fais ton check-in pour garder le streak !"}
+        <p className="text-[10px] font-medium opacity-70 mt-0.5">
+          {streak.todayDone ? 'Continue demain !' : 'Fais ton check-in pour garder la série !'}
         </p>
       </div>
       {streak.longest > streak.current && (
         <div className="text-right">
-          <div className="flex items-center gap-1 text-text-dim">
+          <div className="flex items-center gap-1 justify-end">
             <TrendingUp size={12} />
-            <span className="text-xs font-medium">{streak.longest}</span>
+            <span className="font-display text-sm font-bold">{streak.longest}</span>
           </div>
-          <p className="text-[9px] text-text-dim">record</p>
+          <p className="text-[9px] font-medium opacity-70">record</p>
         </div>
       )}
-    </div>
+    </Link>
   );
 }

@@ -198,7 +198,7 @@ export default function FridayPage() {
         </Card>
       ) : (
         <div className="space-y-4">
-          <p className="text-xs text-text-dim uppercase tracking-wide">Activités prévues</p>
+          <p className="rubrique">Activités prévues</p>
           {Object.entries(grouped)
             .sort(([a], [b]) => a.localeCompare(b))
             .map(([date, dayActivities]) => (
@@ -233,10 +233,10 @@ export default function FridayPage() {
                               key={cat.id}
                               type="button"
                               onClick={() => setEditCategory(cat.id)}
-                              className={`flex flex-col items-center gap-0.5 p-2 rounded-lg text-[11px] transition-all active:scale-95 ${
+                              className={`flex flex-col items-center gap-0.5 p-2 rounded-[3px] text-[11px] brut-press ${
                                 isSelected
-                                  ? 'bg-primary/15 text-primary ring-1 ring-primary/30'
-                                  : 'bg-surface text-text-muted'
+                                  ? 'bg-[var(--color-action)] text-[#16150F] border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)] font-bold'
+                                  : 'bg-surface text-text-muted border border-[var(--color-border)]'
                               }`}
                             >
                               <Icon size={14} />

@@ -13,7 +13,7 @@ const SLIDES = [
   },
   {
     icon: CalendarPlus,
-    color: '#4f46e5',
+    color: 'var(--color-accent)',
     title: 'Planifie ta semaine',
     desc: 'Chaque vendredi, organise ta semaine : sport, social, projets perso. Tout au meme endroit.',
   },
@@ -104,7 +104,7 @@ export function Onboarding({ children }: { children: React.ReactNode }) {
 
         <div
           className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
-          style={{ backgroundColor: `${slide.color}15` }}
+          style={{ backgroundColor: `color-mix(in srgb, ${slide.color} 12%, transparent)` }}
         >
           <Icon size={36} style={{ color: slide.color }} />
         </div>
@@ -121,7 +121,7 @@ export function Onboarding({ children }: { children: React.ReactNode }) {
             onClick={() => { setDirection(i > currentSlide ? 'next' : 'prev'); setCurrentSlide(i); }}
             className="w-2 h-2 rounded-full transition-all"
             style={{
-              backgroundColor: i === currentSlide ? 'var(--color-primary)' : 'var(--color-border)',
+              backgroundColor: i === currentSlide ? 'var(--color-ink)' : 'var(--color-border)',
               width: i === currentSlide ? '24px' : '8px',
             }}
             aria-label={`Ecran ${i + 1}`}
@@ -132,8 +132,8 @@ export function Onboarding({ children }: { children: React.ReactNode }) {
       {/* CTA */}
       <button
         onClick={next}
-        className="mt-8 flex items-center gap-2 px-8 py-3 rounded-2xl font-semibold text-sm text-white transition-colors"
-        style={{ backgroundColor: 'var(--color-primary)' }}
+        className="mt-8 flex items-center gap-2 px-8 py-3 rounded-[3px] font-bold text-sm brut-press border-2 border-[var(--color-ink)] shadow-[3px_3px_0_var(--color-ink)]"
+        style={{ backgroundColor: 'var(--color-action)', color: '#16150F' }}
       >
         {currentSlide === SLIDES.length - 1 ? "C'est parti !" : 'Suivant'}
         <ArrowRight size={14} />

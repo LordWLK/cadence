@@ -23,13 +23,12 @@ export function MoodSelector({ value, onChange }: MoodSelectorProps) {
               type="button"
               onClick={() => { hapticSelect(); onChange(mood); }}
               aria-label={`Humeur : ${MOOD_LABELS[index]}`}
-              className={`flex flex-col items-center gap-1 p-3 rounded-xl transition-all flex-1 ${
-                isSelected ? 'animate-bounce-in' : 'bg-surface-elevated hover:bg-border'
+              className={`flex flex-col items-center gap-1 p-3 rounded-[3px] brut-press flex-1 ${
+                isSelected
+                  ? 'animate-bounce-in border-2 border-[var(--color-ink)] shadow-[3px_3px_0_var(--color-ink)]'
+                  : 'bg-surface-elevated border border-[var(--color-border)] hover:border-[var(--color-border-strong)]'
               }`}
-              style={isSelected ? {
-                backgroundColor: `${hex}20`,
-                boxShadow: `inset 0 0 0 2px ${hex}`,
-              } : undefined}
+              style={isSelected ? { backgroundColor: `${hex}26` } : undefined}
             >
               <span className="text-2xl">{emoji}</span>
               <span

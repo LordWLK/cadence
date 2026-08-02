@@ -134,7 +134,7 @@ export default function CinemaSettingsPage() {
               <div key={city}>
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <MapPin size={12} className="text-text-dim" />
-                  <p className="text-xs text-text-dim uppercase tracking-wide font-medium">{city}</p>
+                  <p className="rubrique">{city}</p>
                 </div>
                 <div className="space-y-1">
                   {cityCinemas.map(cinema => {

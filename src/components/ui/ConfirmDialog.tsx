@@ -98,10 +98,11 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-message"
-        className="w-full max-w-sm rounded-2xl p-5 space-y-4 animate-bounce-in"
+        className="w-full max-w-sm rounded-[4px] p-5 space-y-4 animate-bounce-in"
         style={{
           backgroundColor: 'var(--color-surface-elevated)',
-          border: '1px solid var(--color-border)',
+          border: '2px solid var(--color-ink)',
+          boxShadow: '5px 5px 0 var(--color-ink)',
         }}
       >
         <div className="flex items-start gap-3">
@@ -119,13 +120,13 @@ export function ConfirmDialog({
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            className="flex-1 py-2.5 rounded-[3px] text-sm font-bold brut-press border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)]"
             style={{
-              backgroundColor: 'var(--color-surface-alt)',
-              color: 'var(--color-text-muted)',
+              backgroundColor: 'var(--color-surface-elevated)',
+              color: 'var(--color-text)',
             }}
           >
             {cancelLabel}
@@ -133,10 +134,10 @@ export function ConfirmDialog({
           <button
             ref={confirmRef}
             onClick={onConfirm}
-            className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors"
+            className="flex-1 py-2.5 rounded-[3px] text-sm font-bold brut-press border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)]"
             style={{
-              backgroundColor: isDanger ? 'var(--color-error)' : 'var(--color-primary)',
-              color: 'var(--color-surface-elevated)',
+              backgroundColor: isDanger ? 'var(--color-error)' : 'var(--color-action)',
+              color: isDanger ? '#FBFAF5' : '#16150F',
             }}
           >
             {confirmLabel}

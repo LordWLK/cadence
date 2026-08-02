@@ -47,8 +47,8 @@ export function EnergySlider({ value, onChange }: EnergySliderProps) {
           border-radius: 999px;
           background: linear-gradient(
             to right,
-            var(--color-primary) 0%,
-            var(--color-primary) var(--slider-percent),
+            var(--color-action) 0%,
+            var(--color-action) var(--slider-percent),
             var(--color-border, #d4d4d4) var(--slider-percent),
             var(--color-border, #d4d4d4) 100%
           );
@@ -63,9 +63,9 @@ export function EnergySlider({ value, onChange }: EnergySliderProps) {
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          background: var(--color-primary);
-          border: 2px solid var(--color-surface-elevated);
-          box-shadow: 0 0 0 1px var(--color-border, #d4d4d4);
+          background: var(--color-action);
+          border: 2px solid var(--color-ink);
+          box-shadow: 2px 2px 0 var(--color-ink);
           cursor: pointer;
           margin-top: 0;
           transition: transform 0.15s ease;
@@ -79,9 +79,9 @@ export function EnergySlider({ value, onChange }: EnergySliderProps) {
           width: 20px;
           height: 20px;
           border-radius: 50%;
-          background: var(--color-primary);
-          border: 2px solid var(--color-surface-elevated);
-          box-shadow: 0 0 0 1px var(--color-border, #d4d4d4);
+          background: var(--color-action);
+          border: 2px solid var(--color-ink);
+          box-shadow: 2px 2px 0 var(--color-ink);
           cursor: pointer;
         }
 
@@ -94,7 +94,7 @@ export function EnergySlider({ value, onChange }: EnergySliderProps) {
         .energy-slider::-moz-range-progress {
           height: 4px;
           border-radius: 999px;
-          background: var(--color-primary);
+          background: var(--color-action);
         }
       `}</style>
     </div>

@@ -90,7 +90,7 @@ export function SearchNotes() {
 
       {results.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs text-[var(--color-text-dim)] uppercase tracking-wide">
+          <p className="rubrique">
             {results.length} résultat{results.length > 1 ? 's' : ''}
           </p>
           {results.map((c) => (

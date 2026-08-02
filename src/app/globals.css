@@ -1,28 +1,44 @@
 @import "tailwindcss";
 
+/* ════════════════════════════════════════════════════════════════════════
+   Thème « Gazette × Brut »
+   Règle du design system : CE QUI SE LIT EST ÉDITORIAL (papier, encre,
+   serif, filets fins), CE QUI SE TOUCHE EST BRUT (jaune, bordure encre
+   épaisse, ombre dure). Ne jamais appliquer .brut à un élément non
+   interactif — c'est le contrat visuel de l'app.
+   ════════════════════════════════════════════════════════════════════════ */
+
 @theme {
-  /* ─── Brand primary ─── */
-  --color-primary:       #7c3aed;
-  --color-primary-light: #9b5ff7;
-  --color-primary-dark:  #5b21b6;
-  --color-primary-soft:  #ede9fd;  /* hover / badge bg */
+  /* ─── Encre & papier ─── */
+  --color-ink:   #16150F;   /* bordures Brut, texte fort */
+  --color-paper: #FBFAF5;   /* texte sur aplats sombres */
 
-  /* ─── Accent indigo ─── */
-  --color-accent:        #4f46e5;
-  --color-accent-light:  #818cf8;
+  /* ─── Primary = vermillon (INFORMATION : rubriques, liens, badges) ─── */
+  --color-primary:       #D33A24;
+  --color-primary-light: #E25640;
+  --color-primary-dark:  #A82A18;
+  --color-primary-soft:  #F9E4E0;  /* hover / badge bg */
 
-  /* ─── Surfaces — fond crème doux ─── */
-  --color-surface:          #f7f4ef;   /* fond principal — crème chaud */
-  --color-surface-alt:      #eeeae1;   /* sidebar, zones secondaires */
+  /* ─── Action = jaune (INTERACTIF : boutons, sélection, aujourd'hui) ─── */
+  --color-action:      #FFC61A;
+  --color-action-soft: #FFE9A8;
+
+  /* ─── Accent = encre bleue (le soir, la nuit, le secondaire) ─── */
+  --color-accent:        #274690;
+  --color-accent-light:  #6B82C9;
+
+  /* ─── Surfaces — papier ─── */
+  --color-surface:          #FBFAF5;   /* fond principal — papier */
+  --color-surface-alt:      #F3F1E8;   /* zones secondaires */
   --color-surface-elevated: #ffffff;   /* cards, modales */
-  --color-surface-input:    #fdfbf7;   /* champs de formulaire */
-  --color-border:           #ddd8cc;   /* séparateurs */
-  --color-border-strong:    #c9c3b5;   /* bordures actives */
+  --color-surface-input:    #ffffff;   /* champs de formulaire */
+  --color-border:           #E3DFD2;   /* filets éditoriaux */
+  --color-border-strong:    #16150F;   /* bordures interactives = encre */
 
   /* ─── Texte ─── */
-  --color-text:       #1a1612;   /* titres, corps */
-  --color-text-muted: #6b6355;   /* labels secondaires */
-  --color-text-dim:   #9e9080;   /* placeholders, hints */
+  --color-text:       #16150F;   /* encre */
+  --color-text-muted: #6B6558;   /* labels secondaires */
+  --color-text-dim:   #9C9484;   /* placeholders, hints */
 
   /* ─── Sport ─── */
   --color-sport-football:   #16a34a;
@@ -37,23 +53,44 @@
   --color-mood-5: #22c55e;
 
   /* ─── États ─── */
-  --color-success: #16a34a;
-  --color-warning: #d97706;
-  --color-error:   #dc2626;
+  --color-success: #1F7A3D;
+  --color-warning: #B45309;
+  --color-error:   #C42B16;
+
+  /* ─── Typo display (Fraunces via next/font, cf. layout.tsx) ─── */
+  --font-display: var(--font-fraunces), Georgia, 'Iowan Old Style', serif;
+
+  /* ─── Radius éditoriaux : on resserre l'échelle Tailwind.
+         Les classes rounded-* existantes deviennent quasi carrées
+         sans toucher aux composants. rounded-full reste rond. ─── */
+  --radius-md:  0.1875rem;  /* 3px */
+  --radius-lg:  0.1875rem;  /* 3px */
+  --radius-xl:  0.25rem;    /* 4px */
+  --radius-2xl: 0.375rem;   /* 6px */
+  --radius-3xl: 0.5rem;     /* 8px */
 }
 
-/* ─── Dark theme override ─── */
+/* ─── Dark theme — « encre inversée » : le papier devient encre,
+       le jaune et le vermillon tiennent tels quels. ─── */
 [data-theme="dark"] {
-  --color-surface:          #141118;
-  --color-surface-alt:      #1e1a24;
-  --color-surface-elevated: #252130;
-  --color-surface-input:    #1e1a24;
-  --color-border:           #332d3d;
-  --color-border-strong:    #443c52;
+  --color-surface:          #16140E;
+  --color-surface-alt:      #201D15;
+  --color-surface-elevated: #262218;
+  --color-surface-input:    #201D15;
+  --color-border:           #3A3529;
+  --color-border-strong:    #F2EFE6;
 
-  --color-text:       #f0ece6;
-  --color-text-muted: #9e96a8;
-  --color-text-dim:   #6b6278;
+  --color-ink:   #0B0A07;
+  --color-paper: #16140E;
+
+  --color-text:       #F2EFE6;
+  --color-text-muted: #B3AB99;
+  --color-text-dim:   #7D7666;
+
+  --color-primary:       #E8543E;
+  --color-primary-soft:  #3D231E;
+  --color-action-soft:   #40350F;
+  --color-accent-light:  #8FA3DE;
 
   color-scheme: dark;
 }
@@ -73,11 +110,48 @@ html, body {
 body {
   background-color: var(--color-surface);
   color: var(--color-text);
-  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-inter), 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: -webkit-fill-available;
   overflow-y: auto; /* scroll garanti sur mobile */
+}
+
+/* ─── Éditorial : les titres se lisent → serif display ─── */
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+  font-variation-settings: 'opsz' 40;
+}
+
+/* Rubrique de journal : label de section en petites capitales vermillon */
+.rubrique {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+/* ─── Brut : le vocabulaire de l'interactif.
+       À n'appliquer QUE sur des éléments cliquables. ─── */
+.brut {
+  border: 2px solid var(--color-ink);
+  box-shadow: 3px 3px 0 var(--color-ink);
+  border-radius: 3px;
+}
+.brut-lg {
+  border: 2.5px solid var(--color-ink);
+  box-shadow: 4px 4px 0 var(--color-ink);
+  border-radius: 3px;
+}
+.brut-press {
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+.brut-press:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--color-ink);
 }
 
 /* iPhone safe area */
@@ -112,9 +186,10 @@ input[type="range"]::-webkit-slider-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--color-primary);
+  background: var(--color-action);
+  border: 2px solid var(--color-ink);
   margin-top: -8px;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  box-shadow: 2px 2px 0 var(--color-ink);
 }
 
 input[type="range"]::-moz-range-track {
@@ -127,9 +202,9 @@ input[type="range"]::-moz-range-thumb {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--color-primary);
-  border: none;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 35%, transparent);
+  background: var(--color-action);
+  border: 2px solid var(--color-ink);
+  box-shadow: 2px 2px 0 var(--color-ink);
 }
 
 /* ─── Focus visible ─── */
@@ -139,7 +214,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 input[type="range"]:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 40%, transparent);
+  box-shadow: 2px 2px 0 var(--color-ink), 0 0 0 3px color-mix(in srgb, var(--color-action) 55%, transparent);
 }
 
 /* ─── Animations ─── */

@@ -28,7 +28,7 @@ function LandingPage() {
         </p>
         <Link
           href="/settings"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-primary)] text-white rounded-2xl font-semibold text-sm shadow-lg shadow-[color-mix(in_srgb,var(--color-primary)_30%,transparent)] hover:bg-[var(--color-primary-light)] transition-colors"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[var(--color-action)] text-[#16150F] rounded-[3px] font-bold text-sm brut-press border-2 border-[var(--color-ink)] shadow-[3px_3px_0_var(--color-ink)]"
         >
           Commencer gratuitement <ArrowRight size={14} />
         </Link>
@@ -37,7 +37,7 @@ function LandingPage() {
       {/* Divider */}
       <div className="flex items-center gap-3">
         <div className="flex-1 h-px bg-[var(--color-border)]" />
-        <span className="text-[10px] font-medium uppercase tracking-widest text-[var(--color-text-dim)]">Ce que ça fait</span>
+        <span className="rubrique">Ce que ça fait</span>
         <div className="flex-1 h-px bg-[var(--color-border)]" />
       </div>
 
@@ -91,7 +91,7 @@ function LandingPage() {
       <div className="space-y-5">
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-[var(--color-border)]" />
-          <span className="text-[10px] font-medium uppercase tracking-widest text-[var(--color-text-dim)]">Installer sur iPhone</span>
+          <span className="rubrique">Installer sur iPhone</span>
           <div className="flex-1 h-px bg-[var(--color-border)]" />
         </div>
 
@@ -185,7 +185,7 @@ function LandingPage() {
       <div className="flex flex-col items-center gap-3 pb-4">
         <Link
           href="/settings"
-          className="inline-flex items-center gap-2 px-8 py-3.5 bg-[var(--color-primary)] text-white rounded-2xl font-bold text-sm shadow-xl shadow-[color-mix(in_srgb,var(--color-primary)_25%,transparent)] hover:bg-[var(--color-primary-light)] transition-colors"
+          className="inline-flex items-center gap-2 px-8 py-3.5 bg-[var(--color-action)] text-[#16150F] rounded-[3px] font-bold text-sm brut-press border-2 border-[var(--color-ink)] shadow-[4px_4px_0_var(--color-ink)]"
         >
           Configurer Cadence <ArrowRight size={15} />
         </Link>
@@ -212,13 +212,13 @@ function AppHome() {
           <CadenceLogoStacked className="w-28" />
           <div className="flex gap-2">
             <Link href="/checkin">
-              <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[color-mix(in_srgb,var(--color-primary)_10%,transparent)] text-[var(--color-primary)] text-xs font-medium hover:bg-[color-mix(in_srgb,var(--color-primary)_16%,transparent)] transition-colors">
+              <button className="flex items-center gap-1.5 px-3 py-2 rounded-[3px] bg-[var(--color-surface-elevated)] text-[var(--color-text)] text-xs font-bold brut-press border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)]">
                 <Heart size={13} />
                 Check-in
               </button>
             </Link>
             <Link href="/friday">
-              <button className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[color-mix(in_srgb,var(--color-accent)_10%,transparent)] text-[var(--color-accent)] text-xs font-medium hover:bg-[color-mix(in_srgb,var(--color-accent)_16%,transparent)] transition-colors">
+              <button className="flex items-center gap-1.5 px-3 py-2 rounded-[3px] bg-[var(--color-surface-elevated)] text-[var(--color-text)] text-xs font-bold brut-press border-2 border-[var(--color-ink)] shadow-[2px_2px_0_var(--color-ink)]">
                 <CalendarPlus size={13} />
                 Planifier
               </button>

@@ -85,9 +85,9 @@ export function ShareSelector({ value, onChange, compact = false }: ShareSelecto
                 className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors"
                 style={{
                   backgroundColor: isOn
-                    ? 'color-mix(in srgb, var(--color-primary) 8%, transparent)'
+                    ? 'color-mix(in srgb, var(--color-action) 14%, transparent)'
                     : 'var(--color-surface)',
-                  border: '1px solid ' + (isOn ? 'color-mix(in srgb, var(--color-primary) 25%, transparent)' : 'var(--color-border)'),
+                  border: '1px solid ' + (isOn ? 'var(--color-ink)' : 'var(--color-border)'),
                 }}
               >
                 <label className="flex items-center gap-2 flex-1 cursor-pointer min-w-0">
@@ -98,15 +98,15 @@ export function ShareSelector({ value, onChange, compact = false }: ShareSelecto
                     className="sr-only"
                   />
                   <div
-                    className="w-4 h-4 rounded flex items-center justify-center shrink-0"
+                    className="w-4 h-4 rounded-[2px] flex items-center justify-center shrink-0"
                     style={{
-                      backgroundColor: isOn ? 'var(--color-primary)' : 'var(--color-surface-elevated)',
-                      border: '1px solid ' + (isOn ? 'var(--color-primary)' : 'var(--color-border-strong)'),
+                      backgroundColor: isOn ? 'var(--color-action)' : 'var(--color-surface-elevated)',
+                      border: '2px solid var(--color-ink)',
                     }}
                   >
                     {isOn && (
                       <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M2 5l2 2 4-4" stroke="#16150F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     )}
                   </div>
